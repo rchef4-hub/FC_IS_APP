@@ -22,20 +22,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const players = await response.json();
 
-      const topScorers = [...players].sort((a, b) => (b.buts || 0) - (a.buts || 0));
-      const topPassers = [...players].sort((a, b) => (b.passes || 0) - (a.passes || 0));
+      const topScorers = [...players].sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
+      const topPassers = [...players].sort((a, b) => (parseInt(b.passes) || 0) - (parseInt(a.passes) || 0));
 
       const scorersHTML = topScorers.map(p => `
         <li>
           <strong>${p.nom}</strong>
-          <br><small>⚽ ${p.buts || 0} but(s) en ${p.matchs || 0} match(s)</small>
+          <br><small>⚽ ${parseInt(p.buts) || 0} but(s) en ${parseInt(p.matchs) || 0} match(s)</small>
         </li>
       `).join('');
 
       const passersHTML = topPassers.map(p => `
         <li>
           <strong>${p.nom}</strong>
-          <br><small>👟 ${p.passes || 0} passe(s) décisive(s)</small>
+          <br><small>👟 ${parseInt(p.passes) || 0} passe(s) décisive(s)</small>
         </li>
       `).join('');
 
@@ -295,13 +295,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
           const updatedPlayers = players.map(p => {
             let updatedP = { ...p };
+
+            let currentMatchs = parseInt(updatedP.matchs) || 0;
+            let currentButs = parseInt(updatedP.buts) || 0;
+            let currentPasses = parseInt(updatedP.passes) || 0;
+
             if (presentNames.includes(p.nom)) {
-              updatedP.matchs = (updatedP.matchs || 0) + 1;
+              currentMatchs += 1;
             }
+
             events.forEach(e => {
-              if (e.buteur === p.nom) updatedP.buts = (updatedP.buts || 0) + 1;
-              if (e.passeur === p.nom) updatedP.passes = (updatedP.passes || 0) + 1;
+              if (e.buteur && e.buteur === p.nom) {
+                currentButs += 1;
+              }
+              if (e.passeur && e.passeur === p.nom) {
+                currentPasses += 1;
+              }
             });
+
+            updatedP.matchs = currentMatchs;
+            updatedP.buts = currentButs;
+            updatedP.passes = currentPasses;
+
             return updatedP;
           });
 
@@ -315,6 +330,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
           statusMsg.style.color = "green";
           statusMsg.innerText = "✅ Match enregistré avec succès ! Netlify va mettre à jour le site dans quelques secondes.";
+
+          // Réinitialiser la liste d'événements locale
+          events = [];
+
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
