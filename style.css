@@ -18,9 +18,9 @@ body {
   padding: 0;
   background-color: var(--bg-color);
   color: var(--text-color);
-  padding-bottom: 110px; /* Augmenté pour laisser de la place à la barre du bas */
-  overflow-y: auto; /* Permet le défilement vertical complet */
-  -webkit-overflow-scrolling: touch; /* Défilement fluide sur iOS */
+  padding-bottom: 110px; /* Espace suffisant pour la barre du bas */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* En-tête avec Logo */
@@ -35,19 +35,19 @@ header {
 }
 
 header img {
-  max-height: 80px; /* Redimensionnement propre du logo */
+  max-height: 80px;
   width: auto;
   display: block;
   margin: 0 auto;
   border: 2px solid var(--accent-color);
-  border-radius: 4px; /* Bords légèrement arrondis */
+  border-radius: 4px;
   background: white;
 }
 
 /* Conteneur principal */
 #root {
   padding: 20px;
-  padding-bottom: 120px; /* Marge de sécurité en bas pour les longues listes */
+  padding-bottom: 120px;
   max-width: 600px;
   margin: 0 auto;
   min-height: calc(100vh - 150px);
@@ -105,15 +105,15 @@ nav a.active {
 
 /* Styles pour les matchs */
 li.win {
-  border-left-color: #28a745; /* Vert pour victoire */
+  border-left-color: #28a745;
 }
 
 li.loss {
-  border-left-color: #dc3545; /* Rouge pour défaite */
+  border-left-color: #dc3545;
 }
 
 li.upcoming {
-  border-left-color: var(--accent-color); /* Doré pour à venir */
+  border-left-color: var(--accent-color);
 }
 
 .result {
@@ -135,15 +135,11 @@ li.upcoming {
   cursor: pointer;
 }
 
-#root ul {
-  margin-bottom: 30px; 
-}
+/* --- ACCORDÉON (SECTIONS RÉTRACTABLES CORRIGÉES) --- */
 
-/* --- ACCORDÉON (SECTIONS RÉTRACTABLES) --- */
-
-/* Style de la flèche (indicateur d'état) */
+/* Style de la flèche */
 #root h3::after {
-  content: '▼'; /* Flèche vers le bas (état fermé) */
+  content: '▼';
   position: absolute;
   right: 15px;
   top: 50%;
@@ -151,20 +147,22 @@ li.upcoming {
   transition: transform 0.3s ease;
 }
 
-/* Flèche vers le haut (état ouvert) */
 #root h3.active::after {
   content: '▲'; 
 }
 
-/* La liste (contenu) par défaut est ouverte */
+/* La liste dépliée : pas de limite de hauteur pour ne pas couper les joueurs */
 #root ul {
-  max-height: 2000px; /* Augmenté pour les très longues listes */
-  overflow: hidden;
-  transition: max-height 0.4s ease-in-out;
+  max-height: none;
+  overflow: visible;
+  margin-bottom: 30px;
 }
 
-/* Classe CSS masquant les éléments */
+/* La liste fermée */
 #root ul.collapsed {
-  max-height: 0;
-  margin-bottom: 0;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  opacity: 0;
 }
