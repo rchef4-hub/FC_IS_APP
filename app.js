@@ -220,9 +220,10 @@ function router() {
 
     if(hash === 'home') renderHome();
     else if(hash === 'matches') renderMatches();
-    else if(hash === 'stats') renderStats(); // NOUVELLE LIGNE
+    else if(hash === 'stats') renderStats();
     else if(hash === 'players') renderPlayers(); 
     else if(hash === 'announcements') renderAnnouncements();
+    else if(hash === 'admin') renderAdmin(); // NOUVELLE LIGNE
     else renderHome();
   }
 // --- FONCTION POUR LA SAISIE RAPIDE D'UN MATCH ---
