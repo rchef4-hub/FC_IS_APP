@@ -1,10 +1,13 @@
 // service-worker.js
 
-const CACHE_NAME = 'fcis-cache-v18';
+const CACHE_NAME = 'fcis-cache-v19';
 
 // 1. Installation : enregistrement des fichiers de base
 self.addEventListener('install', (event) => {
-  console.log('Service Worker : Installation en cours...');
+  console.log('Service Worker v19 : Installation...');
+  // Force le nouveau Service Worker à prendre la main immédiatement
+  self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([
@@ -23,50 +26,48 @@ self.addEventListener('install', (event) => {
       ]);
     })
   );
-  // Force le nouveau service worker à devenir actif immédiatement
-  self.skipWaiting();
 });
 
-// 2. Activation : nettoyage des anciens caches (v17, v16, etc.)
+// 2. Activation : suppression définitive de TOUS les anciens caches (v17, v18, etc.)
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker : Activation et nettoyage des anciens caches...');
+  console.log('Service Worker v19 : Nettoyage des anciens caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
-            console.log('Suppression de l\'ancien cache :', cache);
+            console.log('Suppression du cache obsolète :', cache);
             return caches.delete(cache);
           }
         })
       );
     })
   );
+  // Prend le contrôle de tous les onglets ouverts tout de suite
   self.clients.claim();
 });
 
 // 3. Récupération des données (Fetch)
-// Stratégie : Réseau d'abord pour les fichiers JSON (pour avoir toujours les vrais scores/stats)
+// Stratégie Network First : On va toujours chercher les fichiers JSON sur le réseau
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   if (url.pathname.endsWith('.json')) {
-    // Fichiers JSON : On cherche sur le réseau en priorité
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {
-          // Si le réseau répond, on met à jour la copie locale en cache
+          // Si le réseau répond, on met à jour la copie en cache
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
           return networkResponse;
         })
         .catch(() => {
-          // Si pas de réseau (hors-ligne), on utilise la version en cache
+          // Si hors-ligne uniquement, secours sur le cache
           return caches.match(event.request);
         })
     );
   } else {
-    // Fichiers statiques (Images, CSS, JS) : Cache d'abord pour la rapidité
+    // Fichiers statiques (Images, CSS, JS) : Cache d'abord
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         return cachedResponse || fetch(event.request);
