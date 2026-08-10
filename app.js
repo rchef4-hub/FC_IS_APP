@@ -1,6 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
+  // Fonction pour éviter que le navigateur garde les vieilles données en cache
+  function fetchFresh(url) {
+    return fetch(`${url}?t=${Date.now()}`);
+  }
+
   // --- PAGE D'ACCUEIL ---
   function renderHome() {
     root.innerHTML = `
@@ -17,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement des matchs...</p>`;
 
     try {
-      const response = await fetch('matchs.json');
+      const response = await fetchFresh('matchs.json');
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
 
       const matches = await response.json();
@@ -28,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const resultatDisplay = m.resultat ? `<strong>${m.resultat}</strong>` : '<em>À venir</em>';
 
         return `
-          <li style="border-left-color: ${badgeColor}; padding: 12px; margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: var(--shadow);">
+          <li style="border-left-color: ${badgeColor}; padding: 12px; margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: var(--shadow); list-style: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
               <small style="color: #666; font-weight: bold;">📅 ${m.date}</small>
               <span style="background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">${m.lieu}</span>
@@ -45,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       root.innerHTML = `
         <h2>Calendrier & Résultats</h2>
-        <ul style="list-style: none; padding: 0;">${matchesHTML}</ul>
+        <ul style="padding: 0;">${matchesHTML}</ul>
       `;
 
     } catch (error) {
@@ -59,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
     root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
 
     try {
-      const response = await fetch('players.json');
+      const response = await fetchFresh('players.json');
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
 
       const players = await response.json();
@@ -101,9 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     try {
       const [playersRes, dirigeantsRes, arbitresRes] = await Promise.all([
-        fetch('players.json'),
-        fetch('dirigeants.json'),
-        fetch('arbitres.json')
+        fetchFresh('players.json'),
+        fetchFresh('dirigeants.json'),
+        fetchFresh('arbitres.json')
       ]);
 
       if (!playersRes.ok || !dirigeantsRes.ok || !arbitresRes.ok) {
@@ -142,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       root.innerHTML = contentHTML;
       
-      // Logique Accordéon
+      // Accordéon
       document.querySelectorAll('#root h3').forEach(header => {
         header.addEventListener('click', function() {
           const list = this.nextElementSibling;
@@ -164,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
     root.innerHTML = `<h2>Annonces Club</h2><p style="text-align: center;">Chargement des annonces...</p>`;
 
     try {
-      const response = await fetch('annonces.json');
+      const response = await fetchFresh('annonces.json');
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
 
       const annonces = await response.json();
@@ -184,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- SAISIE MATCH (ADMINISTRATEUR AVEC API GITHUB) ---
+  // --- SAISIE MATCH (ADMIN) ---
   async function renderAdmin() {
     const password = prompt("Veuillez entrer le mot de passe administrateur :");
     if (password !== "508497") {
@@ -212,8 +217,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     try {
       const [playersRes, matchesRes] = await Promise.all([
-        fetch('players.json'),
-        fetch('matchs.json')
+        fetchFresh('players.json'),
+        fetchFresh('matchs.json')
       ]);
 
       const players = await playersRes.json();
@@ -368,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
           await updateGitHubFile('matchs.json', updatedMatches, 'Update matchs via app');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Match enregistré avec succès !";
+          statusMsg.innerText = "✅ Match enregistré avec succès ! Attendez ~30 secondes puis rafraîchissez la page.";
 
           events = [];
 
@@ -385,17 +390,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- ROUTEUR PRINCIPAL ---
+  // --- ROUTEUR PRINCIPAL (GÈRE #matches ET #matchs) ---
   function router() {
     const hash = location.hash.replace('#','') || 'home';
     
     document.querySelectorAll('nav a').forEach(a => {
         a.classList.remove('active');
-        if(a.getAttribute('href') === '#' + hash) a.classList.add('active');
+        const href = a.getAttribute('href');
+        if(href === '#' + hash || (hash.startsWith('match') && href.startsWith('#match'))) {
+          a.classList.add('active');
+        }
     });
 
     if(hash === 'home') renderHome();
-    else if(hash === 'matches') renderMatches();
+    else if(hash === 'matches' || hash === 'matchs') renderMatches();
     else if(hash === 'stats') renderStats();
     else if(hash === 'players') renderPlayers(); 
     else if(hash === 'announcements') renderAnnouncements();
