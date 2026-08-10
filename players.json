@@ -4,7 +4,7 @@
     "nom": "PERREIRA Lucas",
     "poste": "Gardien de but",
     "symbole": "🧤",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -13,7 +13,7 @@
     "nom": "DUMONT Thomas",
     "poste": "Défenseur",
     "symbole": "🛡️",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -22,7 +22,7 @@
     "nom": "MOREAU Antoine",
     "poste": "Défenseur",
     "symbole": "🛡️",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -31,7 +31,7 @@
     "nom": "GIRARD Maxime",
     "poste": "Défenseur",
     "symbole": "🛡️",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -40,7 +40,7 @@
     "nom": "ROUX Julien",
     "poste": "Milieu",
     "symbole": "⚙️",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -49,7 +49,7 @@
     "nom": "LEROY Romain",
     "poste": "Milieu",
     "symbole": "⚙️",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -58,7 +58,7 @@
     "nom": "FOURNIER Alexandre",
     "poste": "Attaquant",
     "symbole": "⚡",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -67,7 +67,7 @@
     "nom": "BONNET Nicolas",
     "poste": "Milieu",
     "symbole": "⚙️",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -76,7 +76,7 @@
     "nom": "BOISSELIER Michael",
     "poste": "Attaquant",
     "symbole": "⚽",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -85,7 +85,7 @@
     "nom": "BOISSELIER Dorian",
     "poste": "Attaquant",
     "symbole": "⚽",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -94,7 +94,7 @@
     "nom": "MERCIER Quentin",
     "poste": "Milieu",
     "symbole": "🎯",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   },
@@ -103,7 +103,7 @@
     "nom": "BLANCHARD Clement",
     "poste": "Attaquant",
     "symbole": "⚡",
-    "matchs": 0,
+    "matchs": 1,
     "buts": 0,
     "passes": 0
   }
