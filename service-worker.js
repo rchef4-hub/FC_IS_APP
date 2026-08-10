@@ -2,7 +2,7 @@ self.addEventListener('install', (event) => {
   console.log('Service worker installé');
   // Cache mis à jour à v5 pour forcer la réinstallation
   event.waitUntil(
-    caches.open('fcis-cache-v5').then(cache => { 
+    caches.open('fcis-cache-v6').then(cache => { 
       return cache.addAll([
         'index.html',
         'app.js',
