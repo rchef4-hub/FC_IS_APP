@@ -166,7 +166,47 @@ document.addEventListener('DOMContentLoaded', function() {
     else if(hash === 'announcements') renderAnnouncements();
     else renderHome();
   }
+// --- FONCTION ASYNCHRONE POUR LE CHARGEMENT DES STATISTIQUES ---
+  async function renderStats() {
+    root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
 
+    try {
+      const response = await fetch('players.json');
+      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+
+      const players = await response.json();
+
+      // Tri des joueurs
+      const topScorers = [...players].sort((a, b) => (b.buts || 0) - (a.buts || 0));
+      const topPassers = [...players].sort((a, b) => (b.passes || 0) - (a.passes || 0));
+
+      const scorersHTML = topScorers.map(p => `
+        <li>
+          <strong>${p.nom}</strong>
+          <br><small>⚽ ${p.buts || 0} but(s) en ${p.matchs || 0} match(s)</small>
+        </li>
+      `).join('');
+
+      const passersHTML = topPassers.map(p => `
+        <li>
+          <strong>${p.nom}</strong>
+          <br><small>👟 ${p.passes || 0} passe(s) décisive(s)</small>
+        </li>
+      `).join('');
+
+      root.innerHTML = `
+        <h2>Statistiques de la Saison</h2>
+        <h3 class="accordion-header active">⚽ Meilleurs Buteurs</h3>
+        <ul>${scorersHTML}</ul>
+        <h3 class="accordion-header active">👟 Meilleurs Passeurs</h3>
+        <ul>${passersHTML}</ul>
+      `;
+
+    } catch (error) {
+      console.error("Erreur de chargement des stats :", error);
+      root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Impossible de charger les statistiques.</p>`;
+    }
+  }
   window.addEventListener('hashchange', router);
   window.addEventListener('load', router);
 });
