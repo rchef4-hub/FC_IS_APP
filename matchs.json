@@ -1,29 +1,155 @@
 [
   {
-    "date": "12/12/2025",
-    "heure": "20h00",
-    "adversaire": "AS Rivière",
+    "id": 1,
+    "date": "06/09/2026 15H",
+    "adversaire": "Nogentaise As 2",
     "lieu": "Extérieur",
     "resultat": ""
   },
   {
-    "date": "19/12/2025",
-    "heure": "15h00",
-    "adversaire": "Olympique",
+    "id": 2,
+    "date": "20/09/2026 15H",
+    "adversaire": "Doulaincourt 2",
     "lieu": "Domicile",
     "resultat": ""
   },
   {
-    "date": "19/12/2025",
-    "heure": "15h00",
-    "adversaire": "Sarrey/Montigny",
+    "id": 3,
+    "date": "27/09/2026 15H",
+    "adversaire": "Esnouveaux Es 2",
     "lieu": "Domicile",
     "resultat": ""
   },
   {
-    "date": "07/12/2025",
-    "heure": "15h00",
-    "adversaire": "Esnouveaux",
+    "id": 4,
+    "date": "04/10/2026 15H",
+    "adversaire": "Nogent Sport. 2",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "id": 5,
+    "date": "18/10/2026 15H",
+    "adversaire": "U.S. De Condes 2",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "id": 6,
+    "date": "25/10/2026 14H30",
+    "adversaire": "Bologne Fc 4",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "id": 7,
+    "date": "01/11/2026 14H30",
+    "adversaire": "Ecmr 3",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "id": 8,
+    "date": "08/11/2026 14H30",
+    "adversaire": "Arc En Barrois Us 2",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "id": 9,
+    "date": "15/11/2026 14H30",
+    "adversaire": "Us Ouest 52 3",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "id": 10,
+    "date": "22/11/2026 14H30",
+    "adversaire": "Biesles Us 1",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "id": 11,
+    "date": "29/11/2026 14H30",
+    "adversaire": "Lasarjonc As 3",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "id": 12,
+    "date": "21/02/2027 14H30",
+    "adversaire": "Nogentaise As 2",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "id": 13,
+    "date": "07/03/2027 14H30",
+    "adversaire": "Doulaincourt 2",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "id": 14,
+    "date": "14/03/2027 14H30",
+    "adversaire": "Nogent Sport. 2",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "id": 15,
+    "date": "21/03/2027 14H30",
+    "adversaire": "U.S. De Condes 2",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "id": 16,
+    "date": "04/04/2027 15H",
+    "adversaire": "Bologne Fc 4",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "id": 17,
+    "date": "11/04/2027 15H",
+    "adversaire": "Ecmr 3",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "id": 18,
+    "date": "18/04/2027 15H",
+    "adversaire": "Arc En Barrois Us 2",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "id": 19,
+    "date": "02/05/2027 15H",
+    "adversaire": "Us Ouest 52 3",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "id": 20,
+    "date": "08/05/2027 19H",
+    "adversaire": "Biesles Us 1",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "id": 21,
+    "date": "23/05/2027 15H",
+    "adversaire": "Lasarjonc As 3",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "id": 22,
+    "date": "30/05/2027 15H",
+    "adversaire": "Esnouveaux Es 2",
     "lieu": "Extérieur",
     "resultat": ""
   }
