@@ -15,7 +15,7 @@ self.addEventListener('install', (event) => {
         'app.js',
         'manifest.json',
         'style.css',
-        'FC_IS.jpg',
+        'fc_is.jpg',
         'icon-192.png',
         'icon-512.png',
         'players.json',
