@@ -4,35 +4,35 @@
     "nom": "BRET Guillaume",
     "poste": "Attaquant",
     "symbole": "⚽",
-    "buts": 0,
-    "passes": 0,
-    "matchs": 0
+    "buts": 4,
+    "passes": 2,
+    "matchs": 9
   },
   {
     "numero": 4,
     "nom": "CHEF Sébastien",
     "poste": "Défenseur",
     "symbole": "🛡️",
-    "buts": 0,
+    "buts": 1,
     "passes": 0,
-    "matchs": 0
+    "matchs": 10
   },
   {
     "numero": 9,
     "nom": "BOISSELIER Michael",
     "poste": "Attaquant",
     "symbole": "⚽",
-    "buts": 0,
-    "passes": 0,
-    "matchs": 0
+    "buts": 3,
+    "passes": 4,
+    "matchs": 8
   },
   {
     "numero": 9,
     "nom": "BOISSELIER Dorian",
     "poste": "Attaquant",
     "symbole": "👟",
-    "buts": 0,
-    "passes": 0,
-    "matchs": 0
+    "buts": 2,
+    "passes": 1,
+    "matchs": 7
   }
 ]
