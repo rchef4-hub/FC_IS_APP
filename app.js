@@ -227,9 +227,20 @@ function router() {
     else renderHome();
   }
 // --- FONCTION POUR LA SAISIE RAPIDE D'UN MATCH ---
-  async function renderAdmin() {
-    root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="text-align: center;">Chargement du formulaire...</p>`;
+async function renderAdmin() {
+    // Demande du mot de passe
+    const password = prompt("Veuillez entrer le mot de passe administrateur :");
+    
+    if (password !== "FCIS2026") { // <-- Change "FCIS2026" par le mot de passe de ton choix
+      alert("Mot de passe incorrect !");
+      window.location.hash = "home"; // Redirige vers l'accueil
+      return;
+    }
 
+    // Si le mot de passe est bon, le reste du formulaire s'affiche normalement...
+    root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="text-align: center;">Chargement du formulaire...</p>`;
+    
+    // ... (suite du code renderAdmin)
     try {
       const [playersRes, matchesRes] = await Promise.all([
         fetch('players.json'),
