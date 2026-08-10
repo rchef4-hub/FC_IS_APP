@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- SAISIE MATCH (ADMINISTRATEUR AVEC API GITHUB) ---
+  // --- SAISIE MATCH & RÉINITIALISATION (ADMIN) ---
   async function renderAdmin() {
     const password = prompt("Veuillez entrer le mot de passe administrateur :");
     if (password !== "508497") {
@@ -271,14 +271,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
           <ul id="goals-list" style="margin-bottom: 15px; padding-left: 20px;"></ul>
 
-          <button id="btn-save-direct" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">
+          <button id="btn-save-direct" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; margin-bottom: 15px;">
             🚀 Publier le match directement sur GitHub
           </button>
+
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+          <button id="btn-reset-all" style="width: 100%; background: #dc3545; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
+            🔄 Remettre à ZÉRO toutes les statistiques & résultats
+          </button>
+
           <p id="status-message" style="text-align:center; font-weight:bold; margin-top:10px;"></p>
         </div>
       `;
 
-      // Tableau qui contient la liste des buts
       let events = [];
 
       document.getElementById('btn-add-goal').addEventListener('click', () => {
@@ -329,6 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!putRes.ok) throw new Error(`Erreur lors de la mise à jour de ${filePath}`);
       }
 
+      // Action : Enregistrer un match
       document.getElementById('btn-save-direct').addEventListener('click', async () => {
         const statusMsg = document.getElementById('status-message');
         statusMsg.style.color = "orange";
@@ -341,17 +348,12 @@ document.addEventListener('DOMContentLoaded', function() {
           const checkedBoxes = document.querySelectorAll('.presence-check:checked');
           const presentNames = Array.from(checkedBoxes).map(cb => cb.value);
 
-          // Calcul précis des buts et passes par nom de joueur
           let butsMap = {};
           let passesMap = {};
 
           events.forEach(e => {
-            if (e.buteur) {
-              butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
-            }
-            if (e.passeur) {
-              passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
-            }
+            if (e.buteur) butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
+            if (e.passeur) passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
           });
 
           const updatedPlayers = players.map(p => {
@@ -361,20 +363,9 @@ document.addEventListener('DOMContentLoaded', function() {
             let currentButs = parseInt(updatedP.buts) || 0;
             let currentPasses = parseInt(updatedP.passes) || 0;
 
-            // Ajout du match si le joueur était présent
-            if (presentNames.includes(p.nom)) {
-              currentMatchs += 1;
-            }
-
-            // Ajout des buts marqués
-            if (butsMap[p.nom]) {
-              currentButs += butsMap[p.nom];
-            }
-
-            // Ajout des passes décisives
-            if (passesMap[p.nom]) {
-              currentPasses += passesMap[p.nom];
-            }
+            if (presentNames.includes(p.nom)) currentMatchs += 1;
+            if (butsMap[p.nom]) currentButs += butsMap[p.nom];
+            if (passesMap[p.nom]) currentPasses += passesMap[p.nom];
 
             updatedP.matchs = currentMatchs;
             updatedP.buts = currentButs;
@@ -384,22 +375,57 @@ document.addEventListener('DOMContentLoaded', function() {
           });
 
           const updatedMatches = [...matches];
-          if (score) {
-            updatedMatches[selectedMatchIdx].resultat = score;
-          }
+          if (score) updatedMatches[selectedMatchIdx].resultat = score;
 
           await updateGitHubFile('players.json', updatedPlayers, 'Update players via app');
           await updateGitHubFile('matchs.json', updatedMatches, 'Update matchs via app');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Match enregistré avec succès ! L'onglet Stats est à jour.";
+          statusMsg.innerText = "✅ Match enregistré avec succès !";
 
           events = [];
 
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
-          statusMsg.innerText = "❌ Erreur d'enregistrement. Vérifiez votre Token GitHub ou le nom du dépôt.";
+          statusMsg.innerText = "❌ Erreur d'enregistrement. Vérifiez votre Token GitHub.";
+        }
+      });
+
+      // Action : Réinitialiser TOUS les compteurs
+      document.getElementById('btn-reset-all').addEventListener('click', async () => {
+        const confirmReset = confirm("⚠️ Êtes-vous sûr de vouloir remettre TOUTES les statistiques et les scores à ZÉRO ?");
+        if (!confirmReset) return;
+
+        const statusMsg = document.getElementById('status-message');
+        statusMsg.style.color = "orange";
+        statusMsg.innerText = "⏳ Réinitialisation complète en cours...";
+
+        try {
+          // Remise à zéro de players.json
+          const resetPlayers = players.map(p => ({
+            ...p,
+            matchs: 0,
+            buts: 0,
+            passes: 0
+          }));
+
+          // Remise à zéro des résultats dans matchs.json
+          const resetMatches = matches.map(m => ({
+            ...m,
+            resultat: ""
+          }));
+
+          await updateGitHubFile('players.json', resetPlayers, 'Reset stats to zero');
+          await updateGitHubFile('matchs.json', resetMatches, 'Reset match scores to empty');
+
+          statusMsg.style.color = "green";
+          statusMsg.innerText = "✅ Réinitialisation réussie ! Les stats et scores sont remis à 0.";
+
+        } catch (err) {
+          console.error(err);
+          statusMsg.style.color = "red";
+          statusMsg.innerText = "❌ Erreur lors de la réinitialisation.";
         }
       });
 
