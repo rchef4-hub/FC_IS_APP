@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
           await updateGitHubFile('matchs.json', updatedMatches, 'Update matchs via app');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Match enregistré avec succès ! Netlify va mettre à jour le site dans quelques secondes.";
+          statusMsg.innerText = "✅ Match enregistré ! Le site GitHub se met à jour instantanément.";
 
           // Réinitialiser la liste d'événements locale
           events = [];
