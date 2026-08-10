@@ -11,7 +11,7 @@
     "heure": "15h00",
     "adversaire": "Olympique",
     "lieu": "Domicile",
-    "resultat": "Victoire 3-1"
+    "resultat": ""
   },
   {
     "date": "19/12/2025",
@@ -25,6 +25,6 @@
     "heure": "15h00",
     "adversaire": "Esnouveaux",
     "lieu": "Extérieur",
-    "resultat": "Défaite 0-2"
+    "resultat": ""
   }
 ]
