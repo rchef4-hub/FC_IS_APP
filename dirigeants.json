@@ -1,5 +1,7 @@
 [
   {"fonction": "Président", "nom": "BOISSELIER Mickaël", "symbole": "👔"},
+  {"fonction": "Vide-président", "nom": "BELOUET Rémi", "symbole": "👔"},
   {"fonction": "Trésorier", "nom": "BRET Guillaume", "symbole": "💰"},
-  {"fonction": "Secrétaire", "nom": "CHEF Romain", "symbole": "📝"}
+  {"fonction": "Secrétaire", "nom": "CHEF Romain", "symbole": "📝"},
+  {"fonction": "Vice-secrétaire", "nom": "THIBONNET Julien", "symbole": "📝"}
 ]
