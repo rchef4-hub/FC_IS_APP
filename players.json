@@ -4,8 +4,8 @@
     "nom": "LOBEROT Jean-Philippe",
     "poste": "Gardien de but",
     "symbole": "🧤",
-    "matchs": 1,
-    "buts": 2,
+    "matchs": 0,
+    "buts": 0,
     "passes": 0
   },
   {
@@ -13,17 +13,17 @@
     "nom": "THIBONNET Julien",
     "poste": "Gardien de but",
     "symbole": "🧤",
-    "matchs": 1,
+    "matchs": 0,
     "buts": 0,
-    "passes": 2
+    "passes": 0
   },
   {
     "numero": 3,
     "nom": "MOREAU Antoine",
     "poste": "Défenseur",
     "symbole": "🛡️",
-    "matchs": 1,
-    "buts": 2,
+    "matchs": 0,
+    "buts": 0,
     "passes": 0
   },
   {
@@ -31,9 +31,9 @@
     "nom": "GIRARD Maxime",
     "poste": "Défenseur",
     "symbole": "🛡️",
-    "matchs": 1,
+    "matchs": 0,
     "buts": 0,
-    "passes": 1
+    "passes": 0
   },
   {
     "numero": 5,
