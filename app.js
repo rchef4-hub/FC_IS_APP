@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
-  // Fonction pour éviter que le navigateur garde les vieilles données en cache
+  // Fonction anti-cache pour forcer le téléchargement des dernières données
   function fetchFresh(url) {
     return fetch(`${url}?t=${Date.now()}`);
   }
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- SAISIE MATCH (ADMIN) ---
+  // --- SAISIE MATCH (ADMINISTRATEUR AVEC API GITHUB) ---
   async function renderAdmin() {
     const password = prompt("Veuillez entrer le mot de passe administrateur :");
     if (password !== "508497") {
@@ -278,18 +278,22 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       `;
 
+      // Tableau qui contient la liste des buts
       let events = [];
 
       document.getElementById('btn-add-goal').addEventListener('click', () => {
-        const buteur = document.getElementById('select-buteur').value;
-        const passeur = document.getElementById('select-passeur').value;
+        const buteurSelect = document.getElementById('select-buteur');
+        const passeurSelect = document.getElementById('select-passeur');
+        
+        const buteur = buteurSelect.value;
+        const passeur = passeurSelect.value;
 
         if (!buteur) {
           alert('Veuillez sélectionner au moins un buteur.');
           return;
         }
 
-        events.push({ buteur, passeur });
+        events.push({ buteur: buteur, passeur: passeur });
         
         const goalsList = document.getElementById('goals-list');
         const li = document.createElement('li');
@@ -298,8 +302,8 @@ document.addEventListener('DOMContentLoaded', function() {
         li.innerHTML = `⚽ <strong>${buteur}</strong> ${passeur ? '(passe : ' + passeur + ')' : ''}`;
         goalsList.appendChild(li);
 
-        document.getElementById('select-buteur').value = '';
-        document.getElementById('select-passeur').value = '';
+        buteurSelect.value = '';
+        passeurSelect.value = '';
       });
 
       async function updateGitHubFile(filePath, newContent, commitMessage) {
@@ -337,6 +341,19 @@ document.addEventListener('DOMContentLoaded', function() {
           const checkedBoxes = document.querySelectorAll('.presence-check:checked');
           const presentNames = Array.from(checkedBoxes).map(cb => cb.value);
 
+          // Calcul précis des buts et passes par nom de joueur
+          let butsMap = {};
+          let passesMap = {};
+
+          events.forEach(e => {
+            if (e.buteur) {
+              butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
+            }
+            if (e.passeur) {
+              passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
+            }
+          });
+
           const updatedPlayers = players.map(p => {
             let updatedP = { ...p };
 
@@ -344,18 +361,20 @@ document.addEventListener('DOMContentLoaded', function() {
             let currentButs = parseInt(updatedP.buts) || 0;
             let currentPasses = parseInt(updatedP.passes) || 0;
 
+            // Ajout du match si le joueur était présent
             if (presentNames.includes(p.nom)) {
               currentMatchs += 1;
             }
 
-            events.forEach(e => {
-              if (e.buteur && e.buteur === p.nom) {
-                currentButs += 1;
-              }
-              if (e.passeur && e.passeur === p.nom) {
-                currentPasses += 1;
-              }
-            });
+            // Ajout des buts marqués
+            if (butsMap[p.nom]) {
+              currentButs += butsMap[p.nom];
+            }
+
+            // Ajout des passes décisives
+            if (passesMap[p.nom]) {
+              currentPasses += passesMap[p.nom];
+            }
 
             updatedP.matchs = currentMatchs;
             updatedP.buts = currentButs;
@@ -373,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
           await updateGitHubFile('matchs.json', updatedMatches, 'Update matchs via app');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Match enregistré avec succès ! Attendez ~30 secondes puis rafraîchissez la page.";
+          statusMsg.innerText = "✅ Match enregistré avec succès ! L'onglet Stats est à jour.";
 
           events = [];
 
@@ -390,7 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- ROUTEUR PRINCIPAL (GÈRE #matches ET #matchs) ---
+  // --- ROUTEUR PRINCIPAL ---
   function router() {
     const hash = location.hash.replace('#','') || 'home';
     
