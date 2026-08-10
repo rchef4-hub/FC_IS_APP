@@ -34,8 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Configuration de ton dépôt (à vérifier)
-    const REPO_OWNER = "TON_PSEUDO_GITHUB"; // <-- REMPLACE PAR TON PSEUDO GITHUB
-    const REPO_NAME = "TON_NOM_DE_DEPOT";   // <-- REMPLACE PAR LE NOM DE TON DÉPÔT (ex: fcis-app)
+    const REPO_OWNER = "rchef4-hub"; // <-- REMPLACE PAR TON PSEUDO GITHUB
+    const REPO_NAME = "FC_IS_APP";   // <-- REMPLACE PAR LE NOM DE TON DÉPÔT (ex: fcis-app)
 
     root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="text-align: center;">Chargement des données...</p>`;
 
