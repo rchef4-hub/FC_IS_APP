@@ -7,9 +7,51 @@ document.addEventListener('DOMContentLoaded', function() {
       <h1>Bienvenue au F.C. IS</h1>
       <div style="text-align:center; margin-top:30px;">
         <p>Retrouvez tous les résultats, l'effectif et les dernières infos du club.</p>
-        <p><em>Saison 2025-2026</em></p>
+        <p><em>Saison 2026-2027</em></p>
       </div>
     `;
+  }
+
+  // --- LISTE DES MATCHS ---
+  async function renderMatches() {
+    root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement des matchs...</p>`;
+
+    try {
+      const response = await fetch('matchs.json');
+      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+
+      const matches = await response.json();
+
+      const matchesHTML = matches.map(m => {
+        const isDomicile = m.lieu.toLowerCase().includes('domicile');
+        const badgeColor = isDomicile ? '#28a745' : '#17a2b8';
+        const resultatDisplay = m.resultat ? `<strong>${m.resultat}</strong>` : '<em>À venir</em>';
+
+        return `
+          <li style="border-left-color: ${badgeColor}; padding: 12px; margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: var(--shadow);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+              <small style="color: #666; font-weight: bold;">📅 ${m.date}</small>
+              <span style="background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">${m.lieu}</span>
+            </div>
+            <div style="font-size: 1.1em; margin-bottom: 5px;">
+              <strong>vs ${m.adversaire}</strong>
+            </div>
+            <div style="color: var(--primary-color);">
+              Score : ${resultatDisplay}
+            </div>
+          </li>
+        `;
+      }).join('');
+
+      root.innerHTML = `
+        <h2>Calendrier & Résultats</h2>
+        <ul style="list-style: none; padding: 0;">${matchesHTML}</ul>
+      `;
+
+    } catch (error) {
+      console.error("Erreur de chargement des matchs :", error);
+      root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Impossible de charger les matchs.</p>`;
+    }
   }
 
   // --- STATISTIQUES ---
@@ -151,7 +193,6 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    // Demande du token GitHub (enregistré dans le navigateur)
     let githubToken = localStorage.getItem('fcis_github_token');
     if (!githubToken) {
       githubToken = prompt("Entrez votre Token GitHub (ghp_...) :");
@@ -164,7 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Configuration du dépôt
     const REPO_OWNER = "rchef4-hub";
     const REPO_NAME = "FC_IS_APP";
 
@@ -189,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       let playerCheckboxList = players.map(p => `
         <label style="display:block; margin: 5px 0; font-size: 0.95em;">
-          <input type="checkbox" class="presence-check" value="${p.nom}" checked>
+          <input type="checkbox" class="presence-check" value="${p.nom}">
           #${p.numero} ${p.nom} (${p.poste})
         </label>
       `).join('');
@@ -257,7 +297,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('select-passeur').value = '';
       });
 
-      // --- FONCTION DE MISE À JOUR DIRECTE VIA L'API GITHUB ---
       async function updateGitHubFile(filePath, newContent, commitMessage) {
         const getUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
         const getRes = await fetch(getUrl, {
@@ -329,9 +368,8 @@ document.addEventListener('DOMContentLoaded', function() {
           await updateGitHubFile('matchs.json', updatedMatches, 'Update matchs via app');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Match enregistré ! Le site GitHub se met à jour instantanément.";
+          statusMsg.innerText = "✅ Match enregistré avec succès !";
 
-          // Réinitialiser la liste d'événements locale
           events = [];
 
         } catch (err) {
@@ -357,6 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     if(hash === 'home') renderHome();
+    else if(hash === 'matches') renderMatches();
     else if(hash === 'stats') renderStats();
     else if(hash === 'players') renderPlayers(); 
     else if(hash === 'announcements') renderAnnouncements();
