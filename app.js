@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
+  // --- PAGE D'ACCUEIL ---
   function renderHome() {
     root.innerHTML = `
       <h1>Bienvenue au F.C. IS</h1>
@@ -11,15 +12,13 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-  // --- FONCTION ASYNCHRONE POUR LE CHARGEMENT DES MATCHS VIA JSON ---
+  // --- CALENDRIER DES MATCHS ---
   async function renderMatches() {
     root.innerHTML = `<h2>Calendrier des matchs</h2><p style="text-align: center;">Chargement du calendrier...</p>`;
 
     try {
       const response = await fetch('matchs.json'); 
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
 
       const matchs = await response.json();
       
@@ -30,8 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (match.resultat) {
           detailsHTML = `<p class="result">Résultat : <strong>${match.resultat}</strong></p>`;
           statusClass = match.resultat.toLowerCase().includes('victoire') ? 'win' : 'loss';
-        } else {
-          detailsHTML = ``; 
         }
 
         return `
@@ -51,122 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- FONCTION ASYNCHRONE POUR LE CHARGEMENT DE L'EFFECTIF COMPLET ---
-  async function renderPlayers() {
-    root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
-
-    try {
-      // 1. Récupération SIMULTANÉE des trois fichiers JSON
-      const [playersRes, dirigeantsRes, arbitresRes] = await Promise.all([
-        fetch('players.json'),
-        fetch('dirigeants.json'),
-        fetch('arbitres.json')
-      ]);
-
-      if (!playersRes.ok || !dirigeantsRes.ok || !arbitresRes.ok) {
-        throw new Error('Erreur de chargement d\'un ou plusieurs fichiers de l\'effectif.');
-      }
-
-      // 2. Conversion des réponses en objets/tableaux JavaScript
-      const players = await playersRes.json();
-      const dirigeants = await dirigeantsRes.json();
-      const arbitres = await arbitresRes.json();
-      
-      let contentHTML = '<h2>Effectif du Club</h2>';
-
-      // --- Section 1: Joueurs ---
-      const playerListHTML = players.map(player => `
-        <li>
-          ${player.symbole} <strong>#${player.numero} ${player.nom}</strong>
-          <br><small>${player.poste}</small>
-        </li>
-      `).join('');
-      // NOTE: J'ajoute la classe 'collapsed' par défaut ici pour que seul 'Joueurs' soit ouvert
-      contentHTML += `<h3 class="accordion-header active">⚽ Joueurs</h3><ul>${playerListHTML}</ul>`;
-
-      // --- Section 2: Dirigeants ---
-      const dirigeantsListHTML = dirigeants.map(dirigeant => `
-        <li>
-          ${dirigeant.symbole} <strong>${dirigeant.nom}</strong>
-          <br><small>${dirigeant.fonction}</small>
-        </li>
-      `).join('');
-      contentHTML += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${dirigeantsListHTML}</ul>`;
-
-      // --- Section 3: Arbitres ---
-      const arbitresListHTML = arbitres.map(arbitre => `
-        <li>
-          ${arbitre.symbole} <strong>${arbitre.nom}</strong>
-          <br><small>Arbitre ${arbitre.categorie}</small>
-        </li>
-      `).join('');
-      contentHTML += `<h3 class="accordion-header">📣 Arbitres</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
-      
-      // 4. Affichage du contenu
-      root.innerHTML = contentHTML;
-      
-      // 5. NOUVEAU : AJOUT DE LA LOGIQUE ACCORDÉON
-      document.querySelectorAll('#root h3').forEach(header => {
-          header.addEventListener('click', function() {
-              const list = this.nextElementSibling; // Récupère le <ul> juste après le <h3>
-              
-              if (list && list.tagName === 'UL') {
-                  // Toggle les classes pour l'animation et le changement de flèche
-                  list.classList.toggle('collapsed'); 
-                  this.classList.toggle('active');
-              }
-          });
-      });
-      
-    } catch (error) {
-      console.error("Erreur de chargement de l'effectif :", error);
-      root.innerHTML = `<h2>Effectif</h2><p style="color: red; text-align: center;">Impossible de charger la liste complète.</p>`;
-    }
-  }
-
-  // --- FONCTION ASYNCHRONE POUR LE CHARGEMENT DES ANNONCES VIA JSON ---
-  async function renderAnnouncements() {
-    root.innerHTML = `<h2>Annonces Club</h2><p style="text-align: center;">Chargement des annonces...</p>`;
-
-    try {
-      const response = await fetch('annonces.json');
-
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status}`);
-      }
-
-      const annonces = await response.json();
-      
-      const annoncesListHTML = annonces.map(annonce => `
-        <li style="border-left-color: ${annonce.couleur_bordure || 'var(--primary-color)'};">
-          ${annonce.symbole} <strong>${annonce.titre}</strong>
-          <br>${annonce.details}
-        </li>
-      `).join('');
-      
-      root.innerHTML = `<h2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
-      
-    } catch (error) {
-      console.error("Erreur de chargement des annonces :", error);
-      root.innerHTML = `<h2>Annonces Club</h2><p style="color: red; text-align: center;">Impossible de charger les annonces. Vérifiez le fichier annonces.json.</p>`;
-    }
-  }
-
-  function router() {
-    const hash = location.hash.replace('#','') || 'home';
-    
-    document.querySelectorAll('nav a').forEach(a => {
-        a.classList.remove('active');
-        if(a.getAttribute('href') === '#' + hash) a.classList.add('active');
-    });
-
-    if(hash === 'home') renderHome();
-    else if(hash === 'matches') renderMatches();
-    else if(hash === 'players') renderPlayers(); 
-    else if(hash === 'announcements') renderAnnouncements();
-    else renderHome();
-  }
-// --- FONCTION ASYNCHRONE POUR LE CHARGEMENT DES STATISTIQUES ---
+  // --- STATISTIQUES ---
   async function renderStats() {
     root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
 
@@ -176,7 +58,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const players = await response.json();
 
-      // Tri des joueurs
       const topScorers = [...players].sort((a, b) => (b.buts || 0) - (a.buts || 0));
       const topPassers = [...players].sort((a, b) => (b.passes || 0) - (a.passes || 0));
 
@@ -207,40 +88,108 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Impossible de charger les statistiques.</p>`;
     }
   }
-  window.addEventListener('hashchange', router);
-  window.addEventListener('load', router);
-});
-function router() {
-    const hash = location.hash.replace('#','') || 'home';
-    
-    document.querySelectorAll('nav a').forEach(a => {
-        a.classList.remove('active');
-        if(a.getAttribute('href') === '#' + hash) a.classList.add('active');
-    });
 
-    if(hash === 'home') renderHome();
-    else if(hash === 'matches') renderMatches();
-    else if(hash === 'stats') renderStats();
-    else if(hash === 'players') renderPlayers(); 
-    else if(hash === 'announcements') renderAnnouncements();
-    else if(hash === 'admin') renderAdmin(); // NOUVELLE LIGNE
-    else renderHome();
+  // --- EFFECTIF COMPLET ---
+  async function renderPlayers() {
+    root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
+
+    try {
+      const [playersRes, dirigeantsRes, arbitresRes] = await Promise.all([
+        fetch('players.json'),
+        fetch('dirigeants.json'),
+        fetch('arbitres.json')
+      ]);
+
+      if (!playersRes.ok || !dirigeantsRes.ok || !arbitresRes.ok) {
+        throw new Error('Erreur de chargement d\'un ou plusieurs fichiers de l\'effectif.');
+      }
+
+      const players = await playersRes.json();
+      const dirigeants = await dirigeantsRes.json();
+      const arbitres = await arbitresRes.json();
+      
+      let contentHTML = '<h2>Effectif du Club</h2>';
+
+      const playerListHTML = players.map(player => `
+        <li>
+          ${player.symbole} <strong>#${player.numero} ${player.nom}</strong>
+          <br><small>${player.poste}</small>
+        </li>
+      `).join('');
+      contentHTML += `<h3 class="accordion-header active">⚽ Joueurs</h3><ul>${playerListHTML}</ul>`;
+
+      const dirigeantsListHTML = dirigeants.map(dirigeant => `
+        <li>
+          ${dirigeant.symbole} <strong>${dirigeant.nom}</strong>
+          <br><small>${dirigeant.fonction}</small>
+        </li>
+      `).join('');
+      contentHTML += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${dirigeantsListHTML}</ul>`;
+
+      const arbitresListHTML = arbitres.map(arbitre => `
+        <li>
+          ${arbitre.symbole} <strong>${arbitre.nom}</strong>
+          <br><small>Arbitre ${arbitre.categorie}</small>
+        </li>
+      `).join('');
+      contentHTML += `<h3 class="accordion-header">📣 Arbitres</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
+      
+      root.innerHTML = contentHTML;
+      
+      // Logique Accordéon
+      document.querySelectorAll('#root h3').forEach(header => {
+        header.addEventListener('click', function() {
+          const list = this.nextElementSibling;
+          if (list && list.tagName === 'UL') {
+            list.classList.toggle('collapsed'); 
+            this.classList.toggle('active');
+          }
+        });
+      });
+      
+    } catch (error) {
+      console.error("Erreur de chargement de l'effectif :", error);
+      root.innerHTML = `<h2>Effectif</h2><p style="color: red; text-align: center;">Impossible de charger la liste complète.</p>`;
+    }
   }
-// --- FONCTION POUR LA SAISIE RAPIDE D'UN MATCH ---
-async function renderAdmin() {
-    // Demande du mot de passe
+
+  // --- ANNONCES ---
+  async function renderAnnouncements() {
+    root.innerHTML = `<h2>Annonces Club</h2><p style="text-align: center;">Chargement des annonces...</p>`;
+
+    try {
+      const response = await fetch('annonces.json');
+      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+
+      const annonces = await response.json();
+      
+      const annoncesListHTML = annonces.map(annonce => `
+        <li style="border-left-color: ${annonce.couleur_bordure || 'var(--primary-color)'};">
+          ${annonce.symbole} <strong>${annonce.titre}</strong>
+          <br>${annonce.details}
+        </li>
+      `).join('');
+      
+      root.innerHTML = `<h2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
+      
+    } catch (error) {
+      console.error("Erreur de chargement des annonces :", error);
+      root.innerHTML = `<h2>Annonces Club</h2><p style="color: red; text-align: center;">Impossible de charger les annonces.</p>`;
+    }
+  }
+
+  // --- SAISIE MATCH (ADMINISTRATEUR) ---
+  async function renderAdmin() {
     const password = prompt("Veuillez entrer le mot de passe administrateur :");
     
-    if (password !== "FCIS2026") { // <-- Change "FCIS2026" par le mot de passe de ton choix
+    if (password !== "FCIS2026") {
       alert("Mot de passe incorrect !");
-      window.location.hash = "home"; // Redirige vers l'accueil
+      window.location.hash = "home";
       return;
     }
 
-    // Si le mot de passe est bon, le reste du formulaire s'affiche normalement...
     root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="text-align: center;">Chargement du formulaire...</p>`;
-    
-    // ... (suite du code renderAdmin)
+
     try {
       const [playersRes, matchesRes] = await Promise.all([
         fetch('players.json'),
@@ -258,7 +207,7 @@ async function renderAdmin() {
         `<option value="${p.nom}">${p.nom}</option>`
       ).join('');
 
-      let playerCheckboxList = players.map((p, idx) => `
+      let playerCheckboxList = players.map(p => `
         <label style="display:block; margin: 5px 0; font-size: 0.95em;">
           <input type="checkbox" class="presence-check" value="${p.nom}" checked>
           #${p.numero} ${p.nom} (${p.poste})
@@ -276,7 +225,7 @@ async function renderAdmin() {
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Score final :</label>
           <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <input type="text" id="match-score" placeholder="Ex: Victoire 3-1 ou Défaite 0-2" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+            <input type="text" id="match-score" placeholder="Ex: Victoire 3-1 ou Défaite 0-2" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
           </div>
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">3. Joueurs Présents :</label>
@@ -314,7 +263,6 @@ async function renderAdmin() {
         </div>
       `;
 
-      // Logique interactive du formulaire
       let events = [];
 
       document.getElementById('btn-add-goal').addEventListener('click', () => {
@@ -332,7 +280,6 @@ async function renderAdmin() {
         const li = document.createElement('li');
         li.style.borderLeft = "none";
         li.style.padding = "4px";
-        li.style.marginBottom = "2px";
         li.innerHTML = `⚽ <strong>${buteur}</strong> ${passeur ? '(passe : ' + passeur + ')' : ''}`;
         goalsList.appendChild(li);
 
@@ -347,7 +294,6 @@ async function renderAdmin() {
         const checkedBoxes = document.querySelectorAll('.presence-check:checked');
         const presentNames = Array.from(checkedBoxes).map(cb => cb.value);
 
-        // 1. Mise à jour de la liste des joueurs (matchs, buts, passes)
         const updatedPlayers = players.map(p => {
           let updatedP = { ...p };
           if (presentNames.includes(p.nom)) {
@@ -360,13 +306,11 @@ async function renderAdmin() {
           return updatedP;
         });
 
-        // 2. Mise à jour du calendrier des matchs
         const updatedMatches = [...matches];
         if (score) {
           updatedMatches[selectedMatchIdx].resultat = score;
         }
 
-        // Affichage du résultat dans les zones de texte
         document.getElementById('json-players-output').value = JSON.stringify(updatedPlayers, null, 2);
         document.getElementById('json-matches-output').value = JSON.stringify(updatedMatches, null, 2);
         document.getElementById('output-container').style.display = 'block';
@@ -378,3 +322,25 @@ async function renderAdmin() {
       root.innerHTML = `<h2>Saisie</h2><p style="color:red; text-align:center;">Erreur de chargement des données.</p>`;
     }
   }
+
+  // --- ROUTEUR PRINCIPAL ---
+  function router() {
+    const hash = location.hash.replace('#','') || 'home';
+    
+    document.querySelectorAll('nav a').forEach(a => {
+        a.classList.remove('active');
+        if(a.getAttribute('href') === '#' + hash) a.classList.add('active');
+    });
+
+    if(hash === 'home') renderHome();
+    else if(hash === 'matches') renderMatches();
+    else if(hash === 'stats') renderStats();
+    else if(hash === 'players') renderPlayers(); 
+    else if(hash === 'announcements') renderAnnouncements();
+    else if(hash === 'admin') renderAdmin();
+    else renderHome();
+  }
+
+  window.addEventListener('hashchange', router);
+  window.addEventListener('load', router);
+});
