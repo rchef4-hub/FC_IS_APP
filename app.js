@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // --- SAISIE MATCH (ADMINISTRATEUR AVEC API GITHUB) ---
   async function renderAdmin() {
     const password = prompt("Veuillez entrer le mot de passe administrateur :");
-    if (password !== "FCIS2026") {
+    if (password !== "508497") {
       alert("Mot de passe incorrect !");
       window.location.hash = "home";
       return;
