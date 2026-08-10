@@ -1,10 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
+  // Fonction anti-cache pour forcer le téléchargement des dernières données
   function fetchFresh(url) {
     return fetch(`${url}?t=${Date.now()}`);
   }
 
+  // --- PAGE D'ACCUEIL ---
   function renderHome() {
     root.innerHTML = `
       <h1>Bienvenue au F.C. IS</h1>
@@ -15,11 +17,14 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
+  // --- LISTE DES MATCHS ---
   async function renderMatches() {
     root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement des matchs...</p>`;
+
     try {
       const response = await fetchFresh('matchs.json');
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+
       const matches = await response.json();
 
       const matchesHTML = matches.map(m => {
@@ -43,18 +48,25 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
       }).join('');
 
-      root.innerHTML = `<h2>Calendrier & Résultats</h2><ul style="padding: 0;">${matchesHTML}</ul>`;
+      root.innerHTML = `
+        <h2>Calendrier & Résultats</h2>
+        <ul style="padding: 0;">${matchesHTML}</ul>
+      `;
+
     } catch (error) {
-      console.error("Erreur matchs:", error);
+      console.error("Erreur de chargement des matchs :", error);
       root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Impossible de charger les matchs.</p>`;
     }
   }
 
+  // --- STATISTIQUES ---
   async function renderStats() {
     root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
+
     try {
       const response = await fetchFresh('players.json');
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+
       const players = await response.json();
 
       const topScorers = [...players].sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
@@ -81,12 +93,14 @@ document.addEventListener('DOMContentLoaded', function() {
         <h3 class="accordion-header active">👟 Meilleurs Passeurs</h3>
         <ul>${passersHTML}</ul>
       `;
+
     } catch (error) {
-      console.error("Erreur stats:", error);
+      console.error("Erreur de chargement des stats :", error);
       root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Erreur dans le fichier players.json.</p>`;
     }
   }
 
+  // --- EFFECTIF COMPLET ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
 
@@ -154,11 +168,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // --- ANNONCES ---
   async function renderAnnouncements() {
     root.innerHTML = `<h2>Annonces Club</h2><p style="text-align: center;">Chargement des annonces...</p>`;
+
     try {
       const response = await fetchFresh('annonces.json');
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+
       const annonces = await response.json();
       
       const annoncesListHTML = annonces.map(annonce => `
@@ -169,12 +186,14 @@ document.addEventListener('DOMContentLoaded', function() {
       `).join('');
       
       root.innerHTML = `<h2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
+      
     } catch (error) {
-      console.error("Erreur annonces:", error);
+      console.error("Erreur de chargement des annonces :", error);
       root.innerHTML = `<h2>Annonces Club</h2><p style="color: red; text-align: center;">Impossible de charger les annonces.</p>`;
     }
   }
 
+  // --- SAISIE MATCH & RÉINITIALISATION (ADMIN) ---
   async function renderAdmin() {
     const password = prompt("Veuillez entrer le mot de passe administrateur :");
     if (password !== "508497") {
@@ -209,6 +228,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const players = await playersRes.json();
       const matches = await matchesRes.json();
 
+      let goalEvents = [];
+
       let matchOptions = matches.map((m, idx) => 
         `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
       ).join('');
@@ -220,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let playerCheckboxList = players.map(p => `
         <label style="display:block; margin: 5px 0; font-size: 0.95em;">
           <input type="checkbox" class="presence-check" value="${p.nom}">
-          #${p.numero} ${p.nom} (${p.poste})
+          #${p.numero || ''} ${p.nom} (${p.poste || ''})
         </label>
       `).join('');
 
@@ -250,18 +271,18 @@ document.addEventListener('DOMContentLoaded', function() {
               <option value="">-- Passeur --</option>
               ${playerOptions}
             </select>
-            <button id="btn-add-goal" style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
+            <button id="btn-add-goal" type="button" style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
           </div>
 
-          <ul id="goals-list" style="margin-bottom: 15px; padding-left: 20px;"></ul>
+          <div id="goals-list" style="margin-bottom: 15px;"></div>
 
-          <button id="btn-save-direct" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; margin-bottom: 15px;">
+          <button id="btn-save-direct" type="button" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; margin-bottom: 15px;">
             🚀 Publier le match sur GitHub
           </button>
 
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
-          <button id="btn-reset-all" style="width: 100%; background: #dc3545; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
+          <button id="btn-reset-all" type="button" style="width: 100%; background: #dc3545; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
             🔄 Remettre à ZÉRO les statistiques & résultats
           </button>
 
@@ -269,7 +290,27 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       `;
 
-      let events = [];
+      function renderGoalsUI() {
+        const goalsContainer = document.getElementById('goals-list');
+        if (goalEvents.length === 0) {
+          goalsContainer.innerHTML = `<small style="color: #888;">Aucun but ajouté pour l'instant.</small>`;
+          return;
+        }
+
+        goalsContainer.innerHTML = goalEvents.map((e, index) => `
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid var(--accent-color);">
+            <span>⚽ <strong>${e.buteur}</strong> ${e.passeur ? '<small style="color:#555;">(passe : ' + e.passeur + ')</small>' : ''}</span>
+            <button type="button" onclick="removeGoal(${index})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">❌</button>
+          </div>
+        `).join('');
+      }
+
+      window.removeGoal = function(index) {
+        goalEvents.splice(index, 1);
+        renderGoalsUI();
+      };
+
+      renderGoalsUI();
 
       document.getElementById('btn-add-goal').addEventListener('click', () => {
         const buteurSelect = document.getElementById('select-buteur');
@@ -282,13 +323,8 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
 
-        events.push({ buteur: buteur, passeur: passeur });
-        const goalsList = document.getElementById('goals-list');
-        const li = document.createElement('li');
-        li.style.borderLeft = "none";
-        li.style.padding = "4px";
-        li.innerHTML = `⚽ <strong>${buteur}</strong> ${passeur ? '(passe : ' + passeur + ')' : ''}`;
-        goalsList.appendChild(li);
+        goalEvents.push({ buteur: buteur, passeur: passeur });
+        renderGoalsUI();
 
         buteurSelect.value = '';
         passeurSelect.value = '';
@@ -296,12 +332,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
       async function updateGitHubFile(filePath, newContent, commitMessage) {
         const getUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
-        const getRes = await fetch(getUrl, { headers: { 'Authorization': `token ${githubToken}` } });
+        const getRes = await fetch(getUrl, { 
+          headers: { 'Authorization': `token ${githubToken}` } 
+        });
+
+        if (!getRes.ok) {
+          throw new Error(`Impossible de lire ${filePath}. Vérifiez les permissions de votre Token GitHub.`);
+        }
+
         const fileData = await getRes.json();
 
         const putRes = await fetch(getUrl, {
           method: 'PUT',
-          headers: { 'Authorization': `token ${githubToken}`, 'Content-Type': 'application/json' },
+          headers: { 
+            'Authorization': `token ${githubToken}`, 
+            'Content-Type': 'application/json' 
+          },
           body: JSON.stringify({
             message: commitMessage,
             content: btoa(unescape(encodeURIComponent(JSON.stringify(newContent, null, 2)))),
@@ -309,13 +355,15 @@ document.addEventListener('DOMContentLoaded', function() {
           })
         });
 
-        if (!putRes.ok) throw new Error(`Erreur lors de la mise à jour de ${filePath}`);
+        if (!putRes.ok) {
+          throw new Error(`Erreur de réécriture de ${filePath}`);
+        }
       }
 
       document.getElementById('btn-save-direct').addEventListener('click', async () => {
         const statusMsg = document.getElementById('status-message');
         statusMsg.style.color = "orange";
-        statusMsg.innerText = "⏳ Envoi des données...";
+        statusMsg.innerText = "⏳ Envoi des données sur GitHub...";
 
         try {
           const selectedMatchIdx = document.getElementById('select-match').value;
@@ -324,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const presentNames = Array.from(checkedBoxes).map(cb => cb.value);
 
           let butsMap = {}, passesMap = {};
-          events.forEach(e => {
+          goalEvents.forEach(e => {
             if (e.buteur) butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
             if (e.passeur) passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
           });
@@ -353,11 +401,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
           statusMsg.style.color = "green";
           statusMsg.innerText = "✅ Match enregistré avec succès !";
-          events = [];
+          goalEvents = [];
+          renderGoalsUI();
+
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
-          statusMsg.innerText = "❌ Erreur d'enregistrement.";
+          statusMsg.innerText = "❌ Erreur d'enregistrement. Vérifiez votre Token GitHub.";
         }
       });
 
@@ -390,8 +440,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // --- ROUTEUR PRINCIPAL ---
   function router() {
     const hash = location.hash.replace('#','') || 'home';
+    
     document.querySelectorAll('nav a').forEach(a => {
         a.classList.remove('active');
         const href = a.getAttribute('href');
