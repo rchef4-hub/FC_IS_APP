@@ -1,0 +1,20 @@
+[
+  {
+    "titre": "Entraînement annulé",
+    "details": "Demain pour cause de pluie.",
+    "symbole": "🚨",
+    "couleur_bordure": "red"
+  },
+  {
+    "titre": "Entraînement Vendredi",
+    "details": "Rendez-vous à 18h30 au terrain à IS.",
+    "symbole": "📅",
+    "couleur_bordure": "blue"
+  },
+  {
+    "titre": "Entraînement Jeudi",
+    "details": "Gymnase de Montigny, 19h30.",
+    "symbole": "📅",
+    "couleur_bordure": "blue"
+  }
+]

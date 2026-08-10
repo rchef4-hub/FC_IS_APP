@@ -1,0 +1,174 @@
+:root {
+  /* Couleurs extraites du logo FC IS approximativement */
+  --primary-color: #6a0f49; /* Le bordeaux/pourpre du blason */
+  --accent-color: #d4af37;  /* Le doré du haut du blason */
+  --bg-color: #f4f4f9;      /* Gris très clair pour le fond */
+  --text-color: #333;
+  --white: #ffffff;
+  --shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  padding-bottom: 70px; /* Espace pour le menu du bas */
+}
+
+/* En-tête avec Logo */
+header {
+  background-color: var(--primary-color);
+  text-align: center;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header img {
+  height: 100px; /* Taille contrôlée */
+  width: auto;
+  display: block;
+  margin: 0 auto;
+  border: 2px solid var(--accent-color);
+  border-radius: 2px; /* Bords légèrement arrondis */
+  background: white;
+}
+
+/* Conteneur principal */
+#root {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+h1, h2 {
+  color: var(--primary-color);
+  text-align: center;
+}
+
+/* Style des Cartes (Matchs, Joueurs, Annonces) */
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background: var(--white);
+  margin-bottom: 15px;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  border-left: 5px solid var(--accent-color);
+  font-size: 1.1em;
+}
+
+/* Navigation type "App Mobile" en bas */
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: var(--white);
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  border-top: 3px solid var(--primary-color);
+}
+
+nav a {
+  text-decoration: none;
+  color: #777;
+  font-size: 0.9em;
+  font-weight: bold;
+  text-align: center;
+  flex: 1;
+  padding: 5px;
+}
+
+nav a.active {
+  color: var(--primary-color);
+}
+
+/* Styles pour les matchs */
+li.win {
+  border-left-color: #28a745; /* Vert pour victoire */
+}
+
+li.loss {
+  border-left-color: #dc3545; /* Rouge pour défaite */
+}
+
+li.upcoming {
+  border-left-color: var(--accent-color); /* Doré pour à venir */
+}
+
+.result {
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: #555;
+  font-weight: bold;
+}
+
+/* --- Styles pour les listes d'effectif --- */
+#root h3 {
+  /* Style les titres de sous-catégories (Joueurs, Dirigeants, Arbitres) */
+  background-color: var(--primary-color);
+  color: var(--white);
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-top: 25px;
+  margin-bottom: 5px;
+  cursor: pointer; /* Indique que c'est cliquable si vous implémentez l'accordéon */
+}
+
+/* Optionnel : Séparer les sections pour plus de clarté */
+#root ul {
+    margin-bottom: 30px; 
+}
+
+/* --- ACCORDÉON (SECTIONS RÉTRACTABLES) --- */
+
+#root h3 {
+  /* Ajout d'une flèche et rend le titre interactif */
+  position: relative;
+  cursor: pointer;
+  /* On pourrait masquer la flèche par défaut pour l'ajouter ensuite, mais on va la mettre visible */
+}
+
+/* Style de la flèche (indicateur d'état) */
+#root h3::after {
+  content: '▼'; /* Flèche vers le bas (état fermé) */
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.3s ease;
+}
+
+/* Flèche vers le haut (état ouvert) */
+#root h3.active::after {
+  content: '▲'; 
+}
+
+/* La liste (contenu) par défaut est ouverte, mais on prépare la transition */
+#root ul {
+  /* Ces deux lignes sont cruciales pour l'animation de masquage */
+  max-height: 1000px; /* Valeur très grande pour l'état "ouvert" */
+  overflow: hidden;
+  transition: max-height 0.4s ease-in-out;
+}
+
+/* Classe CSS qui sera ajoutée/retirée par JavaScript pour masquer/fermer */
+#root ul.collapsed {
+  max-height: 0;
+  margin-bottom: 0; /* Supprime l'espace en bas de la liste masquée */
+}

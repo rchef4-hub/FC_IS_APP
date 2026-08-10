@@ -1,0 +1,26 @@
+[
+  {
+    "numero": 11,
+    "nom": "BRET Guillaume",
+    "poste": "Attaquant",
+    "symbole": "⚽"
+  },
+  {
+    "numero": 4,
+    "nom": "CHEF Sébastien",
+    "poste": "Défenseur",
+    "symbole": "🛡️"
+  },
+  {
+    "numero": 9,
+    "nom": "BOISSELIER Michael",
+    "poste": "Attaquant",
+    "symbole": "⚽"
+  },
+  {
+    "numero": 9,
+    "nom": "BOISSELIER Dorian",
+    "poste": "Attaquant",
+    "symbole": "👟"
+  }
+]
