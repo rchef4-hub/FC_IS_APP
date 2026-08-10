@@ -18,14 +18,16 @@ body {
   padding: 0;
   background-color: var(--bg-color);
   color: var(--text-color);
-  padding-bottom: 70px; /* Espace pour le menu du bas */
+  padding-bottom: 110px; /* Augmenté pour laisser de la place à la barre du bas */
+  overflow-y: auto; /* Permet le défilement vertical complet */
+  -webkit-overflow-scrolling: touch; /* Défilement fluide sur iOS */
 }
 
 /* En-tête avec Logo */
 header {
   background-color: var(--primary-color);
   text-align: center;
-  padding: 20px;
+  padding: 15px;
   box-shadow: var(--shadow);
   position: sticky;
   top: 0;
@@ -33,20 +35,22 @@ header {
 }
 
 header img {
-  height: 100px; /* Taille contrôlée */
+  max-height: 80px; /* Redimensionnement propre du logo */
   width: auto;
   display: block;
   margin: 0 auto;
   border: 2px solid var(--accent-color);
-  border-radius: 2px; /* Bords légèrement arrondis */
+  border-radius: 4px; /* Bords légèrement arrondis */
   background: white;
 }
 
 /* Conteneur principal */
 #root {
   padding: 20px;
+  padding-bottom: 120px; /* Marge de sécurité en bas pour les longues listes */
   max-width: 600px;
   margin: 0 auto;
+  min-height: calc(100vh - 150px);
 }
 
 h1, h2 {
@@ -82,6 +86,7 @@ nav {
   padding: 10px 0;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
   border-top: 3px solid var(--primary-color);
+  z-index: 1000;
 }
 
 nav a {
@@ -120,29 +125,21 @@ li.upcoming {
 
 /* --- Styles pour les listes d'effectif --- */
 #root h3 {
-  /* Style les titres de sous-catégories (Joueurs, Dirigeants, Arbitres) */
   background-color: var(--primary-color);
   color: var(--white);
   padding: 10px 15px;
   border-radius: 8px;
   margin-top: 25px;
   margin-bottom: 5px;
-  cursor: pointer; /* Indique que c'est cliquable si vous implémentez l'accordéon */
+  position: relative;
+  cursor: pointer;
 }
 
-/* Optionnel : Séparer les sections pour plus de clarté */
 #root ul {
-    margin-bottom: 30px; 
+  margin-bottom: 30px; 
 }
 
 /* --- ACCORDÉON (SECTIONS RÉTRACTABLES) --- */
-
-#root h3 {
-  /* Ajout d'une flèche et rend le titre interactif */
-  position: relative;
-  cursor: pointer;
-  /* On pourrait masquer la flèche par défaut pour l'ajouter ensuite, mais on va la mettre visible */
-}
 
 /* Style de la flèche (indicateur d'état) */
 #root h3::after {
@@ -159,16 +156,15 @@ li.upcoming {
   content: '▲'; 
 }
 
-/* La liste (contenu) par défaut est ouverte, mais on prépare la transition */
+/* La liste (contenu) par défaut est ouverte */
 #root ul {
-  /* Ces deux lignes sont cruciales pour l'animation de masquage */
-  max-height: 1000px; /* Valeur très grande pour l'état "ouvert" */
+  max-height: 2000px; /* Augmenté pour les très longues listes */
   overflow: hidden;
   transition: max-height 0.4s ease-in-out;
 }
 
-/* Classe CSS qui sera ajoutée/retirée par JavaScript pour masquer/fermer */
+/* Classe CSS masquant les éléments */
 #root ul.collapsed {
   max-height: 0;
-  margin-bottom: 0; /* Supprime l'espace en bas de la liste masquée */
+  margin-bottom: 0;
 }
