@@ -5,7 +5,7 @@
     "poste": "Gardien de but",
     "symbole": "🧤",
     "matchs": 1,
-    "buts": 0,
+    "buts": 2,
     "passes": 0
   },
   {
@@ -15,7 +15,7 @@
     "symbole": "🧤",
     "matchs": 1,
     "buts": 0,
-    "passes": 0
+    "passes": 2
   },
   {
     "numero": 3,
@@ -107,7 +107,7 @@
     "buts": 0,
     "passes": 0
   },
-   {
+  {
     "numero": 12,
     "nom": "QUENTIN Mathieu",
     "poste": "Attaquant",
