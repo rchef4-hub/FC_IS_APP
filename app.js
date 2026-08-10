@@ -1,12 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
-  // Fonction anti-cache pour forcer le téléchargement des dernières données
   function fetchFresh(url) {
     return fetch(`${url}?t=${Date.now()}`);
   }
 
-  // --- PAGE D'ACCUEIL ---
   function renderHome() {
     root.innerHTML = `
       <h1>Bienvenue au F.C. IS</h1>
@@ -17,14 +15,11 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-  // --- LISTE DES MATCHS ---
   async function renderMatches() {
     root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement des matchs...</p>`;
-
     try {
       const response = await fetchFresh('matchs.json');
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
-
       const matches = await response.json();
 
       const matchesHTML = matches.map(m => {
@@ -48,25 +43,18 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
       }).join('');
 
-      root.innerHTML = `
-        <h2>Calendrier & Résultats</h2>
-        <ul style="padding: 0;">${matchesHTML}</ul>
-      `;
-
+      root.innerHTML = `<h2>Calendrier & Résultats</h2><ul style="padding: 0;">${matchesHTML}</ul>`;
     } catch (error) {
-      console.error("Erreur de chargement des matchs :", error);
+      console.error("Erreur matchs:", error);
       root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Impossible de charger les matchs.</p>`;
     }
   }
 
-  // --- STATISTIQUES ---
   async function renderStats() {
     root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
-
     try {
       const response = await fetchFresh('players.json');
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
-
       const players = await response.json();
 
       const topScorers = [...players].sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
@@ -93,85 +81,84 @@ document.addEventListener('DOMContentLoaded', function() {
         <h3 class="accordion-header active">👟 Meilleurs Passeurs</h3>
         <ul>${passersHTML}</ul>
       `;
-
     } catch (error) {
-      console.error("Erreur de chargement des stats :", error);
-      root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Impossible de charger les statistiques.</p>`;
+      console.error("Erreur stats:", error);
+      root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Erreur dans le fichier players.json.</p>`;
     }
   }
 
-  // --- EFFECTIF COMPLET ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
 
+    let players = [], dirigeants = [], arbitres = [];
+
     try {
-      const [playersRes, dirigeantsRes, arbitresRes] = await Promise.all([
-        fetchFresh('players.json'),
-        fetchFresh('dirigeants.json'),
-        fetchFresh('arbitres.json')
-      ]);
+      const res = await fetchFresh('players.json');
+      if (res.ok) players = await res.json();
+    } catch (e) { console.error("Erreur players.json", e); }
 
-      if (!playersRes.ok || !dirigeantsRes.ok || !arbitresRes.ok) {
-        throw new Error('Erreur de chargement d\'un ou plusieurs fichiers de l\'effectif.');
-      }
+    try {
+      const res = await fetchFresh('dirigeants.json');
+      if (res.ok) dirigeants = await res.json();
+    } catch (e) { console.error("Erreur dirigeants.json", e); }
 
-      const players = await playersRes.json();
-      const dirigeants = await dirigeantsRes.json();
-      const arbitres = await arbitresRes.json();
-      
-      let contentHTML = '<h2>Effectif du Club</h2>';
+    try {
+      const res = await fetchFresh('arbitres.json');
+      if (res.ok) arbitres = await res.json();
+    } catch (e) { console.error("Erreur arbitres.json", e); }
 
+    let contentHTML = '<h2>Effectif du Club</h2>';
+
+    if (players.length > 0) {
       const playerListHTML = players.map(player => `
         <li>
-          ${player.symbole} <strong>#${player.numero} ${player.nom}</strong>
-          <br><small>${player.poste}</small>
+          ${player.symbole || '⚽'} <strong>#${player.numero || ''} ${player.nom}</strong>
+          <br><small>${player.poste || ''}</small>
         </li>
       `).join('');
       contentHTML += `<h3 class="accordion-header active">⚽ Joueurs</h3><ul>${playerListHTML}</ul>`;
+    } else {
+      contentHTML += `<p style="color:red; text-align:center;">Erreur de lecture de players.json</p>`;
+    }
 
+    if (dirigeants.length > 0) {
       const dirigeantsListHTML = dirigeants.map(dirigeant => `
         <li>
-          ${dirigeant.symbole} <strong>${dirigeant.nom}</strong>
-          <br><small>${dirigeant.fonction}</small>
+          ${dirigeant.symbole || '👔'} <strong>${dirigeant.nom}</strong>
+          <br><small>${dirigeant.fonction || ''}</small>
         </li>
       `).join('');
       contentHTML += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${dirigeantsListHTML}</ul>`;
+    }
 
+    if (arbitres.length > 0) {
       const arbitresListHTML = arbitres.map(arbitre => `
         <li>
-          ${arbitre.symbole} <strong>${arbitre.nom}</strong>
-          <br><small>Arbitre ${arbitre.categorie}</small>
+          ${arbitre.symbole || '📣'} <strong>${arbitre.nom}</strong>
+          <br><small>Arbitre ${arbitre.categorie || ''}</small>
         </li>
       `).join('');
       contentHTML += `<h3 class="accordion-header">📣 Arbitres</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
-      
-      root.innerHTML = contentHTML;
-      
-      // Accordéon
-      document.querySelectorAll('#root h3').forEach(header => {
-        header.addEventListener('click', function() {
-          const list = this.nextElementSibling;
-          if (list && list.tagName === 'UL') {
-            list.classList.toggle('collapsed'); 
-            this.classList.toggle('active');
-          }
-        });
-      });
-      
-    } catch (error) {
-      console.error("Erreur de chargement de l'effectif :", error);
-      root.innerHTML = `<h2>Effectif</h2><p style="color: red; text-align: center;">Impossible de charger la liste complète.</p>`;
     }
+
+    root.innerHTML = contentHTML;
+
+    document.querySelectorAll('#root h3').forEach(header => {
+      header.addEventListener('click', function() {
+        const list = this.nextElementSibling;
+        if (list && list.tagName === 'UL') {
+          list.classList.toggle('collapsed'); 
+          this.classList.toggle('active');
+        }
+      });
+    });
   }
 
-  // --- ANNONCES ---
   async function renderAnnouncements() {
     root.innerHTML = `<h2>Annonces Club</h2><p style="text-align: center;">Chargement des annonces...</p>`;
-
     try {
       const response = await fetchFresh('annonces.json');
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
-
       const annonces = await response.json();
       
       const annoncesListHTML = annonces.map(annonce => `
@@ -182,14 +169,12 @@ document.addEventListener('DOMContentLoaded', function() {
       `).join('');
       
       root.innerHTML = `<h2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
-      
     } catch (error) {
-      console.error("Erreur de chargement des annonces :", error);
+      console.error("Erreur annonces:", error);
       root.innerHTML = `<h2>Annonces Club</h2><p style="color: red; text-align: center;">Impossible de charger les annonces.</p>`;
     }
   }
 
-  // --- SAISIE MATCH & RÉINITIALISATION (ADMIN) ---
   async function renderAdmin() {
     const password = prompt("Veuillez entrer le mot de passe administrateur :");
     if (password !== "508497") {
@@ -204,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (githubToken) {
         localStorage.setItem('fcis_github_token', githubToken);
       } else {
-        alert("Token nécessaire pour envoyer les données.");
+        alert("Token nécessaire.");
         window.location.hash = "home";
         return;
       }
@@ -242,14 +227,13 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = `
         <h2>⚙️ Saisie d'un Match</h2>
         <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow);">
-          
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">1. Sélectionner le match :</label>
           <select id="select-match" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px;">
             ${matchOptions}
           </select>
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Score final :</label>
-          <input type="text" id="match-score" placeholder="Ex: Victoire 3-1 ou Défaite 0-2" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc;">
+          <input type="text" id="match-score" placeholder="Ex: Victoire 3-1" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc;">
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">3. Joueurs Présents :</label>
           <div style="max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 15px;">
@@ -272,13 +256,13 @@ document.addEventListener('DOMContentLoaded', function() {
           <ul id="goals-list" style="margin-bottom: 15px; padding-left: 20px;"></ul>
 
           <button id="btn-save-direct" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; margin-bottom: 15px;">
-            🚀 Publier le match directement sur GitHub
+            🚀 Publier le match sur GitHub
           </button>
 
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
           <button id="btn-reset-all" style="width: 100%; background: #dc3545; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
-            🔄 Remettre à ZÉRO toutes les statistiques & résultats
+            🔄 Remettre à ZÉRO les statistiques & résultats
           </button>
 
           <p id="status-message" style="text-align:center; font-weight:bold; margin-top:10px;"></p>
@@ -290,17 +274,15 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('btn-add-goal').addEventListener('click', () => {
         const buteurSelect = document.getElementById('select-buteur');
         const passeurSelect = document.getElementById('select-passeur');
-        
         const buteur = buteurSelect.value;
         const passeur = passeurSelect.value;
 
         if (!buteur) {
-          alert('Veuillez sélectionner au moins un buteur.');
+          alert('Veuillez sélectionner un buteur.');
           return;
         }
 
         events.push({ buteur: buteur, passeur: passeur });
-        
         const goalsList = document.getElementById('goals-list');
         const li = document.createElement('li');
         li.style.borderLeft = "none";
@@ -314,17 +296,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
       async function updateGitHubFile(filePath, newContent, commitMessage) {
         const getUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
-        const getRes = await fetch(getUrl, {
-          headers: { 'Authorization': `token ${githubToken}` }
-        });
+        const getRes = await fetch(getUrl, { headers: { 'Authorization': `token ${githubToken}` } });
         const fileData = await getRes.json();
 
         const putRes = await fetch(getUrl, {
           method: 'PUT',
-          headers: {
-            'Authorization': `token ${githubToken}`,
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Authorization': `token ${githubToken}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: commitMessage,
             content: btoa(unescape(encodeURIComponent(JSON.stringify(newContent, null, 2)))),
@@ -335,22 +312,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!putRes.ok) throw new Error(`Erreur lors de la mise à jour de ${filePath}`);
       }
 
-      // Action : Enregistrer un match
       document.getElementById('btn-save-direct').addEventListener('click', async () => {
         const statusMsg = document.getElementById('status-message');
         statusMsg.style.color = "orange";
-        statusMsg.innerText = "⏳ Envoi des données sur GitHub...";
+        statusMsg.innerText = "⏳ Envoi des données...";
 
         try {
           const selectedMatchIdx = document.getElementById('select-match').value;
           const score = document.getElementById('match-score').value;
-
           const checkedBoxes = document.querySelectorAll('.presence-check:checked');
           const presentNames = Array.from(checkedBoxes).map(cb => cb.value);
 
-          let butsMap = {};
-          let passesMap = {};
-
+          let butsMap = {}, passesMap = {};
           events.forEach(e => {
             if (e.buteur) butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
             if (e.passeur) passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
@@ -358,7 +331,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
           const updatedPlayers = players.map(p => {
             let updatedP = { ...p };
-
             let currentMatchs = parseInt(updatedP.matchs) || 0;
             let currentButs = parseInt(updatedP.buts) || 0;
             let currentPasses = parseInt(updatedP.passes) || 0;
@@ -370,7 +342,6 @@ document.addEventListener('DOMContentLoaded', function() {
             updatedP.matchs = currentMatchs;
             updatedP.buts = currentButs;
             updatedP.passes = currentPasses;
-
             return updatedP;
           });
 
@@ -382,46 +353,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
           statusMsg.style.color = "green";
           statusMsg.innerText = "✅ Match enregistré avec succès !";
-
           events = [];
-
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
-          statusMsg.innerText = "❌ Erreur d'enregistrement. Vérifiez votre Token GitHub.";
+          statusMsg.innerText = "❌ Erreur d'enregistrement.";
         }
       });
 
-      // Action : Réinitialiser TOUS les compteurs
       document.getElementById('btn-reset-all').addEventListener('click', async () => {
-        const confirmReset = confirm("⚠️ Êtes-vous sûr de vouloir remettre TOUTES les statistiques et les scores à ZÉRO ?");
-        if (!confirmReset) return;
+        if (!confirm("⚠️ Remettre TOUTES les stats à ZÉRO ?")) return;
 
         const statusMsg = document.getElementById('status-message');
         statusMsg.style.color = "orange";
-        statusMsg.innerText = "⏳ Réinitialisation complète en cours...";
+        statusMsg.innerText = "⏳ Réinitialisation...";
 
         try {
-          // Remise à zéro de players.json
-          const resetPlayers = players.map(p => ({
-            ...p,
-            matchs: 0,
-            buts: 0,
-            passes: 0
-          }));
-
-          // Remise à zéro des résultats dans matchs.json
-          const resetMatches = matches.map(m => ({
-            ...m,
-            resultat: ""
-          }));
+          const resetPlayers = players.map(p => ({ ...p, matchs: 0, buts: 0, passes: 0 }));
+          const resetMatches = matches.map(m => ({ ...m, resultat: "" }));
 
           await updateGitHubFile('players.json', resetPlayers, 'Reset stats to zero');
-          await updateGitHubFile('matchs.json', resetMatches, 'Reset match scores to empty');
+          await updateGitHubFile('matchs.json', resetMatches, 'Reset match scores');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Réinitialisation réussie ! Les stats et scores sont remis à 0.";
-
+          statusMsg.innerText = "✅ Réinitialisation réussie !";
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
@@ -435,10 +390,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- ROUTEUR PRINCIPAL ---
   function router() {
     const hash = location.hash.replace('#','') || 'home';
-    
     document.querySelectorAll('nav a').forEach(a => {
         a.classList.remove('active');
         const href = a.getAttribute('href');
