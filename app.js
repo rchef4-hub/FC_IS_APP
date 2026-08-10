@@ -210,3 +210,18 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('hashchange', router);
   window.addEventListener('load', router);
 });
+function router() {
+    const hash = location.hash.replace('#','') || 'home';
+    
+    document.querySelectorAll('nav a').forEach(a => {
+        a.classList.remove('active');
+        if(a.getAttribute('href') === '#' + hash) a.classList.add('active');
+    });
+
+    if(hash === 'home') renderHome();
+    else if(hash === 'matches') renderMatches();
+    else if(hash === 'stats') renderStats(); // NOUVELLE LIGNE
+    else if(hash === 'players') renderPlayers(); 
+    else if(hash === 'announcements') renderAnnouncements();
+    else renderHome();
+  }
