@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>F.C. IS - Application Officielle</title>
+  <title>F.C. IS</title>
 
-  <!-- LFA / PWA CONFIGURATION -->
+  <!-- CONFIGURATION PWA / MOBILE -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#2c3e50">
+  <meta name="theme-color" content="#6a0f49">
 
   <!-- Apple iOS Support -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,44 +20,40 @@
 </head>
 <body>
 
-  <!-- EN-TÊTE ET NAVIGATION -->
+  <!-- EN-TÊTE -->
   <header>
     <div class="logo-container">
-      <img src="icon-192.png" alt="FC IS Logo" class="app-logo" onerror="this.style.display='none'">
+      <img src="fc_is.jpg" alt="FC IS Logo" class="app-logo">
       <h1>F.C. IS</h1>
     </div>
-    <nav>
-      <ul>
-        <li><a href="#home" class="active">🏠 Accueil</a></li>
-        <li><a href="#matches">📅 Matchs</a></li>
-        <li><a href="#stats">📊 Stats</a></li>
-        <li><a href="#players">👥 Effectif</a></li>
-        <li><a href="#announcements">📢 Annonces</a></li>
-        <li><a href="#admin">⚙️ Admin</a></li>
-      </ul>
-    </nav>
   </header>
 
-  <!-- CONTENU DYNAMIQUE (GÉRÉ PAR APP.JS) -->
+  <!-- CONTENU DYNAMIQUE -->
   <main id="root">
-    <!-- Le contenu des pages s'affiche ici -->
+    <!-- Le contenu s'affiche ici via app.js -->
   </main>
 
-  <!-- PIED DE PAGE -->
-  <footer>
-    <p>&copy; 2026-2027 F.C. IS — Tous droits réservés</p>
-  </footer>
+  <!-- NAVIGATION FIXE EN BAS -->
+  <nav>
+    <ul>
+      <li><a href="#home" class="active">🏠 Accueil</a></li>
+      <li><a href="#matches">📅 Matchs</a></li>
+      <li><a href="#stats">📊 Stats</a></li>
+      <li><a href="#players">👥 Effectif</a></li>
+      <li><a href="#announcements">📢 Annonces</a></li>
+      <!-- Onglet Admin masqué par défaut -->
+      <li id="admin-nav-item" style="display: none;"><a href="#admin">⚙️ Admin</a></li>
+    </ul>
+  </nav>
 
-  <!-- CHARGEMENT DU SCRIPT PRINCIPAL -->
+  <!-- SCRIPT PRINCIPAL -->
   <script src="app.js"></script>
 
-  <!-- ENREGISTREMENT DU SERVICE WORKER (MODE APP MOBILE) -->
+  <!-- SERVICE WORKER (MODE APP) -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service Worker enregistré avec succès !', reg))
-          .catch(err => console.error('Erreur d\'enregistrement du Service Worker :', err));
+        navigator.serviceWorker.register('sw.js');
       });
     }
   </script>
