@@ -59,9 +59,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-// --- STATISTIQUES (BUTEURS, PASSEURS & DISCIPLINE AVEC CARTON BLANC) ---
+  // --- STATISTIQUES (BUTEURS, PASSEURS & DISCIPLINE AVEC CARTON BLANC) ---
   async function renderStats() {
-    root.innerHTML = `2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
+    root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
 
     try {
       const response = await fetchFresh('players.json');
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul class="collapsed">${scorersHTML}</ul>
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
         <ul class="collapsed">${passersHTML}</ul>
-        <h3 class="accordion-header">🟨🟥 Discipline</h3>
+        <h3 class="accordion-header">🟨⬜🟥 Discipline</h3>
         <ul class="collapsed">${cardsHTML}</ul>
       `;
 
@@ -312,19 +312,19 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
 
           <!-- SECTION CARTONS -->
-<label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Avertissement / Carton :</label>
-<div style="display: flex; gap: 5px; margin-bottom: 10px;">
-  <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
-    <option value="">-- Joueur Sanctionné --</option>
-    ${playerOptions}
-  </select>
-  <select id="select-type-carton" style="width: 140px; padding: 6px; border-radius: 6px;">
-    <option value="🟨">🟨 Jaune</option>
-    <option value="⬜">⬜ Blanc (Excl. temp.)</option>
-    <option value="🟥">🟥 Rouge Direct</option>
-  </select>
-  <button id="btn-add-card" type="button" style="background: #ffc107; color: black; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Ajouter</button>
-</div>
+          <label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Avertissement / Carton :</label>
+          <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
+              <option value="">-- Joueur Sanctionné --</option>
+              ${playerOptions}
+            </select>
+            <select id="select-type-carton" style="width: 140px; padding: 6px; border-radius: 6px;">
+              <option value="🟨">🟨 Jaune</option>
+              <option value="⬜">⬜ Blanc (Excl. temp.)</option>
+              <option value="🟥">🟥 Rouge Direct</option>
+            </select>
+            <button id="btn-add-card" type="button" style="background: #ffc107; color: black; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Ajouter</button>
+          </div>
 
           <div id="goals-list" style="margin-bottom: 10px;"></div>
           <div id="cards-list" style="margin-bottom: 15px;"></div>
@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.passeur) passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
           });
 
-         // Traitement des cartons par joueur pour le match
+          // Traitement des cartons par joueur pour le match
           let jaunesMap = {}, blancsMap = {}, rougesMap = {};
           let totalCardsPerPlayer = {}; // Pour détecter les cumuls (Jaune/Blanc)
 
@@ -546,7 +546,15 @@ document.addEventListener('DOMContentLoaded', function() {
         statusMsg.innerText = "⏳ Réinitialisation...";
 
         try {
-          const resetPlayers = players.map(p => ({ ...p, matchs: 0, buts: 0, passes: 0, cartons_jaunes: 0, cartons_rouges: 0 }));
+          const resetPlayers = players.map(p => ({ 
+            ...p, 
+            matchs: 0, 
+            buts: 0, 
+            passes: 0, 
+            cartons_jaunes: 0, 
+            cartons_blancs: 0, 
+            cartons_rouges: 0 
+          }));
           const resetMatches = matches.map(m => ({ ...m, resultat: "" }));
 
           await updateGitHubFile('players.json', resetPlayers, 'Reset stats to zero');
