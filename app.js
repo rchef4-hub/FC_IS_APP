@@ -312,18 +312,19 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
 
           <!-- SECTION CARTONS -->
-          <label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Carton :</label>
-          <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-            <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
-              <option value="">-- Joueur Sanctionné --</option>
-              ${playerOptions}
-            </select>
-            <select id="select-type-carton" style="width: 110px; padding: 6px; border-radius: 6px;">
-              <option value="🟨">🟨 Jaune</option>
-              <option value="🟥">🟥 Rouge</option>
-            </select>
-            <button id="btn-add-card" type="button" style="background: #ffc107; color: black; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Ajouter</button>
-          </div>
+<label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Avertissement / Carton :</label>
+<div style="display: flex; gap: 5px; margin-bottom: 10px;">
+  <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
+    <option value="">-- Joueur Sanctionné --</option>
+    ${playerOptions}
+  </select>
+  <select id="select-type-carton" style="width: 140px; padding: 6px; border-radius: 6px;">
+    <option value="🟨">🟨 Jaune</option>
+    <option value="⬜">⬜ Blanc (Excl. temp.)</option>
+    <option value="🟥">🟥 Rouge Direct</option>
+  </select>
+  <button id="btn-add-card" type="button" style="background: #ffc107; color: black; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Ajouter</button>
+</div>
 
           <div id="goals-list" style="margin-bottom: 10px;"></div>
           <div id="cards-list" style="margin-bottom: 15px;"></div>
