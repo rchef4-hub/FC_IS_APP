@@ -1,62 +1,64 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <title>F.C. IS App</title>
-  <link rel="manifest" href="manifest.json" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F.C. IS - Application Officielle</title>
+
+  <!-- LFA / PWA CONFIGURATION -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2c3e50">
+
+  <!-- Apple iOS Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FCIS">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- Styles CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <header style="text-align: center; padding: 10px 0;">
-  <img src="fc_is.jpg" alt="Logo du FC IS" style="max-height: 80px; width: auto; display: block; margin: 0 auto;">
-</header>
+  <!-- EN-TÊTE ET NAVIGATION -->
+  <header>
+    <div class="logo-container">
+      <img src="icon-192.png" alt="FC IS Logo" class="app-logo" onerror="this.style.display='none'">
+      <h1>F.C. IS</h1>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#home" class="active">🏠 Accueil</a></li>
+        <li><a href="#matches">📅 Matchs</a></li>
+        <li><a href="#stats">📊 Stats</a></li>
+        <li><a href="#players">👥 Effectif</a></li>
+        <li><a href="#announcements">📢 Annonces</a></li>
+        <li><a href="#admin">⚙️ Admin</a></li>
+      </ul>
+    </nav>
+  </header>
 
-  <div id="root"></div>
+  <!-- CONTENU DYNAMIQUE (GÉRÉ PAR APP.JS) -->
+  <main id="root">
+    <!-- Le contenu des pages s'affiche ici -->
+  </main>
 
-  <nav id="main-nav">
-    <a href="#home" onclick="updateActive(this)">Accueil</a>
-    <a href="#matches" onclick="updateActive(this)">Matchs</a>
-    <a href="#stats" onclick="updateActive(this)">Stats</a>
-    <a href="#players" onclick="updateActive(this)">Effectif</a>
-    <a href="#announcements" onclick="updateActive(this)">Infos</a>
-  </nav>
+  <!-- PIED DE PAGE -->
+  <footer>
+    <p>&copy; 2026-2027 F.C. IS — Tous droits réservés</p>
+  </footer>
 
-  <script src="app.js"></script> 
+  <!-- CHARGEMENT DU SCRIPT PRINCIPAL -->
+  <script src="app.js"></script>
 
+  <!-- ENREGISTREMENT DU SERVICE WORKER (MODE APP MOBILE) -->
   <script>
-    // Enregistrement et mise à jour dynamique du Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js').then((registration) => {
-          
-          // Force la vérification des mises à jour à chaque chargement de page
-          registration.update();
-
-          // Détection automatique d'une nouvelle version (changement de v17 à v18, etc.)
-          registration.onupdatefound = () => {
-            const installingWorker = registration.installing;
-            if (installingWorker == null) return;
-
-            installingWorker.onstatechange = () => {
-              if (installingWorker.state === 'installed') {
-                if (navigator.serviceWorker.controller) {
-                  console.log('Nouveau contenu disponible, rechargement automatique...');
-                  window.location.reload();
-                }
-              }
-            };
-          };
-
-        }).catch(err => console.log('Erreur SW :', err));
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker enregistré avec succès !', reg))
+          .catch(err => console.error('Erreur d\'enregistrement du Service Worker :', err));
       });
-    }
-    
-    // Fonction pour surligner l'onglet actif
-    function updateActive(element) {
-        document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-        element.classList.add('active');
     }
   </script>
 </body>
