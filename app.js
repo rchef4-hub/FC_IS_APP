@@ -58,7 +58,8 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Impossible de charger les matchs.</p>`;
     }
   }
-// --- STATISTIQUES (FERMÉES PAR DÉFAUT) ---
+
+  // --- STATISTIQUES (FERMÉES PAR DÉFAUT + CARTONS) ---
   async function renderStats() {
     root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
 
@@ -70,6 +71,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const topScorers = [...players].sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
       const topPassers = [...players].sort((a, b) => (parseInt(b.passes) || 0) - (parseInt(a.passes) || 0));
+      
+      // Classement par cartons (Rouges prioritaires, puis Jaunes)
+      const topCards = [...players]
+        .filter(p => (parseInt(p.cartons_jaunes) || 0) > 0 || (parseInt(p.cartons_rouges) || 0) > 0)
+        .sort((a, b) => ((parseInt(b.cartons_rouges) || 0) * 3 + (parseInt(b.cartons_jaunes) || 0)) - ((parseInt(a.cartons_rouges) || 0) * 3 + (parseInt(a.cartons_jaunes) || 0)));
 
       const scorersHTML = topScorers.map(p => `
         <li>
@@ -85,13 +91,21 @@ document.addEventListener('DOMContentLoaded', function() {
         </li>
       `).join('');
 
-      // On enlève "active" du h3 et on ajoute "collapsed" au ul pour fermer par défaut
+      const cardsHTML = topCards.length > 0 ? topCards.map(p => `
+        <li>
+          <strong>${p.nom}</strong>
+          <br><small>🟨 ${parseInt(p.cartons_jaunes) || 0} jaune(s) | 🟥 ${parseInt(p.cartons_rouges) || 0} rouge(s)</small>
+        </li>
+      `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun carton enregistré pour l\'instant.</p>';
+
       root.innerHTML = `
         <h2>Statistiques de la Saison</h2>
         <h3 class="accordion-header">⚽ Meilleurs Buteurs</h3>
         <ul class="collapsed">${scorersHTML}</ul>
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
         <ul class="collapsed">${passersHTML}</ul>
+        <h3 class="accordion-header">🟨 Discipline & Cartons</h3>
+        <ul class="collapsed">${cardsHTML}</ul>
       `;
 
       // Rend les titres h3 cliquables pour ouvrir/fermer la liste
@@ -111,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
- // --- EFFECTIF COMPLET (TOUTES SECTIONS FERMÉES PAR DÉFAUT) ---
+  // --- EFFECTIF COMPLET (TOUTES SECTIONS FERMÉES PAR DÉFAUT) ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
 
@@ -141,7 +155,6 @@ document.addEventListener('DOMContentLoaded', function() {
           <br><small>${player.poste || ''}</small>
         </li>
       `).join('');
-      // On retire "active" du h3 et on ajoute "collapsed" au ul pour que les Joueurs soient fermés par défaut
       contentHTML += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${playerListHTML}</ul>`;
     } else {
       contentHTML += `<p style="color:red; text-align:center;">Erreur de lecture de players.json</p>`;
@@ -242,6 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const matches = await matchesRes.json();
 
       let goalEvents = [];
+      let cardEvents = [];
 
       let matchOptions = matches.map((m, idx) => 
         `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
@@ -287,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <button id="btn-add-goal" type="button" style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
           </div>
 
-          <!-- NOUVELLE SECTION CARTONS -->
+          <!-- SECTION CARTONS -->
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Carton :</label>
           <div style="display: flex; gap: 5px; margin-bottom: 10px;">
             <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
@@ -303,8 +317,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
           <div id="goals-list" style="margin-bottom: 10px;"></div>
           <div id="cards-list" style="margin-bottom: 15px;"></div>
-
-          <div id="goals-list" style="margin-bottom: 15px;"></div>
 
           <button id="btn-save-direct" type="button" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; margin-bottom: 15px;">
             🚀 Publier le match sur GitHub
@@ -335,13 +347,35 @@ document.addEventListener('DOMContentLoaded', function() {
         `).join('');
       }
 
+      function renderCardsUI() {
+        const cardsContainer = document.getElementById('cards-list');
+        if (cardEvents.length === 0) {
+          cardsContainer.innerHTML = `<small style="color: #888;">Aucun carton ajouté pour l'instant.</small>`;
+          return;
+        }
+
+        cardsContainer.innerHTML = cardEvents.map((c, index) => `
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid #ffc107;">
+            <span>${c.type} <strong>${c.joueur}</strong></span>
+            <button type="button" onclick="removeCard(${index})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">❌</button>
+          </div>
+        `).join('');
+      }
+
       window.removeGoal = function(index) {
         goalEvents.splice(index, 1);
         renderGoalsUI();
       };
 
-      renderGoalsUI();
+      window.removeCard = function(index) {
+        cardEvents.splice(index, 1);
+        renderCardsUI();
+      };
 
+      renderGoalsUI();
+      renderCardsUI();
+
+      // Écouteur pour l'ajout de buts
       document.getElementById('btn-add-goal').addEventListener('click', () => {
         const buteurSelect = document.getElementById('select-buteur');
         const passeurSelect = document.getElementById('select-passeur');
@@ -358,6 +392,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
         buteurSelect.value = '';
         passeurSelect.value = '';
+      });
+
+      // Écouteur pour l'ajout de cartons
+      document.getElementById('btn-add-card').addEventListener('click', () => {
+        const joueurSelect = document.getElementById('select-joueur-carton');
+        const typeSelect = document.getElementById('select-type-carton');
+        const joueur = joueurSelect.value;
+        const type = typeSelect.value;
+
+        if (!joueur) {
+          alert('Veuillez sélectionner un joueur sanctionné.');
+          return;
+        }
+
+        cardEvents.push({ joueur: joueur, type: type });
+        renderCardsUI();
+
+        joueurSelect.value = '';
       });
 
       async function updateGitHubFile(filePath, newContent, commitMessage) {
@@ -407,19 +459,31 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.passeur) passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
           });
 
+          let jaunesMap = {}, rougesMap = {};
+          cardEvents.forEach(c => {
+            if (c.type === '🟨') jaunesMap[c.joueur] = (jaunesMap[c.joueur] || 0) + 1;
+            if (c.type === '🟥') rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
+          });
+
           const updatedPlayers = players.map(p => {
             let updatedP = { ...p };
             let currentMatchs = parseInt(updatedP.matchs) || 0;
             let currentButs = parseInt(updatedP.buts) || 0;
             let currentPasses = parseInt(updatedP.passes) || 0;
+            let currentJaunes = parseInt(updatedP.cartons_jaunes) || 0;
+            let currentRouges = parseInt(updatedP.cartons_rouges) || 0;
 
             if (presentNames.includes(p.nom)) currentMatchs += 1;
             if (butsMap[p.nom]) currentButs += butsMap[p.nom];
             if (passesMap[p.nom]) currentPasses += passesMap[p.nom];
+            if (jaunesMap[p.nom]) currentJaunes += jaunesMap[p.nom];
+            if (rougesMap[p.nom]) currentRouges += rougesMap[p.nom];
 
             updatedP.matchs = currentMatchs;
             updatedP.buts = currentButs;
             updatedP.passes = currentPasses;
+            updatedP.cartons_jaunes = currentJaunes;
+            updatedP.cartons_rouges = currentRouges;
             return updatedP;
           });
 
@@ -432,7 +496,9 @@ document.addEventListener('DOMContentLoaded', function() {
           statusMsg.style.color = "green";
           statusMsg.innerText = "✅ Match enregistré avec succès !";
           goalEvents = [];
+          cardEvents = [];
           renderGoalsUI();
+          renderCardsUI();
 
         } catch (err) {
           console.error(err);
@@ -449,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
         statusMsg.innerText = "⏳ Réinitialisation...";
 
         try {
-          const resetPlayers = players.map(p => ({ ...p, matchs: 0, buts: 0, passes: 0 }));
+          const resetPlayers = players.map(p => ({ ...p, matchs: 0, buts: 0, passes: 0, cartons_jaunes: 0, cartons_rouges: 0 }));
           const resetMatches = matches.map(m => ({ ...m, resultat: "" }));
 
           await updateGitHubFile('players.json', resetPlayers, 'Reset stats to zero');
