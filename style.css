@@ -123,7 +123,7 @@ li.upcoming {
   font-weight: bold;
 }
 
-/* --- Styles pour les listes d'effectif --- */
+/* --- Styles pour les listes d'effectif & stats --- */
 #root h3 {
   background-color: var(--primary-color);
   color: var(--white);
@@ -133,9 +133,10 @@ li.upcoming {
   margin-bottom: 5px;
   position: relative;
   cursor: pointer;
+  user-select: none;
 }
 
-/* --- ACCORDÉON (SECTIONS RÉTRACTABLES CORRIGÉES) --- */
+/* --- ACCORDÉON (SECTIONS RÉTRACTABLES) --- */
 
 /* Style de la flèche */
 #root h3::after {
@@ -144,25 +145,14 @@ li.upcoming {
   right: 15px;
   top: 50%;
   transform: translateY(-50%);
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
 }
 
 #root h3.active::after {
   content: '▲'; 
 }
 
-/* La liste dépliée : pas de limite de hauteur pour ne pas couper les joueurs */
-#root ul {
-  max-height: none;
-  overflow: visible;
-  margin-bottom: 30px;
-}
-
-/* La liste fermée */
+/* Masquage strict des listes fermées */
 #root ul.collapsed {
-  max-height: 0 !important;
-  overflow: hidden !important;
-  margin-bottom: 0 !important;
-  padding: 0 !important;
-  opacity: 0;
+  display: none !important;
 }
