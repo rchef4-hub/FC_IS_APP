@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Impossible de charger les matchs.</p>`;
     }
   }
-// --- STATISTIQUES (AVEC ACCORDÉON CLIQUABLE) ---
+// --- STATISTIQUES (FERMÉES PAR DÉFAUT) ---
   async function renderStats() {
     root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
 
@@ -85,12 +85,13 @@ document.addEventListener('DOMContentLoaded', function() {
         </li>
       `).join('');
 
+      // On enlève "active" du h3 et on ajoute "collapsed" au ul pour fermer par défaut
       root.innerHTML = `
         <h2>Statistiques de la Saison</h2>
-        <h3 class="accordion-header active">⚽ Meilleurs Buteurs</h3>
-        <ul>${scorersHTML}</ul>
-        <h3 class="accordion-header active">👟 Meilleurs Passeurs</h3>
-        <ul>${passersHTML}</ul>
+        <h3 class="accordion-header">⚽ Meilleurs Buteurs</h3>
+        <ul class="collapsed">${scorersHTML}</ul>
+        <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
+        <ul class="collapsed">${passersHTML}</ul>
       `;
 
       // Rend les titres h3 cliquables pour ouvrir/fermer la liste
