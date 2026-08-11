@@ -6,7 +6,9 @@
     "symbole": "🧤",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 2,
@@ -15,7 +17,9 @@
     "symbole": "🧤",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 3,
@@ -24,7 +28,9 @@
     "symbole": "🛡️",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 4,
@@ -33,7 +39,9 @@
     "symbole": "🛡️",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 5,
@@ -42,7 +50,9 @@
     "symbole": "⚙️",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 6,
@@ -51,7 +61,9 @@
     "symbole": "⚙️",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 7,
@@ -60,7 +72,9 @@
     "symbole": "⚡",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 8,
@@ -69,7 +83,9 @@
     "symbole": "⚙️",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 9,
@@ -78,7 +94,9 @@
     "symbole": "⚽",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 9,
@@ -87,7 +105,9 @@
     "symbole": "⚽",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 10,
@@ -96,7 +116,9 @@
     "symbole": "🎯",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 11,
@@ -105,7 +127,9 @@
     "symbole": "⚡",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   },
   {
     "numero": 12,
@@ -114,6 +138,8 @@
     "symbole": "⚡",
     "matchs": 0,
     "buts": 0,
-    "passes": 0
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_rouges": 0
   }
 ]
