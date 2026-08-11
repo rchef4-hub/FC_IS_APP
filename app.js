@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-// --- STATISTIQUES (UNIQUEMENT LES JOUEURS ACTIFS) ---
+// --- STATISTIQUES (BUTEURS, PASSEURS & DISCIPLINE AVEC CARTON BLANC) ---
   async function renderStats() {
     root.innerHTML = `2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
 
@@ -69,22 +69,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const players = await response.json();
 
-      // Filtrer et trier les Buteurs (au moins 1 but)
+      // Buteurs
       const topScorers = [...players]
         .filter(p => (parseInt(p.buts) || 0) > 0)
         .sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
 
-      // Filtrer et trier les Passeurs (au moins 1 passe)
+      // Passeurs
       const topPassers = [...players]
         .filter(p => (parseInt(p.passes) || 0) > 0)
         .sort((a, b) => (parseInt(b.passes) || 0) - (parseInt(a.passes) || 0));
       
-      // Filtrer et trier les Cartons (au moins 1 jaune ou 1 rouge)
+      // Discipline (filtrer les joueurs ayant au moins 1 carton jaune, blanc ou rouge)
       const topCards = [...players]
-        .filter(p => (parseInt(p.cartons_jaunes) || 0) > 0 || (parseInt(p.cartons_rouges) || 0) > 0)
-        .sort((a, b) => ((parseInt(b.cartons_rouges) || 0) * 3 + (parseInt(b.cartons_jaunes) || 0)) - ((parseInt(a.cartons_rouges) || 0) * 3 + (parseInt(a.cartons_jaunes) || 0)));
+        .filter(p => (parseInt(p.cartons_jaunes) || 0) > 0 || (parseInt(p.cartons_blancs) || 0) > 0 || (parseInt(p.cartons_rouges) || 0) > 0)
+        .sort((a, b) => {
+          const scoreB = (parseInt(b.cartons_rouges) || 0) * 5 + (parseInt(b.cartons_blancs) || 0) * 2 + (parseInt(b.cartons_jaunes) || 0);
+          const scoreA = (parseInt(a.cartons_rouges) || 0) * 5 + (parseInt(a.cartons_blancs) || 0) * 2 + (parseInt(a.cartons_jaunes) || 0);
+          return scoreB - scoreA;
+        });
 
-      // HTML pour Buteurs
       const scorersHTML = topScorers.length > 0 ? topScorers.map(p => `
         <li>
           <strong>${p.nom}</strong>
@@ -92,7 +95,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </li>
       `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun buteur pour l\'instant.</p>';
 
-      // HTML pour Passeurs
       const passersHTML = topPassers.length > 0 ? topPassers.map(p => `
         <li>
           <strong>${p.nom}</strong>
@@ -100,11 +102,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </li>
       `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucune passe décisive pour l\'instant.</p>';
 
-      // HTML pour Cartons
       const cardsHTML = topCards.length > 0 ? topCards.map(p => `
         <li>
           <strong>${p.nom}</strong>
-          <br><small>🟨 ${parseInt(p.cartons_jaunes) || 0} jaune(s) | 🟥 ${parseInt(p.cartons_rouges) || 0} rouge(s)</small>
+          <br><small>🟨 ${parseInt(p.cartons_jaunes) || 0} jaune(s) | ⬜ ${parseInt(p.cartons_blancs) || 0} blanc(s) | 🟥 ${parseInt(p.cartons_rouges) || 0} rouge(s)</small>
         </li>
       `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun carton enregistré pour l\'instant.</p>';
 
@@ -114,11 +115,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul class="collapsed">${scorersHTML}</ul>
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
         <ul class="collapsed">${passersHTML}</ul>
-        <h3 class="accordion-header">🟨🟥 Discipline & Cartons</h3>
+        <h3 class="accordion-header">🟨🟥 Discipline</h3>
         <ul class="collapsed">${cardsHTML}</ul>
       `;
 
-      // Rend les titres h3 cliquables pour ouvrir/fermer l'accordéon
       document.querySelectorAll('#root h3').forEach(header => {
         header.addEventListener('click', function() {
           const list = this.nextElementSibling;
