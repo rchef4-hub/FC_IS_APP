@@ -487,7 +487,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // RÈGLE : 2 avertissements (Jaune/Blanc) = Rouge indirect
-            // Les avertissements du match sont annulés et remplacés par 1 rouge.
             if (totalCardsPerPlayer[c.joueur] === 2) {
               rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
               jaunesMap[c.joueur] = 0;
@@ -599,5 +598,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   window.addEventListener('hashchange', router);
-  window.addEventListener('load', router);
+  
+  // Exécution immédiate au chargement du script
+  router();
 });
