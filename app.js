@@ -287,6 +287,23 @@ document.addEventListener('DOMContentLoaded', function() {
             <button id="btn-add-goal" type="button" style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
           </div>
 
+          <!-- NOUVELLE SECTION CARTONS -->
+          <label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Carton :</label>
+          <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
+              <option value="">-- Joueur Sanctionné --</option>
+              ${playerOptions}
+            </select>
+            <select id="select-type-carton" style="width: 110px; padding: 6px; border-radius: 6px;">
+              <option value="🟨">🟨 Jaune</option>
+              <option value="🟥">🟥 Rouge</option>
+            </select>
+            <button id="btn-add-card" type="button" style="background: #ffc107; color: black; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Ajouter</button>
+          </div>
+
+          <div id="goals-list" style="margin-bottom: 10px;"></div>
+          <div id="cards-list" style="margin-bottom: 15px;"></div>
+
           <div id="goals-list" style="margin-bottom: 15px;"></div>
 
           <button id="btn-save-direct" type="button" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; margin-bottom: 15px;">
