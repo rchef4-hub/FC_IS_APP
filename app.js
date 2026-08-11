@@ -470,10 +470,27 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.passeur) passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
           });
 
-          let jaunesMap = {}, rougesMap = {};
+         // Traitement des cartons par joueur pour le match
+          let jaunesMap = {}, blancsMap = {}, rougesMap = {};
+          let totalCardsPerPlayer = {}; // Pour détecter les cumuls (Jaune/Blanc)
+
           cardEvents.forEach(c => {
-            if (c.type === '🟨') jaunesMap[c.joueur] = (jaunesMap[c.joueur] || 0) + 1;
-            if (c.type === '🟥') rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
+            if (!totalCardsPerPlayer[c.joueur]) totalCardsPerPlayer[c.joueur] = 0;
+
+            if (c.type === '🟨') {
+              jaunesMap[c.joueur] = (jaunesMap[c.joueur] || 0) + 1;
+              totalCardsPerPlayer[c.joueur] += 1;
+            } else if (c.type === '⬜') {
+              blancsMap[c.joueur] = (blancsMap[c.joueur] || 0) + 1;
+              totalCardsPerPlayer[c.joueur] += 1;
+            } else if (c.type === '🟥') {
+              rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
+            }
+
+            // RÈGLE DU DISTRICT : Si 2 avertissements (Jaune/Blanc) sur le même match = 1 Carton Rouge !
+            if (totalCardsPerPlayer[c.joueur] === 2) {
+              rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
+            }
           });
 
           const updatedPlayers = players.map(p => {
@@ -482,18 +499,21 @@ document.addEventListener('DOMContentLoaded', function() {
             let currentButs = parseInt(updatedP.buts) || 0;
             let currentPasses = parseInt(updatedP.passes) || 0;
             let currentJaunes = parseInt(updatedP.cartons_jaunes) || 0;
+            let currentBlancs = parseInt(updatedP.cartons_blancs) || 0;
             let currentRouges = parseInt(updatedP.cartons_rouges) || 0;
 
             if (presentNames.includes(p.nom)) currentMatchs += 1;
             if (butsMap[p.nom]) currentButs += butsMap[p.nom];
             if (passesMap[p.nom]) currentPasses += passesMap[p.nom];
             if (jaunesMap[p.nom]) currentJaunes += jaunesMap[p.nom];
+            if (blancsMap[p.nom]) currentBlancs += blancsMap[p.nom];
             if (rougesMap[p.nom]) currentRouges += rougesMap[p.nom];
 
             updatedP.matchs = currentMatchs;
             updatedP.buts = currentButs;
             updatedP.passes = currentPasses;
             updatedP.cartons_jaunes = currentJaunes;
+            updatedP.cartons_blancs = currentBlancs;
             updatedP.cartons_rouges = currentRouges;
             return updatedP;
           });
