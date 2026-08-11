@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul class="collapsed">${scorersHTML}</ul>
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
         <ul class="collapsed">${passersHTML}</ul>
-        <h3 class="accordion-header">🟨⬜🟥 Discipline</h3>
+        <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
         <ul class="collapsed">${cardsHTML}</ul>
       `;
 
