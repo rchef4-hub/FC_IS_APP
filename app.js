@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- STATISTIQUES (BUTEURS, PASSEURS & DISCIPLINE AVEC CARTON BLANC) ---
+  // --- STATISTIQUES (BUTEURS, PASSEURS & DISCIPLINE) ---
   async function renderStats() {
     root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
 
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .filter(p => (parseInt(p.passes) || 0) > 0)
         .sort((a, b) => (parseInt(b.passes) || 0) - (parseInt(a.passes) || 0));
       
-      // Discipline (filtrer les joueurs ayant au moins 1 carton jaune, blanc ou rouge)
+      // Discipline
       const topCards = [...players]
         .filter(p => (parseInt(p.cartons_jaunes) || 0) > 0 || (parseInt(p.cartons_blancs) || 0) > 0 || (parseInt(p.cartons_rouges) || 0) > 0)
         .sort((a, b) => {
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul class="collapsed">${scorersHTML}</ul>
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
         <ul class="collapsed">${passersHTML}</ul>
-        <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
+        <h3 class="accordion-header">🟨⬜🟥 Discipline</h3>
         <ul class="collapsed">${cardsHTML}</ul>
       `;
 
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // --- EFFECTIF COMPLET (TOUTES SECTIONS FERMÉES PAR DÉFAUT) ---
+  // --- EFFECTIF COMPLET ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
 
@@ -192,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     root.innerHTML = contentHTML;
 
-    // Gestion du clic pour ouvrir/fermer chaque section
     document.querySelectorAll('#root h3').forEach(header => {
       header.addEventListener('click', function() {
         const list = this.nextElementSibling;
@@ -472,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
           // Traitement des cartons par joueur pour le match
           let jaunesMap = {}, blancsMap = {}, rougesMap = {};
-          let totalCardsPerPlayer = {}; // Pour détecter les cumuls (Jaune/Blanc)
+          let totalCardsPerPlayer = {}; 
 
           cardEvents.forEach(c => {
             if (!totalCardsPerPlayer[c.joueur]) totalCardsPerPlayer[c.joueur] = 0;
@@ -487,9 +486,12 @@ document.addEventListener('DOMContentLoaded', function() {
               rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
             }
 
-            // RÈGLE DU DISTRICT : Si 2 avertissements (Jaune/Blanc) sur le même match = 1 Carton Rouge !
+            // RÈGLE : 2 avertissements (Jaune/Blanc) = Rouge indirect
+            // Les avertissements du match sont annulés et remplacés par 1 rouge.
             if (totalCardsPerPlayer[c.joueur] === 2) {
               rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
+              jaunesMap[c.joueur] = 0;
+              blancsMap[c.joueur] = 0;
             }
           });
 
