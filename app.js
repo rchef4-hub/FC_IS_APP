@@ -58,8 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Impossible de charger les matchs.</p>`;
     }
   }
-
-  // --- STATISTIQUES ---
+// --- STATISTIQUES (AVEC ACCORDÉON CLIQUABLE) ---
   async function renderStats() {
     root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
 
@@ -94,12 +93,23 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul>${passersHTML}</ul>
       `;
 
+      // Rend les titres h3 cliquables pour ouvrir/fermer la liste
+      document.querySelectorAll('#root h3').forEach(header => {
+        header.addEventListener('click', function() {
+          const list = this.nextElementSibling;
+          if (list && list.tagName === 'UL') {
+            list.classList.toggle('collapsed'); 
+            this.classList.toggle('active');
+          }
+        });
+      });
+
     } catch (error) {
       console.error("Erreur de chargement des stats :", error);
       root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Erreur dans le fichier players.json.</p>`;
     }
   }
-
+  
   // --- EFFECTIF COMPLET ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
