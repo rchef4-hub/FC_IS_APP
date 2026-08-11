@@ -1,15 +1,15 @@
 [
-  {
-    "titre": "Entraînement annulé",
-    "details": "Demain pour cause de pluie.",
-    "symbole": "🚨",
-    "couleur_bordure": "red"
-  },
-  {
-    "titre": "Entraînement Vendredi",
+    {
+    "titre": "Entraînement tous les vendredis",
     "details": "Rendez-vous à 18h30 au terrain à IS.",
     "symbole": "📅",
     "couleur_bordure": "blue"
+  },
+  {
+    "titre": "Journée travaux au terrain",
+    "details": "Samedi 22 août RDV à 9h",
+    "symbole": "🚨",
+    "couleur_bordure": "red"
   },
   {
     "titre": "Entraînement Jeudi",
