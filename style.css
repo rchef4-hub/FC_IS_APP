@@ -1,5 +1,5 @@
 :root {
-  /* Couleurs extraites du logo FC IS approximativement */
+  /* Couleurs extraites du logo FC IS */
   --primary-color: #6a0f49; /* Le bordeaux/pourpre du blason */
   --accent-color: #d4af37;  /* Le doré du haut du blason */
   --bg-color: #f4f4f9;      /* Gris très clair pour le fond */
@@ -23,7 +23,7 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* En-tête avec Logo */
+/* --- EN-TÊTE ET LOGO --- */
 header {
   background-color: var(--primary-color);
   text-align: center;
@@ -32,19 +32,35 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-header img {
-  max-height: 80px;
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+header img, header .app-logo {
+  max-height: 50px;
   width: auto;
   display: block;
-  margin: 0 auto;
   border: 2px solid var(--accent-color);
-  border-radius: 4px;
+  border-radius: 6px;
   background: white;
+  object-fit: contain;
 }
 
-/* Conteneur principal */
+header h1 {
+  color: var(--white);
+  margin: 0;
+  font-size: 1.6em;
+}
+
+/* --- CONTENEUR PRINCIPAL --- */
 #root {
   padding: 20px;
   padding-bottom: 120px;
@@ -58,62 +74,83 @@ h1, h2 {
   text-align: center;
 }
 
-/* Style des Cartes (Matchs, Joueurs, Annonces) */
-ul {
+/* --- CARTES ET LISTES (GÉNÉRAL) --- */
+#root ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
-li {
+#root li {
   background: var(--white);
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   padding: 15px;
   border-radius: 12px;
   box-shadow: var(--shadow);
   border-left: 5px solid var(--accent-color);
-  font-size: 1.1em;
+  font-size: 1.05em;
 }
 
-/* Navigation type "App Mobile" en bas */
+/* --- NAVIGATION APPLI MOBILE (FIXE EN BAS) --- */
 nav {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
   background: var(--white);
-  display: flex;
-  justify-content: space-around;
-  padding: 10px 0;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
   border-top: 3px solid var(--primary-color);
   z-index: 1000;
+  padding: 8px 0;
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+nav ul li {
+  flex: 1;
+  text-align: center;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-decoration: none;
   color: #777;
-  font-size: 0.9em;
+  font-size: 0.85em;
   font-weight: bold;
-  text-align: center;
-  flex: 1;
-  padding: 5px;
+  padding: 4px 2px;
+  border-radius: 6px;
+  transition: color 0.2s ease;
 }
 
-nav a.active {
+nav a.active, nav a:hover {
   color: var(--primary-color);
 }
 
-/* Styles pour les matchs */
+/* --- STYLES DES MATCHS --- */
 li.win {
-  border-left-color: #28a745;
+  border-left-color: #28a745 !important;
 }
 
 li.loss {
-  border-left-color: #dc3545;
+  border-left-color: #dc3545 !important;
 }
 
 li.upcoming {
-  border-left-color: var(--accent-color);
+  border-left-color: var(--accent-color) !important;
 }
 
 .result {
@@ -123,7 +160,7 @@ li.upcoming {
   font-weight: bold;
 }
 
-/* --- Styles pour les listes d'effectif & stats --- */
+/* --- LISTES D'EFFECTIF & STATS (ACCORDÉON) --- */
 #root h3 {
   background-color: var(--primary-color);
   color: var(--white);
@@ -136,9 +173,7 @@ li.upcoming {
   user-select: none;
 }
 
-/* --- ACCORDÉON (SECTIONS RÉTRACTABLES) --- */
-
-/* Style de la flèche */
+/* Style de la flèche de l'accordéon */
 #root h3::after {
   content: '▼';
   position: absolute;
