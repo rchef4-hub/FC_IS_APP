@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // --- EFFECTIF COMPLET ---
+ // --- EFFECTIF COMPLET (TOUTES SECTIONS FERMÉES PAR DÉFAUT) ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
 
@@ -141,7 +141,8 @@ document.addEventListener('DOMContentLoaded', function() {
           <br><small>${player.poste || ''}</small>
         </li>
       `).join('');
-      contentHTML += `<h3 class="accordion-header active">⚽ Joueurs</h3><ul>${playerListHTML}</ul>`;
+      // On retire "active" du h3 et on ajoute "collapsed" au ul pour que les Joueurs soient fermés par défaut
+      contentHTML += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${playerListHTML}</ul>`;
     } else {
       contentHTML += `<p style="color:red; text-align:center;">Erreur de lecture de players.json</p>`;
     }
@@ -168,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     root.innerHTML = contentHTML;
 
+    // Gestion du clic pour ouvrir/fermer chaque section
     document.querySelectorAll('#root h3').forEach(header => {
       header.addEventListener('click', function() {
         const list = this.nextElementSibling;
