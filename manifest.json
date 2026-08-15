@@ -1,7 +1,7 @@
 {
-  "name": "F.C. IS App",
-  "short_name": "FCIS",
-  "start_url": "./index.html",
+  "name": "F.C. IS",
+  "short_name": "F.C. IS",
+  "start_url": "./index.html?v=2",
   "display": "standalone",
   "background_color": "#6a0f49",
   "theme_color": "#6a0f49",
@@ -10,13 +10,13 @@
       "src": "fc_is.png",
       "type": "image/png",
       "sizes": "192x192",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "fc_is.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
