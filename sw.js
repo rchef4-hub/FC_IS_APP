@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fcis-app-v1';
+const CACHE_NAME = 'fcis-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -9,8 +9,8 @@ const ASSETS = [
 ];
 
 // Installation du Service Worker
-self.addEventListener('install', (e) => {
-  e.waitUntil(
+self.addEventListener('install', (event) => {
+  event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
     })
@@ -19,12 +19,14 @@ self.addEventListener('install', (e) => {
 });
 
 // Activation et nettoyage des anciens caches
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key);
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
         })
       );
     })
@@ -33,10 +35,10 @@ self.addEventListener('activate', (e) => {
 });
 
 // Interception des requêtes
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      return cachedResponse || fetch(e.request);
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      return cachedResponse || fetch(event.request);
     })
   );
 });
