@@ -8,12 +8,12 @@
   "icons": [
     {
       "src": "fc_is.png",
-      "type": "image/jpeg",
+      "type": "image/png",
       "sizes": "192x192"
     },
     {
       "src": "fc_is.png",
-      "type": "image/jpeg",
+      "type": "image/png",
       "sizes": "512x512"
     }
   ]
