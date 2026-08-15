@@ -45,12 +45,11 @@ header {
 }
 
 header img, header .app-logo {
-  max-height: 50px;
+  max-height: 65px; /* Augmente la taille du blason */
   width: auto;
   display: block;
-  border: 2px solid var(--accent-color);
-  border-radius: 6px;
-  background: white;
+  background: transparent; /* Retire le fond blanc indésirable */
+  border: none; /* Enlève la bordure rectangulaire */
   object-fit: contain;
 }
 
