@@ -3,7 +3,7 @@
   "short_name": "F.C. IS",
   "start_url": "./index.html?v=2",
   "display": "standalone",
-  "background_color": "transparent",
+  "background_color": "#6a0f49",
   "theme_color": "#6a0f49",
   "icons": [
     {
