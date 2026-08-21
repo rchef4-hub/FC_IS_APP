@@ -7,12 +7,49 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // --- PAGE D'ACCUEIL ---
-  function renderHome() {
+  async function renderHome() {
+    let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
+
+    try {
+      const res = await fetchFresh('players.json');
+      if (res.ok) {
+        const players = await res.json();
+        const currentMonth = new Date().getMonth() + 1; // Mois actuel (1 à 12)
+
+        // Filtre les joueurs qui fêtent leur anniversaire ce mois-ci
+        const monthBDays = players.filter(p => {
+          if (!p.naissance) return false;
+          const parts = p.naissance.split('/');
+          return parseInt(parts[1], 10) === currentMonth;
+        });
+
+        if (monthBDays.length > 0) {
+          bdaysHTML = monthBDays.map(p => {
+            const parts = p.naissance.split('/');
+            return `
+              <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
+                <span>🎂 <strong>${p.nom}</strong></span>
+                <small style="color: var(--primary-color, #007bff); font-weight: bold; font-size: 0.95em;">${parts[0]}/${parts[1]}</small>
+              </li>
+            `;
+          }).join('');
+          bdaysHTML = `<ul style="padding: 0; margin: 0;">${bdaysHTML}</ul>`;
+        }
+      }
+    } catch (e) {
+      console.error("Erreur au chargement des anniversaires :", e);
+    }
+
     root.innerHTML = `
       <h1>Bienvenue au F.C. IS</h1>
-      <div style="text-align:center; margin-top:30px;">
+      <div style="text-align:center; margin-top:20px;">
         <p>Retrouvez tous les résultats, l'effectif et les dernières infos du club.</p>
         <p><em>Saison 2026-2027</em></p>
+      </div>
+
+      <div style="margin-top: 30px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
+        <h3 style="margin-top:0; margin-bottom: 15px; color: var(--primary-color, #333); text-align: center;">🎉 Anniversaires du mois</h3>
+        ${bdaysHTML}
       </div>
     `;
   }
