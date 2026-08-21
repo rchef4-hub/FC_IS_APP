@@ -49,14 +49,28 @@
     </ul>
   </nav>
 
-  <!-- SCRIPT PRINCIPAL -->
-  <script src="app.js"></script>
+  <!-- SCRIPT PRINCIPAL (Incrémenté pour ignorer l'ancien cache HTTP) -->
+  <script src="app.js?v=4"></script>
 
-  <!-- SERVICE WORKER (MODE APP) -->
+  <!-- SERVICE WORKER AVEC RECHARGEMENT AUTOMATIQUE -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js');
+        navigator.serviceWorker.register('sw.js').then((registration) => {
+          // Forcer la recherche de mise à jour sur le serveur à chaque ouverture
+          registration.update();
+        }).catch((err) => {
+          console.error('Erreur d'enregistrement du Service Worker :', err);
+        });
+
+        // Détecter si un nouveau Service Worker a pris le contrôle et rafraîchir la page
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
       });
     }
   </script>
