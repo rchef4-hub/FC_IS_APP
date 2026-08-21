@@ -47,10 +47,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <p><em>Saison 2026-2027</em></p>
       </div>
 
-      <div style="margin-top: 30px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
-  <h3 style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; display: block; list-style: none; -webkit-appearance: none; appearance: none;">
-  🎉 Anniversaires du mois
-</h3>
+    <div style="margin-top: 30px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
+  <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.17em; line-height: 1.2;">
+    🎉 Anniversaires du mois
+  </div>
   ${bdaysHTML}
 </div>
     `;
