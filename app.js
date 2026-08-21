@@ -47,18 +47,18 @@ document.addEventListener('DOMContentLoaded', function() {
         <p><em>Saison 2026-2027</em></p>
       </div>
 
-    <div style="margin-top: 30px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
-  <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.17em; line-height: 1.2;">
-    🎉 Anniversaires du mois
-  </div>
-  ${bdaysHTML}
-</div>
+      <div style="margin-top: 30px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
+        <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.17em; line-height: 1.2;">
+          🎉 Anniversaires du mois
+        </div>
+        ${bdaysHTML}
+      </div>
     `;
   }
 
   // --- LISTE DES MATCHS ---
   async function renderMatches() {
-    root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement des matchs...</p>`;
+    root.innerHTML = `2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement des matchs...</p>`;
 
     try {
       const response = await fetchFresh('matchs.json');
@@ -67,15 +67,23 @@ document.addEventListener('DOMContentLoaded', function() {
       const matches = await response.json();
 
       const matchesHTML = matches.map(m => {
-        const isDomicile = m.lieu.toLowerCase().includes('domicile');
+        const isDomicile = m.lieu && m.lieu.toLowerCase().includes('domicile');
         const badgeColor = isDomicile ? '#28a745' : '#17a2b8';
-        const resultatDisplay = m.resultat ? `<strong>${m.resultat}</strong>` : '<em>À venir</em>';
+        
+        let resultatDisplay = '<em>À venir</em>';
+        if (m.resultat) {
+          if (typeof m.resultat === 'object') {
+            resultatDisplay = `<strong>${m.resultat.scoreDom ?? '-'} - ${m.resultat.scoreExt ?? '-'}</strong>`;
+          } else {
+            resultatDisplay = `<strong>${m.resultat}</strong>`;
+          }
+        }
 
         return `
           <li style="border-left-color: ${badgeColor}; padding: 12px; margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: var(--shadow); list-style: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
               <small style="color: #666; font-weight: bold;">📅 ${m.date}</small>
-              <span style="background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">${m.lieu}</span>
+              <span style="background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">${m.lieu || 'N/C'}</span>
             </div>
             <div style="font-size: 1.1em; margin-bottom: 5px;">
               <strong>vs ${m.adversaire}</strong>
@@ -309,7 +317,12 @@ document.addEventListener('DOMContentLoaded', function() {
         `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
       ).join('');
 
-      let playerOptions = players.map(p => 
+      // Ajout de l'option CSC dans la liste des buteurs
+      let playerOptionsScorer = `<option value="CSC">[CSC] But contre son camp</option>` + players.map(p => 
+        `<option value="${p.nom}">${p.nom}</option>`
+      ).join('');
+
+      let playerOptionsPasser = players.map(p => 
         `<option value="${p.nom}">${p.nom}</option>`
       ).join('');
 
@@ -340,11 +353,11 @@ document.addEventListener('DOMContentLoaded', function() {
           <div style="display: flex; gap: 5px; margin-bottom: 10px;">
             <select id="select-buteur" style="flex: 1; padding: 6px; border-radius: 6px;">
               <option value="">-- Buteur --</option>
-              ${playerOptions}
+              ${playerOptionsScorer}
             </select>
             <select id="select-passeur" style="flex: 1; padding: 6px; border-radius: 6px;">
               <option value="">-- Passeur --</option>
-              ${playerOptions}
+              ${playerOptionsPasser}
             </select>
             <button id="btn-add-goal" type="button" style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
           </div>
@@ -354,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div style="display: flex; gap: 5px; margin-bottom: 10px;">
             <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
               <option value="">-- Joueur Sanctionné --</option>
-              ${playerOptions}
+              ${playerOptionsPasser}
             </select>
             <select id="select-type-carton" style="width: 140px; padding: 6px; border-radius: 6px;">
               <option value="🟨">🟨 Jaune</option>
@@ -388,12 +401,15 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
 
-        goalsContainer.innerHTML = goalEvents.map((e, index) => `
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid var(--accent-color);">
-            <span>⚽ <strong>${e.buteur}</strong> ${e.passeur ? '<small style="color:#555;">(passe : ' + e.passeur + ')</small>' : ''}</span>
-            <button type="button" onclick="removeGoal(${index})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">❌</button>
-          </div>
-        `).join('');
+        goalsContainer.innerHTML = goalEvents.map((e, index) => {
+          const buteurLabel = e.buteur === 'CSC' ? '🤖 <em>[CSC] But contre son camp</em>' : `⚽ <strong>${e.buteur}</strong>`;
+          return `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid var(--accent-color);">
+              <span>${buteurLabel} ${e.passeur ? '<small style="color:#555;">(passe : ' + e.passeur + ')</small>' : ''}</span>
+              <button type="button" onclick="removeGoal(${index})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">❌</button>
+            </div>
+          `;
+        }).join('');
       }
 
       function renderCardsUI() {
@@ -504,8 +520,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
           let butsMap = {}, passesMap = {};
           goalEvents.forEach(e => {
-            if (e.buteur) butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
-            if (e.passeur) passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
+            // Ignorer l'attribution du but s'il s'agit d'un CSC
+            if (e.buteur && e.buteur !== 'CSC') {
+              butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
+            }
+            if (e.passeur) {
+              passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
+            }
           });
 
           // Traitement des cartons par joueur pour le match
