@@ -92,10 +92,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Rendu HTML
     root.innerHTML = `
       <h1>Bienvenue au F.C. IS</h1>
-      <div style="text-align:center; margin-top:20px;">
+      <div style="text-align:center; margin-top:20px; margin-bottom: 20px;">
         <p>Retrouvez tous les résultats, l'effectif et les dernières infos du club.</p>
         <p><em>Saison 2026-2027</em></p>
       </div>
+
+      <!-- BANDEAU ACCÈS RAPIDE : BOUTIQUE -->
+      <a href="https://team.jako.com/fr-fr/team/fc_is/" target="_blank" rel="noopener noreferrer" 
+         style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #6b0f40, #8b1453); color: white; text-decoration: none; padding: 12px 16px; border-radius: 10px; margin-bottom: 25px; font-weight: bold; box-shadow: 0 3px 8px rgba(0,0,0,0.15);">
+        <span style="font-size: 0.95em;">🛍️ Boutique Officielle JAKO</span>
+        <span style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85em; white-space: nowrap;">Visiter ↗</span>
+      </a>
 
       <!-- CARTE : DERNIER MATCH -->
       <div style="margin-top: 25px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
@@ -334,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </li>
       `).join('');
       
-      root.innerHTML = `2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
+      root.innerHTML = `<h2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
       
     } catch (error) {
       console.error("Erreur de chargement des annonces :", error);
