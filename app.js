@@ -9,14 +9,16 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
+    let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récents</p>';
+    let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
 
+    // 1. Chargement des Anniversaires
     try {
       const res = await fetchFresh('players.json');
       if (res.ok) {
         const players = await res.json();
         const currentMonth = new Date().getMonth() + 1; // Mois actuel (1 à 12)
 
-        // Filtre les joueurs qui fêtent leur anniversaire ce mois-ci
         const monthBDays = players.filter(p => {
           if (!p.naissance) return false;
           const parts = p.naissance.split('/');
@@ -40,6 +42,54 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error("Erreur au chargement des anniversaires :", e);
     }
 
+    // 2. Chargement du Dernier Match et du Prochain Match
+    try {
+      const resMatchs = await fetchFresh('matchs.json');
+      if (resMatchs.ok) {
+        const matches = await resMatchs.json();
+
+        // Helper pour afficher correctement le score/résultat
+        const formatResult = (res) => {
+          if (!res) return '';
+          if (typeof res === 'object') {
+            return `${res.scoreDom ?? '-'} - ${res.scoreExt ?? '-'}`;
+          }
+          return res;
+        };
+
+        // Dernier match joué (ayant un champ resultat rempli)
+        const playedMatches = matches.filter(m => m.resultat && m.resultat !== "");
+        if (playedMatches.length > 0) {
+          const lastMatch = playedMatches[playedMatches.length - 1];
+          const isDom = lastMatch.lieu && lastMatch.lieu.toLowerCase().includes('domicile');
+          lastMatchHTML = `
+            <div style="text-align: center;">
+              <small style="color: #666; font-weight: bold;">📅 ${lastMatch.date} (${lastMatch.lieu || 'N/C'})</small>
+              <div style="font-size: 1.1em; margin: 5px 0;"><strong>vs ${lastMatch.adversaire}</strong></div>
+              <div style="color: #28a745; font-weight: bold; font-size: 1.1em;">Score : ${formatResult(lastMatch.resultat)}</div>
+            </div>
+          `;
+        }
+
+        // Prochain match à venir (sans résultat)
+        const upcomingMatches = matches.filter(m => !m.resultat || m.resultat === "");
+        if (upcomingMatches.length > 0) {
+          const nextMatch = upcomingMatches[0];
+          const badgeColor = (nextMatch.lieu && nextMatch.lieu.toLowerCase().includes('domicile')) ? '#28a745' : '#17a2b8';
+          nextMatchHTML = `
+            <div style="text-align: center;">
+              <small style="color: #666; font-weight: bold;">📅 ${nextMatch.date}</small>
+              <div style="font-size: 1.1em; margin: 5px 0;"><strong>vs ${nextMatch.adversaire}</strong></div>
+              <span style="background: ${badgeColor}; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.85em;">${nextMatch.lieu || 'N/C'}</span>
+            </div>
+          `;
+        }
+      }
+    } catch (e) {
+      console.error("Erreur au chargement des matchs sur l'accueil :", e);
+    }
+
+    // Rendu HTML
     root.innerHTML = `
       <h1>Bienvenue au F.C. IS</h1>
       <div style="text-align:center; margin-top:20px;">
@@ -47,8 +97,25 @@ document.addEventListener('DOMContentLoaded', function() {
         <p><em>Saison 2026-2027</em></p>
       </div>
 
-      <div style="margin-top: 30px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
-        <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.17em; line-height: 1.2;">
+      <!-- CARTE : DERNIER MATCH -->
+      <div style="margin-top: 25px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
+        <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.1em;">
+          ⚽ Dernier Match
+        </div>
+        ${lastMatchHTML}
+      </div>
+
+      <!-- CARTE : PROCHAIN MATCH -->
+      <div style="margin-top: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
+        <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.1em;">
+          ⏳ Prochain Match
+        </div>
+        ${nextMatchHTML}
+      </div>
+
+      <!-- CARTE : ANNIVERSAIRES -->
+      <div style="margin-top: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
+        <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.1em;">
           🎉 Anniversaires du mois
         </div>
         ${bdaysHTML}
@@ -58,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- LISTE DES MATCHS ---
   async function renderMatches() {
-    root.innerHTML = `2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement des matchs...</p>`;
+    root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement des matchs...</p>`;
 
     try {
       const response = await fetchFresh('matchs.json');
@@ -267,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </li>
       `).join('');
       
-      root.innerHTML = `<h2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
+      root.innerHTML = `2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
       
     } catch (error) {
       console.error("Erreur de chargement des annonces :", error);
@@ -317,7 +384,6 @@ document.addEventListener('DOMContentLoaded', function() {
         `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
       ).join('');
 
-      // Ajout de l'option CSC dans la liste des buteurs
       let playerOptionsScorer = `<option value="CSC">[CSC] But contre son camp</option>` + players.map(p => 
         `<option value="${p.nom}">${p.nom}</option>`
       ).join('');
@@ -520,7 +586,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
           let butsMap = {}, passesMap = {};
           goalEvents.forEach(e => {
-            // Ignorer l'attribution du but s'il s'agit d'un CSC
             if (e.buteur && e.buteur !== 'CSC') {
               butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
             }
@@ -529,7 +594,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
 
-          // Traitement des cartons par joueur pour le match
           let jaunesMap = {}, blancsMap = {}, rougesMap = {};
           let totalCardsPerPlayer = {}; 
 
@@ -546,7 +610,6 @@ document.addEventListener('DOMContentLoaded', function() {
               rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
             }
 
-            // RÈGLE : 2 avertissements (Jaune/Blanc) = Rouge indirect
             if (totalCardsPerPlayer[c.joueur] === 2) {
               rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
               jaunesMap[c.joueur] = 0;
