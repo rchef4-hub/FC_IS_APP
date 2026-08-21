@@ -93,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
     root.innerHTML = `
       <h1>Bienvenue au F.C. IS</h1>
       <div style="text-align:center; margin-top:20px; margin-bottom: 20px;">
-        <p>Retrouvez tous les résultats, l'effectif et les dernières infos du club.</p>
         <p><em>Saison 2026-2027</em></p>
       </div>
 
