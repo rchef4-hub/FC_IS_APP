@@ -310,5 +310,44 @@
     "cartons_jaunes": 0,
     "cartons_blancs": 0,
     "cartons_rouges": 0
+  },
+  {
+    "numero": 25,
+    "nom": "QUENTIN Mathieu",
+    "poste": "Joueur",
+    "symbole": "⚽",
+    "naissance": "03/05/2003",
+    "matchs": 0,
+    "buts": 0,
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_blancs": 0,
+    "cartons_rouges": 0
+  },
+  {
+    "numero": 26,
+    "nom": "THERIOT Cyril",
+    "poste": "Joueur",
+    "symbole": "⚽",
+    "naissance": "05/09/1991",
+    "matchs": 0,
+    "buts": 0,
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_blancs": 0,
+    "cartons_rouges": 0
+  },
+  {
+    "numero": 27,
+    "nom": "THIBONNET Julien",
+    "poste": "Gardien de but",
+    "symbole": "🧤",
+    "naissance": "31/03/1984",
+    "matchs": 0,
+    "buts": 0,
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_blancs": 0,
+    "cartons_rouges": 0
   }
 ]
