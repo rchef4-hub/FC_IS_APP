@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </li>
         `;
       }).join('');
-      contentHTML += `<h3 class="accordion-header">🪙 Arbitres</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
+      contentHTML += `<h3 class="accordion-header">🟨🟥 Arbitres</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
     }
 
     root.innerHTML = contentHTML;
