@@ -5,8 +5,9 @@
   {"fonction": "Secrétaire", "nom": "CHEF Romain", "symbole": "📝"},
   {"fonction": "Vice-secrétaire", "nom": "THIBONNET Julien", "symbole": "📝"},
   {"fonction": "Entraîneur", "nom": "BERNARD Anthony", "symbole": "👨‍🏫"}
-  {"fonction": "Entraîneur", "nom": "AJILLET Michel", "symbole": "🤝"}
-  {"fonction": "Entraîneur", "nom": "CHEF Floriane", "symbole": "🤝"}
-  {"fonction": "Entraîneur", "nom": "BOISSELIE Stéphanie", "symbole": "🤝"}
-  {"fonction": "Entraîneur", "nom": "THIBONNET Julien", "symbole": "🤝"}
+  {"fonction": "Dirigeant", "nom": "JAILLET Michel", "symbole": "🤝"}
+  {"fonction": "Dirigeante", "nom": "CHEF Floriane", "symbole": "🤝"}
+  {"fonction": "Dirigeante", "nom": "BOISSELIE Stéphanie", "symbole": "🤝"}
+  {"fonction": "Dirigeant", "nom": "THIBONNET Julien", "symbole": "🤝"}
+  {"fonction": "Dirigeant", "nom": "FAGEOT Gérald", "symbole": "🤝"}
 ]
