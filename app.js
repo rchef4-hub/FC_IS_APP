@@ -27,6 +27,19 @@ document.addEventListener('DOMContentLoaded', function() {
     return `<strong>${str}</strong>`;
   }
 
+  // Helper pour attribuer une couleur de bordure selon le poste
+  function getPosteColor(posteStr) {
+    if (!posteStr) return '#6c757d'; 
+    const p = posteStr.toLowerCase();
+
+    if (p.includes('gardien') || p.includes('gb')) return '#28a745'; // Vert
+    if (p.includes('défenseur') || p.includes('defenseur') || p.includes('def')) return '#17a2b8'; // Bleu Cyan
+    if (p.includes('milieu')) return '#fd7e14'; // Orange / Ambre
+    if (p.includes('attaquant') || p.includes('att')) return '#c9a227'; // Jaune Doré (actuel)
+
+    return '#6c757d';
+  }
+
   // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
@@ -338,18 +351,22 @@ document.addEventListener('DOMContentLoaded', function() {
     let contentHTML = '<h2>Effectif du Club</h2>';
 
     if (players.length > 0) {
-      const playerListHTML = players.map(player => `
-        <li>
-          ${player.symbole || '⚽'} <strong>#${player.numero || ''} ${player.nom} ${player.prenom || ''}</strong>
-          <br><small>${player.poste || ''}</small>
-        </li>
-      `).join('');
+      const playerListHTML = players.map(player => {
+        const borderColor = getPosteColor(player.poste);
+        const playerNum = player.numero ? `#${player.numero} ` : '';
+        return `
+          <li style="border-left: 4px solid ${borderColor};">
+            ${player.symbole || '⚽'} <strong>${playerNum}${player.nom} ${player.prenom || ''}</strong>
+            <br><small>${player.poste || ''}</small>
+          </li>
+        `;
+      }).join('');
       contentHTML += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${playerListHTML}</ul>`;
     }
 
     if (dirigeants.length > 0) {
       const dirigeantsListHTML = dirigeants.map(dirigeant => `
-        <li>
+        <li style="border-left: 4px solid #6c757d;">
           ${dirigeant.symbole || '👔'} <strong>${dirigeant.nom} ${dirigeant.prenom || ''}</strong>
           <br><small>${dirigeant.fonction || ''}</small>
         </li>
@@ -361,8 +378,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const arbitresListHTML = arbitres.map(arbitre => {
         const fullName = arbitre.prenom ? `${arbitre.nom} ${arbitre.prenom}` : arbitre.nom;
         return `
-          <li>
-            ${arbitre.symbole || '🟨🟥'} <strong>${fullName}</strong>
+          <li style="border-left: 4px solid #6c757d;">
+            ${arbitre.symbole || '🟨'} <strong>${fullName}</strong>
             <br><small>Arbitre ${arbitre.categorie || 'Club'}</small>
           </li>
         `;
