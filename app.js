@@ -33,9 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
     let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
 
-    // 1. Chargement sécurisé des Anniversaires (Joueurs + Dirigeants + Arbitres)
-    let allMembers = [];
-
     const loadJsonSafe = async (filename) => {
       try {
         const res = await fetchFresh(filename);
@@ -55,35 +52,57 @@ document.addEventListener('DOMContentLoaded', function() {
       loadJsonSafe('arbitres.json')
     ]);
 
-    allMembers = [...players, ...dirigeants, ...arbitres];
+    // Unification des données + dédoublonnage par nom pour éviter un double anniversaire
+    const rawMembers = [...players, ...dirigeants, ...arbitres];
+    const uniqueNames = new Set();
+    
+    const allMembers = rawMembers.filter(m => {
+      if (!m.nom) return false;
+      
+      // Harmonisation des clés de date (naissance ou date_de_naissance)
+      m.dateNaissanceValidee = m.naissance || m.date_de_naissance;
+      
+      // Construction du nom complet s'il y a prénom
+      const fullName = m.prenom ? `${m.nom} ${m.prenom}` : m.nom;
+      if (uniqueNames.has(fullName.toLowerCase())) return false;
+      uniqueNames.add(fullName.toLowerCase());
+      return true;
+    });
 
     if (allMembers.length > 0) {
       const currentMonth = new Date().getMonth() + 1;
 
       const monthBDays = allMembers.filter(m => {
-        if (!m.naissance) return false;
-        const parts = m.naissance.includes('/') ? m.naissance.split('/') : m.naissance.split('-');
+        const dateStr = m.dateNaissanceValidee;
+        if (!dateStr) return false;
+
+        const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
         if (parts.length < 2) return false;
-        
-        // Gère JJ/MM/AAAA ou AAAA-MM-JJ
-        const month = m.naissance.includes('/') && parts[2]?.length === 4 
-          ? parseInt(parts[1], 10) 
-          : (parts[0].length === 4 ? parseInt(parts[1], 10) : parseInt(parts[1], 10));
-          
+
+        let month = 0;
+        if (parts[0].length === 4) {
+          // Format AAAA-MM-JJ -> mois en index 1
+          month = parseInt(parts[1], 10);
+        } else {
+          // Format JJ/MM/AAAA -> mois en index 1
+          month = parseInt(parts[1], 10);
+        }
         return month === currentMonth;
       });
 
       if (monthBDays.length > 0) {
         bdaysHTML = monthBDays.map(m => {
-          const parts = m.naissance.includes('/') ? m.naissance.split('/') : m.naissance.split('-');
+          const dateStr = m.dateNaissanceValidee;
+          const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
           const isISO = parts[0].length === 4;
           const day = isISO ? parts[2].padStart(2, '0') : parts[0].padStart(2, '0');
           const month = parts[1].padStart(2, '0');
           const icon = m.symbole || '🎂';
+          const displayName = m.prenom ? `${m.prenom} ${m.nom}` : m.nom;
           
           return `
             <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
-              <span>${icon} <strong>${m.nom}</strong></span>
+              <span>${icon} <strong>${displayName}</strong></span>
               <small style="color: var(--primary-color, #007bff); font-weight: bold; font-size: 0.95em;">${day}/${month}</small>
             </li>
           `;
@@ -92,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // 2. Chargement du Dernier Match et du Prochain Match
+    // 2. Chargement des matchs
     try {
       const resMatchs = await fetchFresh('matchs.json');
       if (resMatchs.ok) {
@@ -330,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <br><small>${player.poste || ''}</small>
         </li>
       `).join('');
-      contentHTML += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${playerListHTML}</ul>`;
+      contentHTML += `<h3 class="accordion-header">⚽ Joueurs (${players.length})</h3><ul class="collapsed">${playerListHTML}</ul>`;
     }
 
     if (dirigeants.length > 0) {
@@ -340,17 +359,20 @@ document.addEventListener('DOMContentLoaded', function() {
           <br><small>${dirigeant.fonction || ''}</small>
         </li>
       `).join('');
-      contentHTML += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${dirigeantsListHTML}</ul>`;
+      contentHTML += `<h3 class="accordion-header">👔 Dirigeants (${dirigeants.length})</h3><ul class="collapsed">${dirigeantsListHTML}</ul>`;
     }
 
     if (arbitres.length > 0) {
-      const arbitresListHTML = arbitres.map(arbitre => `
-        <li>
-          ${arbitre.symbole || '📣'} <strong>${arbitre.nom}</strong>
-          <br><small>Arbitre ${arbitre.categorie || ''}</small>
-        </li>
-      `).join('');
-      contentHTML += `<h3 class="accordion-header">📣 Arbitres</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
+      const arbitresListHTML = arbitres.map(arbitre => {
+        const displayName = arbitre.prenom ? `${arbitre.prenom} ${arbitre.nom}` : arbitre.nom;
+        return `
+          <li>
+            ${arbitre.symbole || '📣'} <strong>${displayName}</strong>
+            <br><small>Arbitre ${arbitre.categorie || 'Club'}</small>
+          </li>
+        `;
+      }).join('');
+      contentHTML += `<h3 class="accordion-header">📣 Corps Arbitral (${arbitres.length})</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
     }
 
     root.innerHTML = contentHTML;
@@ -391,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- ADMINISTRATION (SAISIE & RESET) ---
+  // --- ADMINISTRATION ---
   async function renderAdmin() {
     const password = prompt("Veuillez entrer le mot de passe administrateur :");
     if (password !== "508497") {
