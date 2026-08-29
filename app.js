@@ -30,55 +30,66 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
-    let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récents</p>';
+    let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
     let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
 
-    // 1. Chargement des Anniversaires (Joueurs + Dirigeants + Arbitres)
-    try {
-      const [playersRes, dirigeantsRes, arbitresRes] = await Promise.all([
-        fetchFresh('players.json').catch(() => null),
-        fetchFresh('dirigeants.json').catch(() => null),
-        fetchFresh('arbitres.json').catch(() => null)
-      ]);
+    // 1. Chargement sécurisé des Anniversaires (Joueurs + Dirigeants + Arbitres)
+    let allMembers = [];
 
-      let allMembers = [];
+    const loadJsonSafe = async (filename) => {
+      try {
+        const res = await fetchFresh(filename);
+        if (res.ok) {
+          const data = await res.json();
+          return Array.isArray(data) ? data : [];
+        }
+      } catch (e) {
+        console.warn(`Fichier ${filename} non trouvé ou invalide.`, e);
+      }
+      return [];
+    };
 
-      if (playersRes && playersRes.ok) {
-        const players = await playersRes.json();
-        allMembers = allMembers.concat(players);
-      }
-      if (dirigeantsRes && dirigeantsRes.ok) {
-        const dirigeants = await dirigeantsRes.json();
-        allMembers = allMembers.concat(dirigeants);
-      }
-      if (arbitresRes && arbitresRes.ok) {
-        const arbitres = await arbitresRes.json();
-        allMembers = allMembers.concat(arbitres);
-      }
+    const [players, dirigeants, arbitres] = await Promise.all([
+      loadJsonSafe('players.json'),
+      loadJsonSafe('dirigeants.json'),
+      loadJsonSafe('arbitres.json')
+    ]);
 
+    allMembers = [...players, ...dirigeants, ...arbitres];
+
+    if (allMembers.length > 0) {
       const currentMonth = new Date().getMonth() + 1;
 
       const monthBDays = allMembers.filter(m => {
         if (!m.naissance) return false;
-        const parts = m.naissance.split('/');
-        return parseInt(parts[1], 10) === currentMonth;
+        const parts = m.naissance.includes('/') ? m.naissance.split('/') : m.naissance.split('-');
+        if (parts.length < 2) return false;
+        
+        // Gère JJ/MM/AAAA ou AAAA-MM-JJ
+        const month = m.naissance.includes('/') && parts[2]?.length === 4 
+          ? parseInt(parts[1], 10) 
+          : (parts[0].length === 4 ? parseInt(parts[1], 10) : parseInt(parts[1], 10));
+          
+        return month === currentMonth;
       });
 
       if (monthBDays.length > 0) {
         bdaysHTML = monthBDays.map(m => {
-          const parts = m.naissance.split('/');
+          const parts = m.naissance.includes('/') ? m.naissance.split('/') : m.naissance.split('-');
+          const isISO = parts[0].length === 4;
+          const day = isISO ? parts[2].padStart(2, '0') : parts[0].padStart(2, '0');
+          const month = parts[1].padStart(2, '0');
           const icon = m.symbole || '🎂';
+          
           return `
             <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
               <span>${icon} <strong>${m.nom}</strong></span>
-              <small style="color: var(--primary-color, #007bff); font-weight: bold; font-size: 0.95em;">${parts[0]}/${parts[1]}</small>
+              <small style="color: var(--primary-color, #007bff); font-weight: bold; font-size: 0.95em;">${day}/${month}</small>
             </li>
           `;
         }).join('');
         bdaysHTML = `<ul style="padding: 0; margin: 0;">${bdaysHTML}</ul>`;
       }
-    } catch (e) {
-      console.error("Erreur au chargement des anniversaires :", e);
     }
 
     // 2. Chargement du Dernier Match et du Prochain Match
