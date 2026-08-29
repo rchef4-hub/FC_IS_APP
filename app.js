@@ -56,11 +56,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const rawMembers = [...players, ...dirigeants, ...arbitres];
     const uniqueKeys = new Set();
     
-    // Dédoublonnage sur NOM + PRÉNOM (évite de sauter les personnes du même nom de famille)
+    // Dédoublonnage sur NOM + PRÉNOM
     const allMembers = rawMembers.filter(m => {
       if (!m.nom) return false;
       
-      // Harmonisation des clés de date (naissance ou date_de_naissance)
       m.dateNaissanceValidee = m.naissance || m.date_de_naissance;
       
       const prenom = m.prenom || '';
@@ -83,10 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let month = 0;
         if (parts[0].length === 4) {
-          // Format AAAA-MM-JJ
           month = parseInt(parts[1], 10);
         } else {
-          // Format JJ/MM/AAAA
           month = parseInt(parts[1], 10);
         }
         return month === currentMonth;
@@ -101,7 +98,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const month = parts[1].padStart(2, '0');
           const icon = m.symbole || '🎂';
           
-          // Affichage NOM + Prénom
           const displayName = m.prenom ? `${m.nom} ${m.prenom}` : m.nom;
           
           return `
@@ -348,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <br><small>${player.poste || ''}</small>
         </li>
       `).join('');
-      contentHTML += `<h3 class="accordion-header">⚽ Joueurs (${players.length})</h3><ul class="collapsed">${playerListHTML}</ul>`;
+      contentHTML += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${playerListHTML}</ul>`;
     }
 
     if (dirigeants.length > 0) {
@@ -358,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <br><small>${dirigeant.fonction || ''}</small>
         </li>
       `).join('');
-      contentHTML += `<h3 class="accordion-header">👔 Dirigeants (${dirigeants.length})</h3><ul class="collapsed">${dirigeantsListHTML}</ul>`;
+      contentHTML += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${dirigeantsListHTML}</ul>`;
     }
 
     if (arbitres.length > 0) {
@@ -366,12 +362,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const fullName = arbitre.prenom ? `${arbitre.nom} ${arbitre.prenom}` : arbitre.nom;
         return `
           <li>
-            ${arbitre.symbole || '📣'} <strong>${fullName}</strong>
+            ${arbitre.symbole || '🪙'} <strong>${fullName}</strong>
             <br><small>Arbitre ${arbitre.categorie || 'Club'}</small>
           </li>
         `;
       }).join('');
-      contentHTML += `<h3 class="accordion-header">📣 Arbitres (${arbitres.length})</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
+      contentHTML += `<h3 class="accordion-header">🪙 Arbitres</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
     }
 
     root.innerHTML = contentHTML;
