@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (p.includes('gardien') || p.includes('gb')) return '#28a745'; // Vert
     if (p.includes('défenseur') || p.includes('defenseur') || p.includes('def')) return '#17a2b8'; // Bleu Cyan
     if (p.includes('milieu')) return '#fd7e14'; // Orange / Ambre
-    if (p.includes('attaquant') || p.includes('att')) return '#c9a227'; // Jaune Doré (actuel)
+    if (p.includes('attaquant') || p.includes('att')) return '#c9a227'; // Jaune Doré
 
     return '#6c757d';
   }
@@ -264,14 +264,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const players = await response.json();
 
+      // Tri des meilleurs buteurs
       const topScorers = [...players]
         .filter(p => (parseInt(p.buts) || 0) > 0)
         .sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
 
+      // Tri des meilleurs passeurs
       const topPassers = [...players]
         .filter(p => (parseInt(p.passes) || 0) > 0)
         .sort((a, b) => (parseInt(b.passes) || 0) - (parseInt(a.passes) || 0));
       
+      // Tri de la discipline
       const topCards = [...players]
         .filter(p => (parseInt(p.cartons_jaunes) || 0) > 0 || (parseInt(p.cartons_blancs) || 0) > 0 || (parseInt(p.cartons_rouges) || 0) > 0)
         .sort((a, b) => {
@@ -280,26 +283,38 @@ document.addEventListener('DOMContentLoaded', function() {
           return scoreB - scoreA;
         });
 
+      // Tri des joueurs les plus utilisés (matchs joués)
+      const topPlayed = [...players]
+        .filter(p => (parseInt(p.matchs) || 0) > 0)
+        .sort((a, b) => (parseInt(b.matchs) || 0) - (parseInt(a.matchs) || 0));
+
       const scorersHTML = topScorers.length > 0 ? topScorers.map(p => `
         <li>
-          <strong>${p.nom}</strong>
+          <strong>${p.nom} ${p.prenom || ''}</strong>
           <br><small>⚽ ${parseInt(p.buts) || 0} but(s) en ${parseInt(p.matchs) || 0} match(s)</small>
         </li>
       `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun buteur pour l\'instant.</p>';
 
       const passersHTML = topPassers.length > 0 ? topPassers.map(p => `
         <li>
-          <strong>${p.nom}</strong>
+          <strong>${p.nom} ${p.prenom || ''}</strong>
           <br><small>👟 ${parseInt(p.passes) || 0} passe(s) décisive(s)</small>
         </li>
       `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucune passe décisive pour l\'instant.</p>';
 
       const cardsHTML = topCards.length > 0 ? topCards.map(p => `
         <li>
-          <strong>${p.nom}</strong>
+          <strong>${p.nom} ${p.prenom || ''}</strong>
           <br><small>🟨 ${parseInt(p.cartons_jaunes) || 0} jaune(s) | ⬜ ${parseInt(p.cartons_blancs) || 0} blanc(s) | 🟥 ${parseInt(p.cartons_rouges) || 0} rouge(s)</small>
         </li>
       `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun carton enregistré pour l\'instant.</p>';
+
+      const playedHTML = topPlayed.length > 0 ? topPlayed.map(p => `
+        <li>
+          <strong>${p.nom} ${p.prenom || ''}</strong>
+          <br><small>🏃 ${parseInt(p.matchs) || 0} match(s) disputé(s)</small>
+        </li>
+      `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun match enregistré pour l\'instant.</p>';
 
       root.innerHTML = `
         <h2>Statistiques de la Saison</h2>
@@ -309,6 +324,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul class="collapsed">${passersHTML}</ul>
         <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
         <ul class="collapsed">${cardsHTML}</ul>
+        <h3 class="accordion-header">🏃 Joueurs les plus utilisés</h3>
+        <ul class="collapsed">${playedHTML}</ul>
       `;
 
       document.querySelectorAll('#root h3').forEach(header => {
