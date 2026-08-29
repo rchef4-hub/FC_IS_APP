@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const res = await fetchFresh('players.json');
       if (res.ok) {
         const players = await res.json();
-        const currentMonth = new Date().getMonth() + 1; // Mois actuel (1 à 12)
+        const currentMonth = new Date().getMonth() + 1;
 
         const monthBDays = players.filter(p => {
           if (!p.naissance) return false;
@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (resMatchs.ok) {
         const matches = await resMatchs.json();
 
-        // Helper pour afficher correctement le score/résultat
         const formatResult = (res) => {
           if (!res) return '';
           if (typeof res === 'object') {
@@ -57,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
           return res;
         };
 
-        // Dernier match joué (ayant un champ resultat rempli)
         const playedMatches = matches.filter(m => m.resultat && m.resultat !== "");
         if (playedMatches.length > 0) {
           const lastMatch = playedMatches[playedMatches.length - 1];
@@ -80,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function() {
           `;
         }
 
-        // Prochain match à venir (sans résultat)
         const upcomingMatches = matches.filter(m => !m.resultat || m.resultat === "");
         if (upcomingMatches.length > 0) {
           const nextMatch = upcomingMatches[0];
@@ -98,21 +95,18 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error("Erreur au chargement des matchs sur l'accueil :", e);
     }
 
-    // Rendu HTML
     root.innerHTML = `
       <h1>Bienvenue au F.C. IS</h1>
       <div style="text-align:center; margin-top:20px; margin-bottom: 20px;">
         <p><em>Saison 2026-2027</em></p>
       </div>
 
-      <!-- BANDEAU ACCÈS RAPIDE : BOUTIQUE -->
       <a href="https://team.jako.com/fr-fr/team/fc_is/" target="_blank" rel="noopener noreferrer" 
          style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #6b0f40, #8b1453); color: white; text-decoration: none; padding: 12px 16px; border-radius: 10px; margin-bottom: 25px; font-weight: bold; box-shadow: 0 3px 8px rgba(0,0,0,0.15);">
         <span style="font-size: 0.95em;">🛍️ Boutique Officielle JAKO</span>
         <span style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85em; white-space: nowrap;">Visiter ↗</span>
       </a>
 
-      <!-- CARTE : DERNIER MATCH -->
       <div style="margin-top: 25px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
         <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.1em;">
           ⚽ Dernier Match
@@ -120,7 +114,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ${lastMatchHTML}
       </div>
 
-      <!-- CARTE : PROCHAIN MATCH -->
       <div style="margin-top: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
         <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.1em;">
           ⏳ Prochain Match
@@ -128,7 +121,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ${nextMatchHTML}
       </div>
 
-      <!-- CARTE : ANNIVERSAIRES -->
       <div style="margin-top: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
         <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.1em;">
           🎉 Anniversaires du mois
@@ -197,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- STATISTIQUES (BUTEURS, PASSEURS & DISCIPLINE) ---
+  // --- STATISTIQUES ---
   async function renderStats() {
     root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
 
@@ -207,17 +199,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const players = await response.json();
 
-      // Buteurs
       const topScorers = [...players]
         .filter(p => (parseInt(p.buts) || 0) > 0)
         .sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
 
-      // Passeurs
       const topPassers = [...players]
         .filter(p => (parseInt(p.passes) || 0) > 0)
         .sort((a, b) => (parseInt(b.passes) || 0) - (parseInt(a.passes) || 0));
       
-      // Discipline
       const topCards = [...players]
         .filter(p => (parseInt(p.cartons_jaunes) || 0) > 0 || (parseInt(p.cartons_blancs) || 0) > 0 || (parseInt(p.cartons_rouges) || 0) > 0)
         .sort((a, b) => {
@@ -366,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- SAISIE MATCH & RÉINITIALISATION (ADMIN) ---
+  // --- ADMINISTRATION (SAISIE & RESET) ---
   async function renderAdmin() {
     const password = prompt("Veuillez entrer le mot de passe administrateur :");
     if (password !== "508497") {
@@ -432,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </select>
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Score final :</label>
-          <input type="text" id="match-score" placeholder="Ex: Victoire 3-1" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc;">
+          <input type="text" id="match-score" placeholder="Ex: Défaite 1 -2" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc;">
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">3. Joueurs Présents :</label>
           <div style="max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 15px;">
@@ -452,7 +441,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <button id="btn-add-goal" type="button" style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
           </div>
 
-          <!-- SECTION CARTONS -->
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Avertissement / Carton :</label>
           <div style="display: flex; gap: 5px; margin-bottom: 10px;">
             <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
@@ -530,7 +518,6 @@ document.addEventListener('DOMContentLoaded', function() {
       renderGoalsUI();
       renderCardsUI();
 
-      // Écouteur pour l'ajout de buts
       document.getElementById('btn-add-goal').addEventListener('click', () => {
         const buteurSelect = document.getElementById('select-buteur');
         const passeurSelect = document.getElementById('select-passeur');
@@ -549,7 +536,6 @@ document.addEventListener('DOMContentLoaded', function() {
         passeurSelect.value = '';
       });
 
-      // Écouteur pour l'ajout de cartons
       document.getElementById('btn-add-card').addEventListener('click', () => {
         const joueurSelect = document.getElementById('select-joueur-carton');
         const typeSelect = document.getElementById('select-type-carton');
@@ -574,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (!getRes.ok) {
-          throw new Error(`Impossible de lire ${filePath}. Vérifiez les permissions de votre Token GitHub.`);
+          throw new Error(`Impossible de lire ${filePath}. Vérifiez les permissions du Token.`);
         }
 
         const fileData = await getRes.json();
@@ -593,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (!putRes.ok) {
-          throw new Error(`Erreur de réécriture de ${filePath}`);
+          throw new Error(`Erreur lors de la réécriture de ${filePath}`);
         }
       }
 
@@ -608,6 +594,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const checkedBoxes = document.querySelectorAll('.presence-check:checked');
           const presentNames = Array.from(checkedBoxes).map(cb => cb.value);
 
+          // 1. Calcul des buts et passes
           let butsMap = {}, passesMap = {};
           goalEvents.forEach(e => {
             if (e.buteur && e.buteur !== 'CSC') {
@@ -618,6 +605,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
 
+          // 2. Calcul des cartons
           let jaunesMap = {}, blancsMap = {}, rougesMap = {};
           let totalCardsPerPlayer = {}; 
 
@@ -641,6 +629,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
 
+          // 3. Mise à jour du tableau des joueurs
           const updatedPlayers = players.map(p => {
             let updatedP = { ...p };
             let currentMatchs = parseInt(updatedP.matchs) || 0;
@@ -666,31 +655,32 @@ document.addEventListener('DOMContentLoaded', function() {
             return updatedP;
           });
 
-          // Mise à jour de matchs.json avec les buteurs & passeurs formatés
+          // 4. Mise à jour de matchs.json avec les textes formattés
           const updatedMatches = [...matches];
           if (score) updatedMatches[selectedMatchIdx].resultat = score;
 
-          if (goalEvents.length > 0) {
-            // Mise en forme des buteurs (ex: Dupont (x2), Durand)
-            let buteursList = [];
-            for (let b in butsMap) {
-              buteursList.push(butsMap[b] > 1 ? `${b} (x${butsMap[b]})` : b);
-            }
-            if (goalEvents.some(e => e.buteur === 'CSC')) {
-              buteursList.push('CSC');
-            }
+          // Formater et ajouter les buteurs
+          let buteursList = [];
+          for (let b in butsMap) {
+            buteursList.push(butsMap[b] > 1 ? `${b} (x${butsMap[b]})` : b);
+          }
+          if (goalEvents.some(e => e.buteur === 'CSC')) {
+            buteursList.push('CSC');
+          }
+          if (buteursList.length > 0) {
             updatedMatches[selectedMatchIdx].buteurs = buteursList.join(', ');
-
-            // Mise en forme des passeurs
-            let passeursList = [];
-            for (let p in passesMap) {
-              passeursList.push(passesMap[p] > 1 ? `${p} (x${passesMap[p]})` : p);
-            }
-            if (passeursList.length > 0) {
-              updatedMatches[selectedMatchIdx].passeurs = passeursList.join(', ');
-            }
           }
 
+          // Formater et ajouter les passeurs
+          let passeursList = [];
+          for (let p in passesMap) {
+            passeursList.push(passesMap[p] > 1 ? `${p} (x${passesMap[p]})` : p);
+          }
+          if (passeursList.length > 0) {
+            updatedMatches[selectedMatchIdx].passeurs = passeursList.join(', ');
+          }
+
+          // Envoi vers GitHub
           await updateGitHubFile('players.json', updatedPlayers, 'Update players via app');
           await updateGitHubFile('matchs.json', updatedMatches, 'Update matchs via app');
 
@@ -704,12 +694,12 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
-          statusMsg.innerText = "❌ Erreur d'enregistrement. Vérifiez votre Token GitHub.";
+          statusMsg.innerText = "❌ Erreur lors de l'enregistrement.";
         }
       });
 
       document.getElementById('btn-reset-all').addEventListener('click', async () => {
-        if (!confirm("⚠️ Remettre TOUTES les stats à ZÉRO ?")) return;
+        if (!confirm("⚠️ Réinitialiser TOUTES les statistiques et les résultats ?")) return;
 
         const statusMsg = document.getElementById('status-message');
         statusMsg.style.color = "orange";
@@ -750,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- ROUTEUR PRINCIPAL ---
+  // --- ROUTEUR ---
   function router() {
     const hash = location.hash.replace('#','') || 'home';
     
@@ -772,7 +762,5 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   window.addEventListener('hashchange', router);
-  
-  // Exécution immédiate au chargement du script
   router();
 });
