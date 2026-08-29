@@ -61,12 +61,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const playedMatches = matches.filter(m => m.resultat && m.resultat !== "");
         if (playedMatches.length > 0) {
           const lastMatch = playedMatches[playedMatches.length - 1];
-          const isDom = lastMatch.lieu && lastMatch.lieu.toLowerCase().includes('domicile');
+          
+          let detailsHTML = '';
+          if (lastMatch.buteurs) {
+            detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 6px;">⚽ <strong>Buteur(s) :</strong> ${lastMatch.buteurs}</div>`;
+          }
+          if (lastMatch.passeurs) {
+            detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 4px;">👟 <strong>Passeur(s) :</strong> ${lastMatch.passeurs}</div>`;
+          }
+
           lastMatchHTML = `
             <div style="text-align: center;">
               <small style="color: #666; font-weight: bold;">📅 ${lastMatch.date} (${lastMatch.lieu || 'N/C'})</small>
               <div style="font-size: 1.1em; margin: 5px 0;"><strong>vs ${lastMatch.adversaire}</strong></div>
               <div style="color: #28a745; font-weight: bold; font-size: 1.1em;">Score : ${formatResult(lastMatch.resultat)}</div>
+              ${detailsHTML}
             </div>
           `;
         }
@@ -152,6 +161,14 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
+        let detailsHTML = '';
+        if (m.buteurs) {
+          detailsHTML += `<div style="font-size: 0.85em; color: #555; margin-top: 4px;">⚽ <strong>Buteurs :</strong> ${m.buteurs}</div>`;
+        }
+        if (m.passeurs) {
+          detailsHTML += `<div style="font-size: 0.85em; color: #555; margin-top: 2px;">👟 <strong>Passeurs :</strong> ${m.passeurs}</div>`;
+        }
+
         return `
           <li style="border-left-color: ${badgeColor}; padding: 12px; margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: var(--shadow); list-style: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
@@ -164,6 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div style="color: var(--primary-color);">
               Score : ${resultatDisplay}
             </div>
+            ${detailsHTML}
           </li>
         `;
       }).join('');
@@ -648,8 +666,30 @@ document.addEventListener('DOMContentLoaded', function() {
             return updatedP;
           });
 
+          // Mise à jour de matchs.json avec les buteurs & passeurs formatés
           const updatedMatches = [...matches];
           if (score) updatedMatches[selectedMatchIdx].resultat = score;
+
+          if (goalEvents.length > 0) {
+            // Mise en forme des buteurs (ex: Dupont (x2), Durand)
+            let buteursList = [];
+            for (let b in butsMap) {
+              buteursList.push(butsMap[b] > 1 ? `${b} (x${butsMap[b]})` : b);
+            }
+            if (goalEvents.some(e => e.buteur === 'CSC')) {
+              buteursList.push('CSC');
+            }
+            updatedMatches[selectedMatchIdx].buteurs = buteursList.join(', ');
+
+            // Mise en forme des passeurs
+            let passeursList = [];
+            for (let p in passesMap) {
+              passeursList.push(passesMap[p] > 1 ? `${p} (x${passesMap[p]})` : p);
+            }
+            if (passeursList.length > 0) {
+              updatedMatches[selectedMatchIdx].passeurs = passeursList.join(', ');
+            }
+          }
 
           await updateGitHubFile('players.json', updatedPlayers, 'Update players via app');
           await updateGitHubFile('matchs.json', updatedMatches, 'Update matchs via app');
@@ -685,7 +725,12 @@ document.addEventListener('DOMContentLoaded', function() {
             cartons_blancs: 0, 
             cartons_rouges: 0 
           }));
-          const resetMatches = matches.map(m => ({ ...m, resultat: "" }));
+          const resetMatches = matches.map(m => {
+            const copy = { ...m, resultat: "" };
+            delete copy.buteurs;
+            delete copy.passeurs;
+            return copy;
+          });
 
           await updateGitHubFile('players.json', resetPlayers, 'Reset stats to zero');
           await updateGitHubFile('matchs.json', resetMatches, 'Reset match scores');
