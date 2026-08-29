@@ -4,10 +4,10 @@
   {"fonction": "Trésorier", "nom": "BRET Guillaume", "symbole": "💰","date_de_naissance": "1990-09-10"},
   {"fonction": "Secrétaire", "nom": "CHEF Romain", "symbole": "📝","date_de_naissance": "1984-01-01"},
   {"fonction": "Vice-secrétaire", "nom": "THIBONNET Julien", "symbole": "📝","date_de_naissance": "1984-03-31"},
-  {"fonction": "Entraîneur", "nom": "BERNARD Anthony", "symbole": "👨‍🏫","date_de_naissance": "1995-08-09"}
-  {"fonction": "Dirigeant", "nom": "JAILLET Michel", "symbole": "🤝","date_de_naissance": "1950-02-01"}
-  {"fonction": "Dirigeante", "nom": "CHEF Floriane", "symbole": "🤝","date_de_naissance": "1986-08-29"}
+  {"fonction": "Entraîneur", "nom": "BERNARD Anthony", "symbole": "👨‍🏫","date_de_naissance": "1995-08-09"},
+  {"fonction": "Dirigeant", "nom": "JAILLET Michel", "symbole": "🤝","date_de_naissance": "1950-02-01"},
+  {"fonction": "Dirigeante", "nom": "CHEF Floriane", "symbole": "🤝","date_de_naissance": "1986-08-29"},
   {"fonction": "Dirigeante", "nom": "BOISSELIE Stéphanie", "symbole": "🤝","date_de_naissance": "1977-03-19"},
-  {"fonction": "Dirigeant", "nom": "THIBONNET Julien", "symbole": "🤝","date_de_naissance": "2002-09-09"}
+  {"fonction": "Dirigeant", "nom": "THIBONNET Julien", "symbole": "🤝","date_de_naissance": "2002-09-09"},
   {"fonction": "Dirigeant", "nom": "FAGEOT Gérald", "symbole": "🤝","date_de_naissance": "1983-06-25"}
 ]
