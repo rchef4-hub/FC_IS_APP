@@ -52,20 +52,22 @@ document.addEventListener('DOMContentLoaded', function() {
       loadJsonSafe('arbitres.json')
     ]);
 
-    // Unification des données + dédoublonnage par nom pour éviter un double anniversaire
+    // Fusion de toutes les personnes
     const rawMembers = [...players, ...dirigeants, ...arbitres];
-    const uniqueNames = new Set();
+    const uniqueKeys = new Set();
     
+    // Dédoublonnage sur NOM + PRÉNOM (évite de sauter les personnes du même nom de famille)
     const allMembers = rawMembers.filter(m => {
       if (!m.nom) return false;
       
       // Harmonisation des clés de date (naissance ou date_de_naissance)
       m.dateNaissanceValidee = m.naissance || m.date_de_naissance;
       
-      // Construction du nom complet s'il y a prénom
-      const fullName = m.prenom ? `${m.nom} ${m.prenom}` : m.nom;
-      if (uniqueNames.has(fullName.toLowerCase())) return false;
-      uniqueNames.add(fullName.toLowerCase());
+      const prenom = m.prenom || '';
+      const uniqueKey = `${m.nom.trim().toLowerCase()}_${prenom.trim().toLowerCase()}`;
+      
+      if (uniqueKeys.has(uniqueKey)) return false;
+      uniqueKeys.add(uniqueKey);
       return true;
     });
 
@@ -77,14 +79,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!dateStr) return false;
 
         const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
-        if (parts.length < 2) return false;
+        if (parts.length < 3) return false;
 
         let month = 0;
         if (parts[0].length === 4) {
-          // Format AAAA-MM-JJ -> mois en index 1
+          // Format AAAA-MM-JJ
           month = parseInt(parts[1], 10);
         } else {
-          // Format JJ/MM/AAAA -> mois en index 1
+          // Format JJ/MM/AAAA
           month = parseInt(parts[1], 10);
         }
         return month === currentMonth;
@@ -98,7 +100,9 @@ document.addEventListener('DOMContentLoaded', function() {
           const day = isISO ? parts[2].padStart(2, '0') : parts[0].padStart(2, '0');
           const month = parts[1].padStart(2, '0');
           const icon = m.symbole || '🎂';
-          const displayName = m.prenom ? `${m.prenom} ${m.nom}` : m.nom;
+          
+          // Affichage NOM + Prénom
+          const displayName = m.prenom ? `${m.nom} ${m.prenom}` : m.nom;
           
           return `
             <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
@@ -111,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // 2. Chargement des matchs
+    // Chargement des matchs
     try {
       const resMatchs = await fetchFresh('matchs.json');
       if (resMatchs.ok) {
@@ -120,14 +124,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const playedMatches = matches.filter(m => m.resultat && m.resultat !== "");
         if (playedMatches.length > 0) {
           const lastMatch = playedMatches[playedMatches.length - 1];
-          
           let detailsHTML = '';
-          if (lastMatch.buteurs) {
-            detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 6px;">⚽ <strong>Buteur(s) :</strong> ${lastMatch.buteurs}</div>`;
-          }
-          if (lastMatch.passeurs) {
-            detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 4px;">👟 <strong>Passeur(s) :</strong> ${lastMatch.passeurs}</div>`;
-          }
+          if (lastMatch.buteurs) detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 6px;">⚽ <strong>Buteur(s) :</strong> ${lastMatch.buteurs}</div>`;
+          if (lastMatch.passeurs) detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 4px;">👟 <strong>Passeur(s) :</strong> ${lastMatch.passeurs}</div>`;
 
           lastMatchHTML = `
             <div style="text-align: center;">
@@ -345,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (players.length > 0) {
       const playerListHTML = players.map(player => `
         <li>
-          ${player.symbole || '⚽'} <strong>#${player.numero || ''} ${player.nom}</strong>
+          ${player.symbole || '⚽'} <strong>#${player.numero || ''} ${player.nom} ${player.prenom || ''}</strong>
           <br><small>${player.poste || ''}</small>
         </li>
       `).join('');
@@ -355,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (dirigeants.length > 0) {
       const dirigeantsListHTML = dirigeants.map(dirigeant => `
         <li>
-          ${dirigeant.symbole || '👔'} <strong>${dirigeant.nom}</strong>
+          ${dirigeant.symbole || '👔'} <strong>${dirigeant.nom} ${dirigeant.prenom || ''}</strong>
           <br><small>${dirigeant.fonction || ''}</small>
         </li>
       `).join('');
@@ -364,10 +363,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (arbitres.length > 0) {
       const arbitresListHTML = arbitres.map(arbitre => {
-        const displayName = arbitre.prenom ? `${arbitre.prenom} ${arbitre.nom}` : arbitre.nom;
+        const fullName = arbitre.prenom ? `${arbitre.nom} ${arbitre.prenom}` : arbitre.nom;
         return `
           <li>
-            ${arbitre.symbole || '📣'} <strong>${displayName}</strong>
+            ${arbitre.symbole || '📣'} <strong>${fullName}</strong>
             <br><small>Arbitre ${arbitre.categorie || 'Club'}</small>
           </li>
         `;
