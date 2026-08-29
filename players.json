@@ -1,6 +1,5 @@
 [
   {
-    "numero": 1,
     "nom": "BELOUET Remi",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -13,7 +12,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 2,
     "nom": "BERNARD Anthony",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -26,7 +24,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 3,
     "nom": "BOISSELIER Dorian",
     "poste": "Attaquant",
     "symbole": "⚽",
@@ -39,7 +36,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 4,
     "nom": "BOISSELIER Mickael",
     "poste": "Attaquant",
     "symbole": "⚽",
@@ -52,7 +48,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 6,
     "nom": "BOUILLET Alexandre",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -65,7 +60,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 8,
     "nom": "BRET Guillaume",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -78,7 +72,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 9,
     "nom": "CHEF Albin",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -91,7 +84,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 11,
     "nom": "CHEF Romain",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -104,7 +96,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 12,
     "nom": "CHEF Sebastien",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -117,7 +108,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 13,
     "nom": "CLERC Enzo",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -130,7 +120,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 14,
     "nom": "CLERC Noa",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -143,7 +132,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 17,
     "nom": "GALLOIS Lucas",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -156,7 +144,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 18,
     "nom": "GIRAULT Lucas",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -169,7 +156,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 19,
     "nom": "GROSMAIRE Arnaud",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -182,7 +168,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 21,
     "nom": "LAMIRAL Malory",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -195,7 +180,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 22,
     "nom": "LOBEROT Jean Philippe",
     "poste": "Gardien de but",
     "symbole": "🧤",
@@ -208,7 +192,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 23,
     "nom": "MAUTRET Jonathan",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -222,7 +205,6 @@
   },
   
   {
-    "numero": 41,
     "nom": "POLYCARPE Alexandre",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -235,7 +217,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 24,
     "nom": "POLYCARPE Antoine",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -248,7 +229,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 25,
     "nom": "QUENTIN Mathieu",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -261,7 +241,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 26,
     "nom": "THERIOT Cyril",
     "poste": "Joueur",
     "symbole": "⚽",
@@ -274,7 +253,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 27,
     "nom": "THIBONNET Julien",
     "poste": "Gardien de but",
     "symbole": "🧤",
