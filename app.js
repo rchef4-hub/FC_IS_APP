@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </li>
         `;
       }).join('');
-      contentHTML += `<h3 class="accordion-header">📣 Corps Arbitral (${arbitres.length})</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
+      contentHTML += `<h3 class="accordion-header">📣 Arbitres (${arbitres.length})</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
     }
 
     root.innerHTML = contentHTML;
