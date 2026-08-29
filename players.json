@@ -52,37 +52,11 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 5,
-    "nom": "BOISSELIER Stephanie",
-    "poste": "Dirigeant",
-    "symbole": "👔",
-    "naissance": "19/03/1977",
-    "matchs": 0,
-    "buts": 0,
-    "passes": 0,
-    "cartons_jaunes": 0,
-    "cartons_blancs": 0,
-    "cartons_rouges": 0
-  },
-  {
     "numero": 6,
     "nom": "BOUILLET Alexandre",
     "poste": "Joueur",
     "symbole": "⚽",
     "naissance": "20/06/1986",
-    "matchs": 0,
-    "buts": 0,
-    "passes": 0,
-    "cartons_jaunes": 0,
-    "cartons_blancs": 0,
-    "cartons_rouges": 0
-  },
-  {
-    "numero": 7,
-    "nom": "BOUSDIRA Kevin",
-    "poste": "Joueur",
-    "symbole": "⚽",
-    "naissance": "08/01/1998",
     "matchs": 0,
     "buts": 0,
     "passes": 0,
@@ -109,19 +83,6 @@
     "poste": "Joueur",
     "symbole": "⚽",
     "naissance": "21/10/2009",
-    "matchs": 0,
-    "buts": 0,
-    "passes": 0,
-    "cartons_jaunes": 0,
-    "cartons_blancs": 0,
-    "cartons_rouges": 0
-  },
-  {
-    "numero": 10,
-    "nom": "CHEF Floriane",
-    "poste": "Dirigeant",
-    "symbole": "👔",
-    "naissance": "29/08/1986",
     "matchs": 0,
     "buts": 0,
     "passes": 0,
@@ -182,32 +143,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 15,
-    "nom": "DELOMPRE Regis",
-    "poste": "Joueur",
-    "symbole": "⚽",
-    "naissance": "21/11/1964",
-    "matchs": 0,
-    "buts": 0,
-    "passes": 0,
-    "cartons_jaunes": 0,
-    "cartons_blancs": 0,
-    "cartons_rouges": 0
-  },
-  {
-    "numero": 16,
-    "nom": "FAGEOT Gerald",
-    "poste": "Joueur",
-    "symbole": "⚽",
-    "naissance": "25/06/1983",
-    "matchs": 0,
-    "buts": 0,
-    "passes": 0,
-    "cartons_jaunes": 0,
-    "cartons_blancs": 0,
-    "cartons_rouges": 0
-  },
-  {
     "numero": 17,
     "nom": "GALLOIS Lucas",
     "poste": "Joueur",
@@ -247,19 +182,6 @@
     "cartons_rouges": 0
   },
   {
-    "numero": 20,
-    "nom": "JAILLET Michel",
-    "poste": "Dirigeant",
-    "symbole": "👔",
-    "naissance": "01/02/1950",
-    "matchs": 0,
-    "buts": 0,
-    "passes": 0,
-    "cartons_jaunes": 0,
-    "cartons_blancs": 0,
-    "cartons_rouges": 0
-  },
-  {
     "numero": 21,
     "nom": "LAMIRAL Malory",
     "poste": "Joueur",
@@ -291,6 +213,20 @@
     "poste": "Joueur",
     "symbole": "⚽",
     "naissance": "21/10/2001",
+    "matchs": 0,
+    "buts": 0,
+    "passes": 0,
+    "cartons_jaunes": 0,
+    "cartons_blancs": 0,
+    "cartons_rouges": 0
+  },
+  
+  {
+    "numero": 41,
+    "nom": "POLYCARPE Alexandre",
+    "poste": "Joueur",
+    "symbole": "⚽",
+    "naissance": "03/03/2006",
     "matchs": 0,
     "buts": 0,
     "passes": 0,
