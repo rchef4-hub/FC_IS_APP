@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const fullName = arbitre.prenom ? `${arbitre.nom} ${arbitre.prenom}` : arbitre.nom;
         return `
           <li>
-            ${arbitre.symbole || '🪙'} <strong>${fullName}</strong>
+            ${arbitre.symbole || '🟨🟥'} <strong>${fullName}</strong>
             <br><small>Arbitre ${arbitre.categorie || 'Club'}</small>
           </li>
         `;
