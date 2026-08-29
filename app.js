@@ -33,31 +33,49 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récents</p>';
     let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
 
-    // 1. Chargement des Anniversaires
+    // 1. Chargement des Anniversaires (Joueurs + Dirigeants + Arbitres)
     try {
-      const res = await fetchFresh('players.json');
-      if (res.ok) {
-        const players = await res.json();
-        const currentMonth = new Date().getMonth() + 1;
+      const [playersRes, dirigeantsRes, arbitresRes] = await Promise.all([
+        fetchFresh('players.json').catch(() => null),
+        fetchFresh('dirigeants.json').catch(() => null),
+        fetchFresh('arbitres.json').catch(() => null)
+      ]);
 
-        const monthBDays = players.filter(p => {
-          if (!p.naissance) return false;
-          const parts = p.naissance.split('/');
-          return parseInt(parts[1], 10) === currentMonth;
-        });
+      let allMembers = [];
 
-        if (monthBDays.length > 0) {
-          bdaysHTML = monthBDays.map(p => {
-            const parts = p.naissance.split('/');
-            return `
-              <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
-                <span>🎂 <strong>${p.nom}</strong></span>
-                <small style="color: var(--primary-color, #007bff); font-weight: bold; font-size: 0.95em;">${parts[0]}/${parts[1]}</small>
-              </li>
-            `;
-          }).join('');
-          bdaysHTML = `<ul style="padding: 0; margin: 0;">${bdaysHTML}</ul>`;
-        }
+      if (playersRes && playersRes.ok) {
+        const players = await playersRes.json();
+        allMembers = allMembers.concat(players);
+      }
+      if (dirigeantsRes && dirigeantsRes.ok) {
+        const dirigeants = await dirigeantsRes.json();
+        allMembers = allMembers.concat(dirigeants);
+      }
+      if (arbitresRes && arbitresRes.ok) {
+        const arbitres = await arbitresRes.json();
+        allMembers = allMembers.concat(arbitres);
+      }
+
+      const currentMonth = new Date().getMonth() + 1;
+
+      const monthBDays = allMembers.filter(m => {
+        if (!m.naissance) return false;
+        const parts = m.naissance.split('/');
+        return parseInt(parts[1], 10) === currentMonth;
+      });
+
+      if (monthBDays.length > 0) {
+        bdaysHTML = monthBDays.map(m => {
+          const parts = m.naissance.split('/');
+          const icon = m.symbole || '🎂';
+          return `
+            <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
+              <span>${icon} <strong>${m.nom}</strong></span>
+              <small style="color: var(--primary-color, #007bff); font-weight: bold; font-size: 0.95em;">${parts[0]}/${parts[1]}</small>
+            </li>
+          `;
+        }).join('');
+        bdaysHTML = `<ul style="padding: 0; margin: 0;">${bdaysHTML}</ul>`;
       }
     } catch (e) {
       console.error("Erreur au chargement des anniversaires :", e);
@@ -271,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // --- EFFECTIF COMPLETI ---
+  // --- EFFECTIF COMPLET ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
 
@@ -302,8 +320,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </li>
       `).join('');
       contentHTML += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${playerListHTML}</ul>`;
-    } else {
-      contentHTML += `<p style="color:red; text-align:center;">Erreur de lecture de players.json</p>`;
     }
 
     if (dirigeants.length > 0) {
