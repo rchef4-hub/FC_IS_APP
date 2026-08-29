@@ -6,6 +6,27 @@ document.addEventListener('DOMContentLoaded', function() {
     return fetch(`${url}?t=${Date.now()}`);
   }
 
+  // Helper pour colorer les résultats dynamiquement
+  function formatScoreColor(scoreStr) {
+    if (!scoreStr) return '';
+    
+    let str = typeof scoreStr === 'object' 
+      ? `${scoreStr.scoreDom ?? '-'} - ${scoreStr.scoreExt ?? '-'}` 
+      : scoreStr;
+
+    const lower = str.toLowerCase();
+    
+    if (lower.includes('victoire')) {
+      return `<span style="color: #28a745; font-weight: bold;">${str}</span>`;
+    } else if (lower.includes('nul')) {
+      return `<span style="color: #fd7e14; font-weight: bold;">${str}</span>`;
+    } else if (lower.includes('défaite') || lower.includes('defaite')) {
+      return `<span style="color: #6b0f40; font-weight: bold;">${str}</span>`;
+    }
+    
+    return `<strong>${str}</strong>`;
+  }
+
   // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
@@ -48,14 +69,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (resMatchs.ok) {
         const matches = await resMatchs.json();
 
-        const formatResult = (res) => {
-          if (!res) return '';
-          if (typeof res === 'object') {
-            return `${res.scoreDom ?? '-'} - ${res.scoreExt ?? '-'}`;
-          }
-          return res;
-        };
-
         const playedMatches = matches.filter(m => m.resultat && m.resultat !== "");
         if (playedMatches.length > 0) {
           const lastMatch = playedMatches[playedMatches.length - 1];
@@ -72,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div style="text-align: center;">
               <small style="color: #666; font-weight: bold;">📅 ${lastMatch.date} (${lastMatch.lieu || 'N/C'})</small>
               <div style="font-size: 1.1em; margin: 5px 0;"><strong>vs ${lastMatch.adversaire}</strong></div>
-              <div style="color: #28a745; font-weight: bold; font-size: 1.1em;">Score : ${formatResult(lastMatch.resultat)}</div>
+              <div style="font-size: 1.1em;">Score : ${formatScoreColor(lastMatch.resultat)}</div>
               ${detailsHTML}
             </div>
           `;
@@ -146,11 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let resultatDisplay = '<em>À venir</em>';
         if (m.resultat) {
-          if (typeof m.resultat === 'object') {
-            resultatDisplay = `<strong>${m.resultat.scoreDom ?? '-'} - ${m.resultat.scoreExt ?? '-'}</strong>`;
-          } else {
-            resultatDisplay = `<strong>${m.resultat}</strong>`;
-          }
+          resultatDisplay = formatScoreColor(m.resultat);
         }
 
         let detailsHTML = '';
@@ -262,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // --- EFFECTIF COMPLET ---
+  // --- EFFECTIF COMPLETI ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
 
@@ -421,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </select>
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Score final :</label>
-          <input type="text" id="match-score" placeholder="Ex: Défaite 1 -2" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc;">
+          <input type="text" id="match-score" placeholder="Ex: Victoire 3 - 0 ou Défaite 1 -2" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc;">
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">3. Joueurs Présents :</label>
           <div style="max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 15px;">
@@ -594,7 +603,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const checkedBoxes = document.querySelectorAll('.presence-check:checked');
           const presentNames = Array.from(checkedBoxes).map(cb => cb.value);
 
-          // 1. Calcul des buts et passes
           let butsMap = {}, passesMap = {};
           goalEvents.forEach(e => {
             if (e.buteur && e.buteur !== 'CSC') {
@@ -605,7 +613,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
 
-          // 2. Calcul des cartons
           let jaunesMap = {}, blancsMap = {}, rougesMap = {};
           let totalCardsPerPlayer = {}; 
 
@@ -629,7 +636,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
 
-          // 3. Mise à jour du tableau des joueurs
           const updatedPlayers = players.map(p => {
             let updatedP = { ...p };
             let currentMatchs = parseInt(updatedP.matchs) || 0;
@@ -655,11 +661,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return updatedP;
           });
 
-          // 4. Mise à jour de matchs.json avec les textes formattés
           const updatedMatches = [...matches];
           if (score) updatedMatches[selectedMatchIdx].resultat = score;
 
-          // Formater et ajouter les buteurs
           let buteursList = [];
           for (let b in butsMap) {
             buteursList.push(butsMap[b] > 1 ? `${b} (x${butsMap[b]})` : b);
@@ -671,7 +675,6 @@ document.addEventListener('DOMContentLoaded', function() {
             updatedMatches[selectedMatchIdx].buteurs = buteursList.join(', ');
           }
 
-          // Formater et ajouter les passeurs
           let passeursList = [];
           for (let p in passesMap) {
             passeursList.push(passesMap[p] > 1 ? `${p} (x${passesMap[p]})` : p);
@@ -680,7 +683,6 @@ document.addEventListener('DOMContentLoaded', function() {
             updatedMatches[selectedMatchIdx].passeurs = passeursList.join(', ');
           }
 
-          // Envoi vers GitHub
           await updateGitHubFile('players.json', updatedPlayers, 'Update players via app');
           await updateGitHubFile('matchs.json', updatedMatches, 'Update matchs via app');
 
