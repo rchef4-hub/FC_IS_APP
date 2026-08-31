@@ -49,25 +49,19 @@
     </ul>
   </nav>
 
-  <!-- CHARGEMENT DYNAMIQUE ANTI-CACHE DE APP.JS -->
-  <script>
-    const script = document.createElement('script');
-    script.src = 'app.js?t=' + Date.now();
-    document.body.appendChild(script);
-  </script>
+  <!-- CHARGEMENT DE APP.JS -->
+  <script src="app.js"></script>
 
   <!-- SERVICE WORKER AVEC RECHARGEMENT AUTOMATIQUE -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then((registration) => {
-          // Forcer la recherche de mise à jour sur le serveur à chaque ouverture
           registration.update();
         }).catch((err) => {
           console.error('Erreur d\'enregistrement du Service Worker :', err);
         });
 
-        // Détecter si un nouveau Service Worker a pris le contrôle et rafraîchir la page
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing) {
