@@ -49,8 +49,12 @@
     </ul>
   </nav>
 
-  <!-- SCRIPT PRINCIPAL (Incrémenté pour ignorer l'ancien cache HTTP) -->
-  <script src="app.js?v=4"></script>
+  <!-- CHARGEMENT DYNAMIQUE ANTI-CACHE DE APP.JS -->
+  <script>
+    const script = document.createElement('script');
+    script.src = 'app.js?t=' + Date.now();
+    document.body.appendChild(script);
+  </script>
 
   <!-- SERVICE WORKER AVEC RECHARGEMENT AUTOMATIQUE -->
   <script>
@@ -60,7 +64,7 @@
           // Forcer la recherche de mise à jour sur le serveur à chaque ouverture
           registration.update();
         }).catch((err) => {
-          console.error('Erreur d'enregistrement du Service Worker :', err);
+          console.error('Erreur d\'enregistrement du Service Worker :', err);
         });
 
         // Détecter si un nouveau Service Worker a pris le contrôle et rafraîchir la page
