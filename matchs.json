@@ -38,31 +38,43 @@
   },
   {
     "date": "18/10/2026 15H",
-    "adversaire": "U.S. De Condes 2",
+    "adversaire": "U.S. Condes 2",
     "lieu": "Extérieur",
     "resultat": ""
   },
   {
-    "date": "25/10/2026 15H",
-    "adversaire": "Biesles 2",
+    "date": "25/10/2026 14H30",
+    "adversaire": "Bologne FC 4",
     "lieu": "Domicile",
     "resultat": ""
   },
   {
-    "date": "08/11/2026 15H",
-    "adversaire": "Chalindrey 3",
+    "date": "01/11/2026 14H30",
+    "adversaire": "ECMR 3",
     "lieu": "Extérieur",
     "resultat": ""
   },
   {
-    "date": "15/11/2026 15H",
-    "adversaire": "F.C. Saints Geosmois 3",
+    "date": "08/11/2026 14H30",
+    "adversaire": "US Arc en Barrois 2",
     "lieu": "Domicile",
     "resultat": ""
   },
   {
-    "date": "29/11/2026 15H",
-    "adversaire": "Bourbonne 2",
+    "date": "15/11/2026 14H30",
+    "adversaire": "OUEST 52 US 3",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "date": "22/11/2026 14H30",
+    "adversaire": "Biesles US",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "date": "29/11/2026 14H30",
+    "adversaire": "LASARJONC AS 3",
     "lieu": "Extérieur",
     "resultat": ""
   },
