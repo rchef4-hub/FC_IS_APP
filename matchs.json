@@ -74,79 +74,73 @@
   },
   {
     "date": "29/11/2026 14H30",
-    "adversaire": "LASARJONC AS 3",
+    "adversaire": "Lasarjonc AS 3",
     "lieu": "Extérieur",
     "resultat": ""
   },
   {
-    "date": "06/12/2026 15H",
-    "adversaire": "Val De Meuse 2",
-    "lieu": "Extérieur",
-    "resultat": ""
-  },
-  {
-    "date": "07/03/2027 15H",
+    "date": "21/02/2027 14H30",
     "adversaire": "Nogentaise As 2",
     "lieu": "Domicile",
     "resultat": ""
   },
   {
-    "date": "14/03/2027 15H",
-    "adversaire": "Doulaincourt 2",
+    "date": "07/03/2027 14H30",
+    "adversaire": "Doulaincourt Cs 2",
     "lieu": "Extérieur",
     "resultat": ""
   },
   {
-    "date": "21/03/2027 15H",
-    "adversaire": "Esnouveaux Es 2",
+    "date": "14/03/2027 14H30",
+    "adversaire": "Sporting Nogent 2",
+    "lieu": "Extérieur",
+    "resultat": ""
+  },
+  {
+    "date": "21/03/2027 14H30",
+    "adversaire": "Condes Us 2",
+    "lieu": "Domicile",
+    "resultat": ""
+  },
+  {
+    "date": "03/04/2027 15H",
+    "adversaire": "Bologne Fc 4",
     "lieu": "Extérieur",
     "resultat": ""
   },
   {
     "date": "11/04/2027 15H",
-    "adversaire": "Nogent Sport. 2",
-    "lieu": "Extérieur",
-    "resultat": ""
-  },
-  {
-    "date": "18/04/2027 15H",
-    "adversaire": "U.S. De Condes 2",
+    "adversaire": "ECMR 3",
     "lieu": "Domicile",
     "resultat": ""
   },
   {
-    "date": "25/04/2027 15H",
-    "adversaire": "Biesles 2",
+    "date": "18/04/2027 15H",
+    "adversaire": "Arc en Barrois Us 2",
     "lieu": "Extérieur",
     "resultat": ""
   },
   {
     "date": "02/05/2027 15H",
-    "adversaire": "Chalindrey 3",
+    "adversaire": "Ouest 52 Us 3",
     "lieu": "Domicile",
     "resultat": ""
   },
   {
-    "date": "09/05/2027 15H",
-    "adversaire": "F.C. Saints Geosmois 3",
+    "date": "08/05/2027 19H",
+    "adversaire": "Biesles Us",
     "lieu": "Extérieur",
     "resultat": ""
   },
   {
     "date": "23/05/2027 15H",
-    "adversaire": "Bourbonne 2",
+    "adversaire": "Lasarjonc As 3",
     "lieu": "Domicile",
     "resultat": ""
   },
   {
     "date": "30/05/2027 15H",
-    "adversaire": "Val De Meuse 2",
-    "lieu": "Domicile",
-    "resultat": ""
-  },
-  {
-    "date": "06/06/2027 15H",
-    "adversaire": "As Sarrey/Montigny 2",
+    "adversaire": "Esnouveaux 2",
     "lieu": "Extérieur",
     "resultat": ""
   }
