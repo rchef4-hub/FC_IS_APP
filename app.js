@@ -293,28 +293,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const scorersHTML = topScorers.length > 0 ? topScorers.map(p => `
         <li>
-          <strong>${p.nom} ${p.prenom || ''}</strong>
+          <strong>${p.nom} ${p.prenom || p.Prenom || p.prénom || ''}</strong>
           <br><small>⚽ ${parseInt(p.buts) || 0} but(s) en ${parseInt(p.matchs) || 0} match(s)</small>
         </li>
       `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun buteur pour l\'instant.</p>';
 
       const passersHTML = topPassers.length > 0 ? topPassers.map(p => `
         <li>
-          <strong>${p.nom} ${p.prenom || ''}</strong>
+          <strong>${p.nom} ${p.prenom || p.Prenom || p.prénom || ''}</strong>
           <br><small>👟 ${parseInt(p.passes) || 0} passe(s) décisive(s)</small>
         </li>
       `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucune passe décisive pour l\'instant.</p>';
 
       const cardsHTML = topCards.length > 0 ? topCards.map(p => `
         <li>
-          <strong>${p.nom} ${p.prenom || ''}</strong>
+          <strong>${p.nom} ${p.prenom || p.Prenom || p.prénom || ''}</strong>
           <br><small>🟨 ${parseInt(p.cartons_jaunes) || 0} jaune(s) | ⬜ ${parseInt(p.cartons_blancs) || 0} blanc(s) | 🟥 ${parseInt(p.cartons_rouges) || 0} rouge(s)</small>
         </li>
       `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun carton enregistré pour l\'instant.</p>';
 
       const playedHTML = topPlayed.length > 0 ? topPlayed.map(p => `
         <li>
-          <strong>${p.nom} ${p.prenom || ''}</strong>
+          <strong>${p.nom} ${p.prenom || p.Prenom || p.prénom || ''}</strong>
           <br><small>🏃 ${parseInt(p.matchs) || 0} match(s) disputé(s)</small>
         </li>
       `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun match enregistré pour l\'instant.</p>';
@@ -323,15 +323,19 @@ document.addEventListener('DOMContentLoaded', function() {
         <h2>Statistiques de la Saison</h2>
         <h3 class="accordion-header">⚽ Meilleurs Buteurs</h3>
         <ul class="collapsed">${scorersHTML}</ul>
+        
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
         <ul class="collapsed">${passersHTML}</ul>
+        
         <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
         <ul class="collapsed">${cardsHTML}</ul>
+        
         <h3 class="accordion-header">🏃 Joueurs les plus utilisés</h3>
         <ul class="collapsed">${playedHTML}</ul>
       `;
 
-      document.querySelectorAll('#root h3').forEach(header => {
+      // Ecouteur d'événement pour déplier/replier les accordéons
+      document.querySelectorAll('#root h3.accordion-header').forEach(header => {
         header.addEventListener('click', function() {
           const list = this.nextElementSibling;
           if (list && list.tagName === 'UL') {
@@ -346,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Erreur dans le fichier players.json.</p>`;
     }
   }
-  
+
   // --- EFFECTIF COMPLET ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
@@ -446,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </li>
       `).join('');
       
-      root.innerHTML = `2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
+      root.innerHTML = `<h2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
       
     } catch (error) {
       console.error("Erreur de chargement des annonces :", error);
