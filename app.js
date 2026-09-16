@@ -71,12 +71,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Dédoublonnage sur NOM + PRÉNOM
     const allMembers = rawMembers.filter(m => {
-      if (!m.nom) return false;
+      if (!m.nom && !m.Nom) return false;
       
-      m.dateNaissanceValidee = m.naissance || m.date_de_naissance;
+      m.dateNaissanceValidee = m.naissance || m.date_de_naissance || m.Naissance;
       
-      const prenom = m.prenom || '';
-      const uniqueKey = `${m.nom.trim().toLowerCase()}_${prenom.trim().toLowerCase()}`;
+      const prenom = m.prenom || m.Prenom || m.prénom || '';
+      const nom = m.nom || m.Nom || '';
+      const uniqueKey = `${nom.trim().toLowerCase()}_${prenom.trim().toLowerCase()}`;
       
       if (uniqueKeys.has(uniqueKey)) return false;
       uniqueKeys.add(uniqueKey);
@@ -111,7 +112,9 @@ document.addEventListener('DOMContentLoaded', function() {
           const month = parts[1].padStart(2, '0');
           const icon = m.symbole || '🎂';
           
-          const displayName = m.prenom ? `${m.nom} ${m.prenom}` : m.nom;
+          const prenom = m.prenom || m.Prenom || m.prénom || '';
+          const nom = m.nom || m.Nom || '';
+          const displayName = prenom ? `${nom} ${prenom}` : nom;
           
           return `
             <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
@@ -371,9 +374,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const playerListHTML = players.map(player => {
         const borderColor = getPosteColor(player.poste);
         const playerNum = player.numero ? `#${player.numero} ` : '';
+        const prenom = player.prenom || player.Prenom || player.prénom || '';
+        const nom = player.nom || player.Nom || '';
         return `
           <li style="border-left: 4px solid ${borderColor};">
-            ${player.symbole || '⚽'} <strong>${playerNum}${player.nom} ${player.prenom || ''}</strong>
+            ${player.symbole || '⚽'} <strong>${playerNum}${nom} ${prenom}</strong>
             <br><small>${player.poste || ''}</small>
           </li>
         `;
@@ -382,22 +387,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (dirigeants.length > 0) {
-      const dirigeantsListHTML = dirigeants.map(dirigeant => `
-        <li style="border-left: 4px solid #6c757d;">
-          ${dirigeant.symbole || '👔'} <strong>${dirigeant.nom} ${dirigeant.prenom || ''}</strong>
-          <br><small>${dirigeant.fonction || ''}</small>
-        </li>
-      `).join('');
+      const dirigeantsListHTML = dirigeants.map(dirigeant => {
+        const prenom = dirigeant.prenom || dirigeant.Prenom || dirigeant.prénom || '';
+        const nom = dirigeant.nom || dirigeant.Nom || '';
+        return `
+          <li style="border-left: 4px solid #6c757d;">
+            ${dirigeant.symbole || '👔'} <strong>${nom} ${prenom}</strong>
+            <br><small>${dirigeant.fonction || ''}</small>
+          </li>
+        `;
+      }).join('');
       contentHTML += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${dirigeantsListHTML}</ul>`;
     }
 
     if (arbitres.length > 0) {
       const arbitresListHTML = arbitres.map(arbitre => {
-        const fullName = arbitre.prenom ? `${arbitre.nom} ${arbitre.prenom}` : arbitre.nom;
+        const prenom = arbitre.prenom || arbitre.Prenom || arbitre.prénom || '';
+        const nom = arbitre.nom || arbitre.Nom || '';
+        const fullName = prenom ? `${nom} ${prenom}` : nom;
+        const categorie = arbitre.categorie || arbitre.Categorie || 'Club';
         return `
           <li style="border-left: 4px solid #6c757d;">
             ${arbitre.symbole || '🟨'} <strong>${fullName}</strong>
-            <br><small>Arbitre ${arbitre.categorie || 'Club'}</small>
+            <br><small>Arbitre ${categorie}</small>
           </li>
         `;
       }).join('');
@@ -434,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </li>
       `).join('');
       
-      root.innerHTML = `<h2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
+      root.innerHTML = `2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
       
     } catch (error) {
       console.error("Erreur de chargement des annonces :", error);
@@ -736,109 +748,126 @@ document.addEventListener('DOMContentLoaded', function() {
             updatedP.cartons_jaunes = currentJaunes;
             updatedP.cartons_blancs = currentBlancs;
             updatedP.cartons_rouges = currentRouges;
+
             return updatedP;
           });
 
-          const updatedMatches = [...matches];
-          if (score) updatedMatches[selectedMatchIdx].resultat = score;
+          // Mise à jour du match
+          const updatedMatches = matches.map((m, idx) => {
+            if (idx == selectedMatchIdx) {
+              let buteursStr = goalEvents.map(e => e.buteur === 'CSC' ? 'CSC' : e.buteur).join(', ');
+              let passeursStr = goalEvents.map(e => e.passeur).filter(Boolean).join(', ');
 
-          let buteursList = [];
-          for (let b in butsMap) {
-            buteursList.push(butsMap[b] > 1 ? `${b} (x${butsMap[b]})` : b);
-          }
-          if (goalEvents.some(e => e.buteur === 'CSC')) {
-            buteursList.push('CSC');
-          }
-          if (buteursList.length > 0) {
-            updatedMatches[selectedMatchIdx].buteurs = buteursList.join(', ');
-          }
+              return {
+                ...m,
+                resultat: score || m.resultat,
+                buteurs: buteursStr,
+                passeurs: passeursStr
+              };
+            }
+            return m;
+          });
 
-          let passeursList = [];
-          for (let p in passesMap) {
-            passeursList.push(passesMap[p] > 1 ? `${p} (x${passesMap[p]})` : p);
-          }
-          if (passeursList.length > 0) {
-            updatedMatches[selectedMatchIdx].passeurs = passeursList.join(', ');
-          }
-
-          await updateGitHubFile('players.json', updatedPlayers, 'Update players via app');
-          await updateGitHubFile('matchs.json', updatedMatches, 'Update matchs via app');
+          await updateGitHubFile('players.json', updatedPlayers, 'Mise à jour des stats joueurs');
+          await updateGitHubFile('matchs.json', updatedMatches, 'Mise à jour du résultat du match');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Match enregistré avec succès !";
-          goalEvents = [];
-          cardEvents = [];
-          renderGoalsUI();
-          renderCardsUI();
+          statusMsg.innerText = "✅ Match et statistiques publiés avec succès !";
 
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
-          statusMsg.innerText = "❌ Erreur lors de l'enregistrement.";
+          statusMsg.innerText = "❌ Erreur : " + err.message;
         }
       });
 
       document.getElementById('btn-reset-all').addEventListener('click', async () => {
-        if (!confirm("⚠️ Réinitialiser TOUTES les statistiques et les résultats ?")) return;
+        if (!confirm("⚠️ Êtes-vous SÛR de vouloir réinitialiser TOUS les résultats et les stats à zéro ?")) {
+          return;
+        }
 
         const statusMsg = document.getElementById('status-message');
         statusMsg.style.color = "orange";
-        statusMsg.innerText = "⏳ Réinitialisation...";
+        statusMsg.innerText = "⏳ Réinitialisation globale...";
 
         try {
-          const resetPlayers = players.map(p => ({ 
-            ...p, 
-            matchs: 0, 
-            buts: 0, 
-            passes: 0, 
-            cartons_jaunes: 0, 
-            cartons_blancs: 0, 
-            cartons_rouges: 0 
+          const resetPlayers = players.map(p => ({
+            ...p,
+            matchs: 0,
+            buts: 0,
+            passes: 0,
+            cartons_jaunes: 0,
+            cartons_blancs: 0,
+            cartons_rouges: 0
           }));
-          const resetMatches = matches.map(m => {
-            const copy = { ...m, resultat: "" };
-            delete copy.buteurs;
-            delete copy.passeurs;
-            return copy;
-          });
 
-          await updateGitHubFile('players.json', resetPlayers, 'Reset stats to zero');
-          await updateGitHubFile('matchs.json', resetMatches, 'Reset match scores');
+          const resetMatches = matches.map(m => ({
+            ...m,
+            resultat: "",
+            buteurs: "",
+            passeurs: ""
+          }));
+
+          await updateGitHubFile('players.json', resetPlayers, 'Réinitialisation stats joueurs');
+          await updateGitHubFile('matchs.json', resetMatches, 'Réinitialisation calendrier matchs');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Réinitialisation réussie !";
+          statusMsg.innerText = "✅ Remise à zéro effectuée !";
+
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
-          statusMsg.innerText = "❌ Erreur lors de la réinitialisation.";
+          statusMsg.innerText = "❌ Erreur lors de la réinitialisation : " + err.message;
         }
       });
 
-    } catch (err) {
-      console.error(err);
-      root.innerHTML = `<h2>Saisie</h2><p style="color:red; text-align:center;">Erreur de chargement des données.</p>`;
+    } catch (e) {
+      console.error(e);
+      root.innerHTML = `<h2>⚙️ Administration</h2><p style="color: red; text-align: center;">Erreur lors du chargement de l'interface admin.</p>`;
     }
   }
 
-  // --- ROUTEUR ---
+  // --- ROUTEUR SIMPLE ---
   function router() {
-    const hash = location.hash.replace('#','') || 'home';
-    
-    document.querySelectorAll('nav a').forEach(a => {
-        a.classList.remove('active');
-        const href = a.getAttribute('href');
-        if(href === '#' + hash || (hash.startsWith('match') && href.startsWith('#match'))) {
-          a.classList.add('active');
-        }
+    const hash = window.location.hash.slice(1) || 'home';
+
+    // Gestion de l'élément Admin dans le menu
+    const adminNavItem = document.getElementById('admin-nav-item');
+    if (adminNavItem) {
+      adminNavItem.style.display = (hash === 'admin') ? 'block' : 'none';
+    }
+
+    // Gestion active du menu
+    document.querySelectorAll('nav a').forEach(link => {
+      if (link.getAttribute('href') === `#${hash}`) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
     });
 
-    if(hash === 'home') renderHome();
-    else if(hash === 'matches' || hash === 'matchs') renderMatches();
-    else if(hash === 'stats') renderStats();
-    else if(hash === 'players') renderPlayers(); 
-    else if(hash === 'announcements') renderAnnouncements();
-    else if(hash === 'admin') renderAdmin();
-    else renderHome();
+    switch (hash) {
+      case 'home':
+        renderHome();
+        break;
+      case 'matches':
+        renderMatches();
+        break;
+      case 'stats':
+        renderStats();
+        break;
+      case 'players':
+        renderPlayers();
+        break;
+      case 'announcements':
+        renderAnnouncements();
+        break;
+      case 'admin':
+        renderAdmin();
+        break;
+      default:
+        renderHome();
+    }
   }
 
   window.addEventListener('hashchange', router);
