@@ -6,6 +6,12 @@ document.addEventListener('DOMContentLoaded', function() {
     return fetch(`${url}?t=${Date.now()}`);
   }
 
+  // Helper pour normaliser le texte (supprime espaces superflus et met en minuscules)
+  function normalizeText(str) {
+    if (!str) return '';
+    return str.toString().trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
   // Helper pour colorer les résultats dynamiquement
   function formatScoreColor(scoreStr) {
     if (!scoreStr) return '';
@@ -273,9 +279,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const scorersHTML = topScorers.length > 0 ? topScorers.map(p => {
         const prenom = p.prenom || p.Prenom || p.prénom || '';
+        const nom = p.nom || p.Nom || '';
         return `
           <li>
-            <strong>${p.nom} ${prenom}</strong>
+            <strong>${nom} ${prenom}</strong>
             <br><small>⚽ ${parseInt(p.buts) || 0} but(s) en ${parseInt(p.matchs) || 0} match(s)</small>
           </li>
         `;
@@ -283,9 +290,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const passersHTML = topPassers.length > 0 ? topPassers.map(p => {
         const prenom = p.prenom || p.Prenom || p.prénom || '';
+        const nom = p.nom || p.Nom || '';
         return `
           <li>
-            <strong>${p.nom} ${prenom}</strong>
+            <strong>${nom} ${prenom}</strong>
             <br><small>👟 ${parseInt(p.passes) || 0} passe(s) décisive(s)</small>
           </li>
         `;
@@ -293,9 +301,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const cardsHTML = topCards.length > 0 ? topCards.map(p => {
         const prenom = p.prenom || p.Prenom || p.prénom || '';
+        const nom = p.nom || p.Nom || '';
         return `
           <li>
-            <strong>${p.nom} ${prenom}</strong>
+            <strong>${nom} ${prenom}</strong>
             <br><small>🟨 ${parseInt(p.cartons_jaunes) || 0} jaune(s) | ⬜ ${parseInt(p.cartons_blancs) || 0} blanc(s) | 🟥 ${parseInt(p.cartons_rouges) || 0} rouge(s)</small>
           </li>
         `;
@@ -303,9 +312,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const playedHTML = topPlayed.length > 0 ? topPlayed.map(p => {
         const prenom = p.prenom || p.Prenom || p.prénom || '';
+        const nom = p.nom || p.Nom || '';
         return `
           <li>
-            <strong>${p.nom} ${prenom}</strong>
+            <strong>${nom} ${prenom}</strong>
             <br><small>🏃 ${parseInt(p.matchs) || 0} match(s) disputé(s)</small>
           </li>
         `;
@@ -493,19 +503,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
       let playerOptionsScorer = `<option value="CSC">[CSC] But contre son camp</option>` + players.map(p => {
         const prenom = p.prenom || p.Prenom || p.prénom || '';
-        const fullName = prenom ? `${p.nom} ${prenom}` : p.nom;
+        const nom = p.nom || p.Nom || '';
+        const fullName = prenom ? `${nom} ${prenom}` : nom;
         return `<option value="${fullName}">${fullName}</option>`;
       }).join('');
 
       let playerOptionsPasser = players.map(p => {
         const prenom = p.prenom || p.Prenom || p.prénom || '';
-        const fullName = prenom ? `${p.nom} ${prenom}` : p.nom;
+        const nom = p.nom || p.Nom || '';
+        const fullName = prenom ? `${nom} ${prenom}` : nom;
         return `<option value="${fullName}">${fullName}</option>`;
       }).join('');
 
       let playerCheckboxList = players.map(p => {
         const prenom = p.prenom || p.Prenom || p.prénom || '';
-        const fullName = prenom ? `${p.nom} ${prenom}` : p.nom;
+        const nom = p.nom || p.Nom || '';
+        const fullName = prenom ? `${nom} ${prenom}` : nom;
         return `
           <label style="display:block; margin: 5px 0; font-size: 0.95em;">
             <input type="checkbox" class="presence-check" value="${fullName}">
@@ -662,7 +675,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (!getRes.ok) {
-          throw new Error(`Impossible de lire ${filePath}. Vérifiez les permissions du Token.`);
+          throw new Error(`Impossible de lire ${filePath}. Vérifiez le Token.`);
         }
 
         const fileData = await getRes.json();
@@ -688,7 +701,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('btn-save-direct').addEventListener('click', async () => {
         const statusMsg = document.getElementById('status-message');
         
-        // Vérification de sécurité : si l'utilisateur a choisi un buteur sans cliquer sur le bouton + Ajouter
+        // Prise en compte si l'utilisateur n'a pas cliqué sur "+ Ajouter"
         const pendingButeur = document.getElementById('select-buteur').value;
         const pendingPasseur = document.getElementById('select-passeur').value;
         if (pendingButeur) {
@@ -705,15 +718,20 @@ document.addEventListener('DOMContentLoaded', function() {
           const selectedMatchIdx = document.getElementById('select-match').value;
           const score = document.getElementById('match-score').value;
           const checkedBoxes = document.querySelectorAll('.presence-check:checked');
-          const presentNames = Array.from(checkedBoxes).map(cb => cb.value);
+          const presentNamesNorm = Array.from(checkedBoxes).map(cb => normalizeText(cb.value));
 
-          let butsMap = {}, passesMap = {};
+          // Cartographie des buts / passes en minuscules
+          let butsMap = {};
+          let passesMap = {};
+
           goalEvents.forEach(e => {
             if (e.buteur && e.buteur !== 'CSC') {
-              butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
+              const k = normalizeText(e.buteur);
+              butsMap[k] = (butsMap[k] || 0) + 1;
             }
             if (e.passeur) {
-              passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
+              const k = normalizeText(e.passeur);
+              passesMap[k] = (passesMap[k] || 0) + 1;
             }
           });
 
@@ -721,26 +739,27 @@ document.addEventListener('DOMContentLoaded', function() {
           let totalCardsPerPlayer = {}; 
 
           cardEvents.forEach(c => {
-            if (!totalCardsPerPlayer[c.joueur]) totalCardsPerPlayer[c.joueur] = 0;
+            const k = normalizeText(c.joueur);
+            if (!totalCardsPerPlayer[k]) totalCardsPerPlayer[k] = 0;
 
             if (c.type === '🟨') {
-              jaunesMap[c.joueur] = (jaunesMap[c.joueur] || 0) + 1;
-              totalCardsPerPlayer[c.joueur] += 1;
+              jaunesMap[k] = (jaunesMap[k] || 0) + 1;
+              totalCardsPerPlayer[k] += 1;
             } else if (c.type === '⬜') {
-              blancsMap[c.joueur] = (blancsMap[c.joueur] || 0) + 1;
-              totalCardsPerPlayer[c.joueur] += 1;
+              blancsMap[k] = (blancsMap[k] || 0) + 1;
+              totalCardsPerPlayer[k] += 1;
             } else if (c.type === '🟥') {
-              rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
+              rougesMap[k] = (rougesMap[k] || 0) + 1;
             }
 
-            if (totalCardsPerPlayer[c.joueur] === 2) {
-              rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
-              jaunesMap[c.joueur] = 0;
-              blancsMap[c.joueur] = 0;
+            if (totalCardsPerPlayer[k] === 2) {
+              rougesMap[k] = (rougesMap[k] || 0) + 1;
+              jaunesMap[k] = 0;
+              blancsMap[k] = 0;
             }
           });
 
-          // Mise à jour des joueurs
+          // Mise à jour des joueurs avec vérification multiclés
           const updatedPlayers = players.map(p => {
             let updatedP = { ...p };
             let currentMatchs = parseInt(updatedP.matchs) || 0;
@@ -750,38 +769,62 @@ document.addEventListener('DOMContentLoaded', function() {
             let currentBlanc = parseInt(updatedP.cartons_blancs) || 0;
             let currentRouges = parseInt(updatedP.cartons_rouges) || 0;
 
+            const nom = p.nom || p.Nom || '';
             const prenom = p.prenom || p.Prenom || p.prénom || '';
-            const fullName = prenom ? `${p.nom} ${prenom}` : p.nom;
 
-            if (presentNames.includes(p.nom) || presentNames.includes(fullName)) {
+            const keysToTest = [
+              normalizeText(`${nom} ${prenom}`),
+              normalizeText(`${prenom} ${nom}`),
+              normalizeText(nom)
+            ].filter(Boolean);
+
+            // Vérification presence
+            const isPresent = keysToTest.some(k => presentNamesNorm.includes(k));
+            if (isPresent) {
               updatedP.matchs = currentMatchs + 1;
             }
-            if (butsMap[fullName] || butsMap[p.nom]) {
-              updatedP.buts = currentButs + (butsMap[fullName] || butsMap[p.nom]);
-            }
-            if (passesMap[fullName] || passesMap[p.nom]) {
-              updatedP.passes = currentPasses + (passesMap[fullName] || passesMap[p.nom]);
-            }
-            if (jaunesMap[fullName] || jaunesMap[p.nom]) {
-              updatedP.cartons_jaunes = currentJaunes + (jaunesMap[fullName] || jaunesMap[p.nom]);
-            }
-            if (blancsMap[fullName] || blancsMap[p.nom]) {
-              updatedP.cartons_blancs = currentBlanc + (blancsMap[fullName] || blancsMap[p.nom]);
-            }
-            if (rougesMap[fullName] || rougesMap[p.nom]) {
-              updatedP.cartons_rouges = currentRouges + (rougesMap[fullName] || rougesMap[p.nom]);
-            }
+
+            // Calcul Buts
+            let addedButs = 0;
+            keysToTest.forEach(k => {
+              if (butsMap[k]) {
+                addedButs += butsMap[k];
+                butsMap[k] = 0; // éviter le double comptage
+              }
+            });
+            updatedP.buts = currentButs + addedButs;
+
+            // Calcul Passes
+            let addedPasses = 0;
+            keysToTest.forEach(k => {
+              if (passesMap[k]) {
+                addedPasses += passesMap[k];
+                passesMap[k] = 0;
+              }
+            });
+            updatedP.passes = currentPasses + addedPasses;
+
+            // Calcul Cartons
+            let addedJaunes = 0, addedBlancs = 0, addedRouges = 0;
+            keysToTest.forEach(k => {
+              if (jaunesMap[k]) { addedJaunes += jaunesMap[k]; jaunesMap[k] = 0; }
+              if (blancsMap[k]) { addedBlancs += blancsMap[k]; blancsMap[k] = 0; }
+              if (rougesMap[k]) { addedRouges += rougesMap[k]; rougesMap[k] = 0; }
+            });
+
+            updatedP.cartons_jaunes = currentJaunes + addedJaunes;
+            updatedP.cartons_blancs = currentBlanc + addedBlancs;
+            updatedP.cartons_rouges = currentRouges + addedRouges;
 
             return updatedP;
           });
 
-          // Mise à jour obligatoire du match
+          // Mise à jour du match dans matches.json
           matches[selectedMatchIdx].resultat = score;
           
           let buteursList = goalEvents.map(e => e.buteur).join(', ');
           let passeursList = goalEvents.map(e => e.passeur).filter(p => p).join(', ');
 
-          // Forcer la clé buteurs et passeurs dans le JSON
           matches[selectedMatchIdx].buteurs = buteursList || "";
           matches[selectedMatchIdx].passeurs = passeursList || "";
 
