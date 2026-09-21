@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("root");
-  const navLinks = document.querySelectorAll("nav a");
 
   // Anti-cache navigateur
   async function fetchFresh(url) {
@@ -166,16 +165,32 @@ document.addEventListener("DOMContentLoaded", () => {
         const badgeColor = isDomicile ? '#2e7d32' : '#00838f';
         const statusText = m.resultat && m.resultat.trim() !== '' ? m.resultat : 'À venir';
 
-        // Détermination de la couleur du score
-        let scoreColor = '#666666';
-        if (m.resultat) {
+        // Détection automatique de la couleur par analyse textuelle ET numérique
+        let scoreColor = '#555555';
+        if (m.resultat && m.resultat.trim() !== '') {
           const resLower = m.resultat.toLowerCase();
+          
           if (resLower.includes('victoire')) {
             scoreColor = '#2e7d32'; // Vert
           } else if (resLower.includes('défaite') || resLower.includes('defaite')) {
             scoreColor = '#c62828'; // Rouge
           } else if (resLower.includes('nul')) {
             scoreColor = '#ef6c00'; // Orange
+          } else {
+            // Analyse des chiffres (ex: "2 - 0" ou "0 - 9")
+            const scores = m.resultat.match(/\d+/g);
+            if (scores && scores.length >= 2) {
+              const scoreEquipe = parseInt(scores[0], 10);
+              const scoreAdversaire = parseInt(scores[1], 10);
+
+              if (scoreEquipe > scoreAdversaire) {
+                scoreColor = '#2e7d32'; // Vert
+              } else if (scoreEquipe < scoreAdversaire) {
+                scoreColor = '#c62828'; // Rouge
+              } else {
+                scoreColor = '#ef6c00'; // Orange
+              }
+            }
           }
         }
 
@@ -216,11 +231,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- ROUTEUR ---
   function navigateTo(hash) {
+    const navLinks = document.querySelectorAll("nav a");
     navLinks.forEach(link => link.classList.remove('active'));
-    const activeLink = document.querySelector(`nav a[href="${hash}"]`);
+    
+    const targetHash = hash || '#accueil';
+    const activeLink = document.querySelector(`nav a[href="${targetHash}"]`);
     if (activeLink) activeLink.classList.add('active');
 
-    switch (hash) {
+    switch (targetHash) {
       case '#effectif':
         renderEffectif();
         break;
@@ -234,9 +252,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Écouteur sur le changement de hash dans l'URL
   window.addEventListener('hashchange', () => {
     navigateTo(window.location.hash);
   });
 
+  // Interception des clics sur la navigation
+  document.querySelectorAll("nav a").forEach(link => {
+    link.addEventListener("click", (e) => {
+      const hash = link.getAttribute("href");
+      if (hash && hash.startsWith("#")) {
+        e.preventDefault();
+        window.location.hash = hash;
+        navigateTo(hash);
+      }
+    });
+  });
+
+  // Chargement initial
   navigateTo(window.location.hash || '#accueil');
 });
