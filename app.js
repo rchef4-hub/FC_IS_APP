@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("root");
   const navLinks = document.querySelectorAll("nav a");
 
-  // Fonction utilitaire pour éviter le cache navigateur lors des requêtes fetch
+  // Anti-cache navigateur
   async function fetchFresh(url) {
     const freshUrl = `${url}?_=${Date.now()}`;
     return fetch(freshUrl, { cache: 'no-store' });
@@ -20,14 +20,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const matchs = await resMatchs.json();
       const players = await resPlayers.json();
 
-      // Séparation des matchs joués et à venir
       const joues = matchs.filter(m => m.resultat && m.resultat.trim() !== '');
       const aVenir = matchs.filter(m => !m.resultat || m.resultat.trim() === '');
 
       const dernierMatch = joues.length > 0 ? joues[joues.length - 1] : null;
       const prochainMatch = aVenir.length > 0 ? aVenir[0] : null;
 
-      // Anniversaires du mois en cours
       const moisActuel = (new Date().getMonth() + 1).toString().padStart(2, '0');
       const anniversaires = players.filter(p => {
         if (!p.naissance) return false;
@@ -52,12 +50,10 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       if (dernierMatch) {
-        const dom = dernierMatch.lieu === 'Domicile' ? 'F.C. IS' : dernierMatch.adversaire;
-        const ext = dernierMatch.lieu === 'Domicile' ? dernierMatch.adversaire : 'F.C. IS';
         html += `
           <div style="text-align: center;">
             <p style="margin: 5px 0; color: #666; font-size: 0.9em;">📅 ${dernierMatch.date}</p>
-            <p style="font-size: 1.1em; margin: 10px 0;"><strong>${dom}</strong> vs <strong>${ext}</strong></p>
+            <p style="font-size: 1.1em; margin: 10px 0;"><strong>vs ${dernierMatch.adversaire}</strong> (${dernierMatch.lieu})</p>
             <p style="font-size: 1.2em; font-weight: bold; color: #6b1d44;">${dernierMatch.resultat}</p>
             ${dernierMatch.buteurs ? `<p style="font-size: 0.85em; color: #444; margin-top: 5px;">⚽ ${dernierMatch.buteurs}</p>` : ''}
           </div>
@@ -77,12 +73,10 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       if (prochainMatch) {
-        const dom = prochainMatch.lieu === 'Domicile' ? 'F.C. IS' : prochainMatch.adversaire;
-        const ext = prochainMatch.lieu === 'Domicile' ? prochainMatch.adversaire : 'F.C. IS';
         html += `
           <div style="text-align: center;">
             <p style="margin: 5px 0; color: #666; font-size: 0.9em;">📅 ${prochainMatch.date}</p>
-            <p style="font-size: 1.1em; margin: 10px 0;"><strong>${dom}</strong> vs <strong>${ext}</strong></p>
+            <p style="font-size: 1.1em; margin: 10px 0;"><strong>vs ${prochainMatch.adversaire}</strong></p>
             <p style="font-size: 0.9em; color: #888;">📍 Match à ${prochainMatch.lieu}</p>
           </div>
         `;
@@ -165,32 +159,35 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetchFresh('matchs.json');
       const matchs = await res.json();
 
-      let html = `<h2>Calendrier & Résultats</h2><div class="matchs-list">`;
+      let html = `<h2>Calendrier & Résultats</h2><div class="matchs-list" style="display: flex; flex-direction: column; gap: 15px;">`;
 
       matchs.forEach(m => {
-        const isPlayed = m.resultat && m.resultat.trim() !== '';
-        const statusText = isPlayed ? m.resultat : 'À venir';
-        const dom = m.lieu === 'Domicile' ? 'F.C. IS' : m.adversaire;
-        const ext = m.lieu === 'Domicile' ? m.adversaire : 'F.C. IS';
+        const isDomicile = m.lieu === 'Domicile';
+        const badgeColor = isDomicile ? '#2e7d32' : '#00838f';
+        const statusText = m.resultat && m.resultat.trim() !== '' ? m.resultat : 'À venir';
 
         html += `
-          <div class="match-card" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
-            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px; font-size: 0.85em; color: #666;">
-              <span>📅 ${m.date || ''}</span>
-              <span style="font-weight: bold; color: ${isPlayed ? '#6b1d44' : '#d4af37'};">${statusText}</span>
+          <div class="match-card" style="background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 5px solid ${badgeColor}; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.9em; color: #555; font-weight: 500;">📅 ${m.date || ''}</span>
+              <span style="background: ${badgeColor}; color: white; padding: 3px 12px; border-radius: 12px; font-size: 0.8em; font-weight: bold;">${m.lieu || 'Domicile'}</span>
             </div>
-            <div style="font-size: 1.05em; text-align: center; margin: 8px 0;">
-              <strong>${dom}</strong> vs <strong>${ext}</strong>
+
+            <div style="font-size: 1.1em; font-weight: bold; color: #222; margin: 6px 0;">
+              vs ${m.adversaire}
+            </div>
+
+            <div style="font-size: 0.95em; margin-top: 4px;">
+              Score : <strong style="color: #6b1d44;">${statusText}</strong>
             </div>
         `;
 
-        if (isPlayed) {
-          if (m.buteurs && m.buteurs.trim() !== '') {
-            html += `<div style="font-size: 0.85em; color: #444; margin-top: 5px;">⚽ <strong>Buteurs :</strong> ${m.buteurs}</div>`;
-          }
-          if (m.passeurs && m.passeurs.trim() !== '') {
-            html += `<div style="font-size: 0.85em; color: #444; margin-top: 3px;">👟 <strong>Passeurs :</strong> ${m.passeurs}</div>`;
-          }
+        if (m.buteurs && m.buteurs.trim() !== '') {
+          html += `<div style="font-size: 0.88em; color: #444; margin-top: 8px; border-top: 1px dashed #eee; padding-top: 6px;">⚽ <strong>Buteurs :</strong> ${m.buteurs}</div>`;
+        }
+
+        if (m.passeurs && m.passeurs.trim() !== '') {
+          html += `<div style="font-size: 0.88em; color: #444; margin-top: 4px;">👟 <strong>Passeurs :</strong> ${m.passeurs}</div>`;
         }
 
         html += `</div>`;
@@ -204,7 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- ROUTEUR SIMPLE ---
+  // --- ROUTEUR ---
   function navigateTo(hash) {
     navLinks.forEach(link => link.classList.remove('active'));
     const activeLink = document.querySelector(`nav a[href="${hash}"]`);
@@ -228,6 +225,5 @@ document.addEventListener("DOMContentLoaded", () => {
     navigateTo(window.location.hash);
   });
 
-  // Chargement initial
   navigateTo(window.location.hash || '#accueil');
 });
