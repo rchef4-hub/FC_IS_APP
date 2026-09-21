@@ -1,48 +1,42 @@
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
-  // Fonction anti-cache pour forcer le téléchargement des dernières données
   function fetchFresh(url) {
     return fetch(`${url}?t=${Date.now()}`);
   }
 
-  // Helper pour normaliser le texte (supprime espaces superflus et met en minuscules)
-  function normalizeText(str) {
-    if (!str) return '';
-    return str.toString().trim().toLowerCase().replace(/\s+/g, ' ');
+  // --- HELPER FORMAT UNIQUE : "NOM Prénom" ---
+  function getPlayerFullName(p) {
+    if (!p) return '';
+    const nom = (p.nom || p.Nom || '').trim().toUpperCase();
+    let prenom = (p.prenom || p.Prenom || p.prénom || '').trim();
+    if (prenom.length > 0) {
+      prenom = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+    }
+    return prenom ? `${nom} ${prenom}` : nom;
   }
 
-  // Helper pour colorer les résultats dynamiquement
   function formatScoreColor(scoreStr) {
     if (!scoreStr) return '';
-    
     let str = typeof scoreStr === 'object' 
       ? `${scoreStr.scoreDom ?? '-'} - ${scoreStr.scoreExt ?? '-'}` 
       : scoreStr;
-
     const lower = str.toLowerCase();
     
-    if (lower.includes('victoire')) {
-      return `<span style="color: #28a745; font-weight: bold;">${str}</span>`;
-    } else if (lower.includes('nul')) {
-      return `<span style="color: #fd7e14; font-weight: bold;">${str}</span>`;
-    } else if (lower.includes('défaite') || lower.includes('defaite')) {
-      return `<span style="color: #6b0f40; font-weight: bold;">${str}</span>`;
-    }
+    if (lower.includes('victoire')) return `<span style="color: #28a745; font-weight: bold;">${str}</span>`;
+    if (lower.includes('nul')) return `<span style="color: #fd7e14; font-weight: bold;">${str}</span>`;
+    if (lower.includes('défaite') || lower.includes('defaite')) return `<span style="color: #6b0f40; font-weight: bold;">${str}</span>`;
     
     return `<strong>${str}</strong>`;
   }
 
-  // Helper pour attribuer une couleur de bordure selon le poste
   function getPosteColor(posteStr) {
     if (!posteStr) return '#6c757d'; 
     const p = posteStr.toLowerCase();
-
     if (p.includes('gardien') || p.includes('gb')) return '#28a745';
-    if (p.includes('défenseur') || p.includes('defenseur') || p.includes('def')) return '#17a2b8';
+    if (p.includes('défenseur') || p.includes('def')) return '#17a2b8';
     if (p.includes('milieu')) return '#fd7e14';
     if (p.includes('attaquant') || p.includes('att')) return '#c9a227';
-
     return '#6c757d';
   }
 
@@ -55,12 +49,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadJsonSafe = async (filename) => {
       try {
         const res = await fetchFresh(filename);
-        if (res.ok) {
-          const data = await res.json();
-          return Array.isArray(data) ? data : [];
-        }
+        if (res.ok) return await res.json();
       } catch (e) {
-        console.warn(`Fichier ${filename} non trouvé ou invalide.`, e);
+        console.warn(`Fichier ${filename} introuvable.`, e);
       }
       return [];
     };
@@ -75,13 +66,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const uniqueKeys = new Set();
     
     const allMembers = rawMembers.filter(m => {
-      if (!m.nom && !m.Nom) return false;
+      const fullName = getPlayerFullName(m);
+      if (!fullName) return false;
       m.dateNaissanceValidee = m.naissance || m.date_de_naissance || m.Naissance;
-      const prenom = m.prenom || m.Prenom || m.prénom || '';
-      const nom = m.nom || m.Nom || '';
-      const uniqueKey = `${nom.trim().toLowerCase()}_${prenom.trim().toLowerCase()}`;
-      if (uniqueKeys.has(uniqueKey)) return false;
-      uniqueKeys.add(uniqueKey);
+      if (uniqueKeys.has(fullName)) return false;
+      uniqueKeys.add(fullName);
       return true;
     });
 
@@ -92,8 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!dateStr) return false;
         const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
         if (parts.length < 3) return false;
-        const month = parseInt(parts[1], 10);
-        return month === currentMonth;
+        return parseInt(parts[1], 10) === currentMonth;
       });
 
       if (monthBDays.length > 0) {
@@ -103,15 +91,10 @@ document.addEventListener('DOMContentLoaded', function() {
           const isISO = parts[0].length === 4;
           const day = isISO ? parts[2].padStart(2, '0') : parts[0].padStart(2, '0');
           const month = parts[1].padStart(2, '0');
-          const icon = m.symbole || '🎂';
-          const prenom = m.prenom || m.Prenom || m.prénom || '';
-          const nom = m.nom || m.Nom || '';
-          const displayName = prenom ? `${nom} ${prenom}` : nom;
-          
           return `
             <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
-              <span>${icon} <strong>${displayName}</strong></span>
-              <small style="color: var(--primary-color, #007bff); font-weight: bold; font-size: 0.95em;">${day}/${month}</small>
+              <span>${m.symbole || '🎂'} <strong>${getPlayerFullName(m)}</strong></span>
+              <small style="color: var(--primary-color, #007bff); font-weight: bold;">${day}/${month}</small>
             </li>
           `;
         }).join('');
@@ -154,186 +137,101 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
     } catch (e) {
-      console.error("Erreur au chargement des matchs sur l'accueil :", e);
+      console.error("Erreur chargement accueil :", e);
     }
 
     root.innerHTML = `
       <h1>Bienvenue au F.C. IS</h1>
-      <div style="text-align:center; margin-top:20px; margin-bottom: 20px;">
-        <p><em>Saison 2026-2027</em></p>
-      </div>
+      <div style="text-align:center; margin: 20px 0;"><p><em>Saison 2026-2027</em></p></div>
 
       <a href="https://team.jako.com/fr-fr/team/fc_is/" target="_blank" rel="noopener noreferrer" 
-         style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #6b0f40, #8b1453); color: white; text-decoration: none; padding: 12px 16px; border-radius: 10px; margin-bottom: 25px; font-weight: bold; box-shadow: 0 3px 8px rgba(0,0,0,0.15);">
-        <span style="font-size: 0.95em;">🛍️ Boutique Officielle JAKO</span>
-        <span style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85em; white-space: nowrap;">Visiter ↗</span>
+         style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #6b0f40, #8b1453); color: white; text-decoration: none; padding: 12px 16px; border-radius: 10px; margin-bottom: 25px; font-weight: bold;">
+        <span>🛍️ Boutique Officielle JAKO</span>
+        <span style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85em;">Visiter ↗</span>
       </a>
 
-      <div style="margin-top: 25px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
-        <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.1em;">
-          ⚽ Dernier Match
-        </div>
+      <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+        <div style="background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px;">⚽ Dernier Match</div>
         ${lastMatchHTML}
       </div>
 
-      <div style="margin-top: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
-        <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.1em;">
-          ⏳ Prochain Match
-        </div>
+      <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+        <div style="background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px;">⏳ Prochain Match</div>
         ${nextMatchHTML}
       </div>
 
-      <div style="margin-top: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.1));">
-        <div style="margin-top:0; margin-bottom: 15px; background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.1em;">
-          🎉 Anniversaires du mois
-        </div>
+      <div style="background: white; padding: 15px; border-radius: 12px;">
+        <div style="background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px;">🎉 Anniversaires du mois</div>
         ${bdaysHTML}
       </div>
     `;
   }
 
-  // --- LISTE DES MATCHS ---
+  // --- CALENDRIER ---
   async function renderMatches() {
-    root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement des matchs...</p>`;
-
+    root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement...</p>`;
     try {
-      const response = await fetchFresh('matchs.json');
-      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
-
-      const matches = await response.json();
+      const res = await fetchFresh('matchs.json');
+      const matches = await res.json();
 
       const matchesHTML = matches.map(m => {
         const isDomicile = m.lieu && m.lieu.toLowerCase().includes('domicile');
         const badgeColor = isDomicile ? '#28a745' : '#17a2b8';
         
-        let resultatDisplay = '<em>À venir</em>';
-        if (m.resultat) {
-          resultatDisplay = formatScoreColor(m.resultat);
-        }
-
         let detailsHTML = '';
-        if (m.buteurs) {
-          detailsHTML += `<div style="font-size: 0.85em; color: #555; margin-top: 4px;">⚽ <strong>Buteurs :</strong> ${m.buteurs}</div>`;
-        }
-        if (m.passeurs) {
-          detailsHTML += `<div style="font-size: 0.85em; color: #555; margin-top: 2px;">👟 <strong>Passeurs :</strong> ${m.passeurs}</div>`;
-        }
+        if (m.buteurs) detailsHTML += `<div style="font-size: 0.85em; color: #555; margin-top: 4px;">⚽ <strong>Buteurs :</strong> ${m.buteurs}</div>`;
+        if (m.passeurs) detailsHTML += `<div style="font-size: 0.85em; color: #555; margin-top: 2px;">👟 <strong>Passeurs :</strong> ${m.passeurs}</div>`;
 
         return `
-          <li style="border-left-color: ${badgeColor}; padding: 12px; margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: var(--shadow); list-style: none;">
+          <li style="border-left-color: ${badgeColor}; padding: 12px; margin-bottom: 10px; background: white; border-radius: 8px; list-style: none; box-shadow: var(--shadow);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
               <small style="color: #666; font-weight: bold;">📅 ${m.date}</small>
               <span style="background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">${m.lieu || 'N/C'}</span>
             </div>
-            <div style="font-size: 1.1em; margin-bottom: 5px;">
-              <strong>vs ${m.adversaire}</strong>
-            </div>
-            <div style="color: var(--primary-color);">
-              Score : ${resultatDisplay}
-            </div>
+            <div style="font-size: 1.1em; margin-bottom: 5px;"><strong>vs ${m.adversaire}</strong></div>
+            <div>Score : ${m.resultat ? formatScoreColor(m.resultat) : '<em>À venir</em>'}</div>
             ${detailsHTML}
           </li>
         `;
       }).join('');
 
-      root.innerHTML = `
-        <h2>Calendrier & Résultats</h2>
-        <ul style="padding: 0;">${matchesHTML}</ul>
-      `;
-
-    } catch (error) {
-      console.error("Erreur de chargement des matchs :", error);
-      root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Impossible de charger les matchs.</p>`;
+      root.innerHTML = `<h2>Calendrier & Résultats</h2><ul style="padding: 0;">${matchesHTML}</ul>`;
+    } catch (e) {
+      root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
     }
   }
 
   // --- STATISTIQUES ---
   async function renderStats() {
-    root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement des statistiques...</p>`;
-
+    root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement...</p>`;
     try {
-      const response = await fetchFresh('players.json');
-      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+      const res = await fetchFresh('players.json');
+      const players = await res.json();
 
-      const players = await response.json();
+      const topScorers = [...players].filter(p => (parseInt(p.buts) || 0) > 0).sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
+      const topPassers = [...players].filter(p => (parseInt(p.passes) || 0) > 0).sort((a, b) => (parseInt(b.passes) || 0) - (parseInt(a.passes) || 0));
+      const topCards = [...players].filter(p => (parseInt(p.cartons_jaunes) || 0) > 0 || (parseInt(p.cartons_blancs) || 0) > 0 || (parseInt(p.cartons_rouges) || 0) > 0);
+      const topPlayed = [...players].filter(p => (parseInt(p.matchs) || 0) > 0).sort((a, b) => (parseInt(b.matchs) || 0) - (parseInt(a.matchs) || 0));
 
-      const topScorers = [...players]
-        .filter(p => (parseInt(p.buts) || 0) > 0)
-        .sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
-
-      const topPassers = [...players]
-        .filter(p => (parseInt(p.passes) || 0) > 0)
-        .sort((a, b) => (parseInt(b.passes) || 0) - (parseInt(a.passes) || 0));
-      
-      const topCards = [...players]
-        .filter(p => (parseInt(p.cartons_jaunes) || 0) > 0 || (parseInt(p.cartons_blancs) || 0) > 0 || (parseInt(p.cartons_rouges) || 0) > 0)
-        .sort((a, b) => {
-          const scoreB = (parseInt(b.cartons_rouges) || 0) * 5 + (parseInt(b.cartons_blancs) || 0) * 2 + (parseInt(b.cartons_jaunes) || 0);
-          const scoreA = (parseInt(a.cartons_rouges) || 0) * 5 + (parseInt(a.cartons_blancs) || 0) * 2 + (parseInt(a.cartons_jaunes) || 0);
-          return scoreB - scoreA;
-        });
-
-      const topPlayed = [...players]
-        .filter(p => (parseInt(p.matchs) || 0) > 0)
-        .sort((a, b) => (parseInt(b.matchs) || 0) - (parseInt(a.matchs) || 0));
-
-      const scorersHTML = topScorers.length > 0 ? topScorers.map(p => {
-        const prenom = p.prenom || p.Prenom || p.prénom || '';
-        const nom = p.nom || p.Nom || '';
-        return `
-          <li>
-            <strong>${nom} ${prenom}</strong>
-            <br><small>⚽ ${parseInt(p.buts) || 0} but(s) en ${parseInt(p.matchs) || 0} match(s)</small>
-          </li>
-        `;
-      }).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun buteur pour l\'instant.</p>';
-
-      const passersHTML = topPassers.length > 0 ? topPassers.map(p => {
-        const prenom = p.prenom || p.Prenom || p.prénom || '';
-        const nom = p.nom || p.Nom || '';
-        return `
-          <li>
-            <strong>${nom} ${prenom}</strong>
-            <br><small>👟 ${parseInt(p.passes) || 0} passe(s) décisive(s)</small>
-          </li>
-        `;
-      }).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucune passe décisive pour l\'instant.</p>';
-
-      const cardsHTML = topCards.length > 0 ? topCards.map(p => {
-        const prenom = p.prenom || p.Prenom || p.prénom || '';
-        const nom = p.nom || p.Nom || '';
-        return `
-          <li>
-            <strong>${nom} ${prenom}</strong>
-            <br><small>🟨 ${parseInt(p.cartons_jaunes) || 0} jaune(s) | ⬜ ${parseInt(p.cartons_blancs) || 0} blanc(s) | 🟥 ${parseInt(p.cartons_rouges) || 0} rouge(s)</small>
-          </li>
-        `;
-      }).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun carton enregistré pour l\'instant.</p>';
-
-      const playedHTML = topPlayed.length > 0 ? topPlayed.map(p => {
-        const prenom = p.prenom || p.Prenom || p.prénom || '';
-        const nom = p.nom || p.Nom || '';
-        return `
-          <li>
-            <strong>${nom} ${prenom}</strong>
-            <br><small>🏃 ${parseInt(p.matchs) || 0} match(s) disputé(s)</small>
-          </li>
-        `;
-      }).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun match enregistré pour l\'instant.</p>';
+      const renderList = (arr, labelFn, emptyMsg) => arr.length > 0 ? arr.map(p => `
+        <li>
+          <strong>${getPlayerFullName(p)}</strong><br><small>${labelFn(p)}</small>
+        </li>
+      `).join('') : `<p style="padding: 10px; color: #666; text-align: center;">${emptyMsg}</p>`;
 
       root.innerHTML = `
         <h2>Statistiques de la Saison</h2>
         <h3 class="accordion-header">⚽ Meilleurs Buteurs</h3>
-        <ul class="collapsed">${scorersHTML}</ul>
+        <ul class="collapsed">${renderList(topScorers, p => `⚽ ${p.buts \vert{}\vert{} 0} but(s) en${p.matchs || 0} match(s)`, "Aucun buteur")}</ul>
         
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
-        <ul class="collapsed">${passersHTML}</ul>
+        <ul class="collapsed">${renderList(topPassers, p => `👟 ${p.passes || 0} passe(s)`, "Aucune passe décisive")}</ul>
         
         <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
-        <ul class="collapsed">${cardsHTML}</ul>
+        <ul class="collapsed">${renderList(topCards, p => `🟨 ${p.cartons_jaunes || 0} | ⬜ ${p.cartons_blancs \vert{}\vert{} 0} \vert{} 🟥 ${p.cartons_rouges || 0}`, "Aucun carton")}</ul>
         
         <h3 class="accordion-header">🏃 Joueurs les plus utilisés</h3>
-        <ul class="collapsed">${playedHTML}</ul>
+        <ul class="collapsed">${renderList(topPlayed, p => `🏃 ${p.matchs || 0} match(s)`, "Aucun match enregistree")}</ul>
       `;
 
       document.querySelectorAll('#root h3.accordion-header').forEach(header => {
@@ -345,117 +243,66 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         });
       });
-
-    } catch (error) {
-      console.error("Erreur de chargement des stats :", error);
-      root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Erreur dans le fichier players.json.</p>`;
+    } catch (e) {
+      root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
     }
   }
 
-  // --- EFFECTIF COMPLET ---
+  // --- EFFECTIF ---
   async function renderPlayers() {
-    root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
-
-    let players = [], dirigeants = [], arbitres = [];
-
+    root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement...</p>`;
     try {
-      const res = await fetchFresh('players.json');
-      if (res.ok) players = await res.json();
-    } catch (e) { console.error("Erreur players.json", e); }
+      const [players, dirigeants, arbitres] = await Promise.all([
+        fetchFresh('players.json').then(r => r.ok ? r.json() : []),
+        fetchFresh('dirigeants.json').then(r => r.ok ? r.json() : []),
+        fetchFresh('arbitres.json').then(r => r.ok ? r.json() : [])
+      ]);
 
-    try {
-      const res = await fetchFresh('dirigeants.json');
-      if (res.ok) dirigeants = await res.json();
-    } catch (e) { console.error("Erreur dirigeants.json", e); }
+      let html = '<h2>Effectif du Club</h2>';
 
-    try {
-      const res = await fetchFresh('arbitres.json');
-      if (res.ok) arbitres = await res.json();
-    } catch (e) { console.error("Erreur arbitres.json", e); }
+      if (players.length > 0) {
+        const list = players.map(p => `<li style="border-left: 4px solid ${getPosteColor(p.poste)};">${p.symbole || '⚽'} <strong>${p.numero ? '#' + p.numero + ' ' : ''}${getPlayerFullName(p)}</strong><br><small>${p.poste || ''}</small></li>`).join('');
+        html += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${list}</ul>`;
+      }
+      if (dirigeants.length > 0) {
+        const list = dirigeants.map(d => `<li style="border-left: 4px solid #6c757d;">${d.symbole || '👔'} <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`).join('');
+        html += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${list}</ul>`;
+      }
+      if (arbitres.length > 0) {
+        const list = arbitres.map(a => `<li style="border-left: 4px solid #6c757d;">${a.symbole || '🟨'} <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
+        html += `<h3 class="accordion-header">🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
+      }
 
-    let contentHTML = '<h2>Effectif du Club</h2>';
+      root.innerHTML = html;
 
-    if (players.length > 0) {
-      const playerListHTML = players.map(player => {
-        const borderColor = getPosteColor(player.poste);
-        const playerNum = player.numero ? `#${player.numero} ` : '';
-        const prenom = player.prenom || player.Prenom || player.prénom || '';
-        const nom = player.nom || player.Nom || '';
-        return `
-          <li style="border-left: 4px solid ${borderColor};">
-            ${player.symbole || '⚽'} <strong>${playerNum}${nom} ${prenom}</strong>
-            <br><small>${player.poste || ''}</small>
-          </li>
-        `;
-      }).join('');
-      contentHTML += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${playerListHTML}</ul>`;
-    }
-
-    if (dirigeants.length > 0) {
-      const dirigeantsListHTML = dirigeants.map(dirigeant => {
-        const prenom = dirigeant.prenom || dirigeant.Prenom || dirigeant.prénom || '';
-        const nom = dirigeant.nom || dirigeant.Nom || '';
-        return `
-          <li style="border-left: 4px solid #6c757d;">
-            ${dirigeant.symbole || '👔'} <strong>${nom} ${prenom}</strong>
-            <br><small>${dirigeant.fonction || ''}</small>
-          </li>
-        `;
-      }).join('');
-      contentHTML += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${dirigeantsListHTML}</ul>`;
-    }
-
-    if (arbitres.length > 0) {
-      const arbitresListHTML = arbitres.map(arbitre => {
-        const prenom = arbitre.prenom || arbitre.Prenom || arbitre.prénom || '';
-        const nom = arbitre.nom || arbitre.Nom || '';
-        const fullName = prenom ? `${nom} ${prenom}` : nom;
-        const categorie = arbitre.categorie || arbitre.Categorie || 'Club';
-        return `
-          <li style="border-left: 4px solid #6c757d;">
-            ${arbitre.symbole || '🟨'} <strong>${fullName}</strong>
-            <br><small>Arbitre ${categorie}</small>
-          </li>
-        `;
-      }).join('');
-      contentHTML += `<h3 class="accordion-header">🟨🟥 Arbitres</h3><ul class="collapsed">${arbitresListHTML}</ul>`;
-    }
-
-    root.innerHTML = contentHTML;
-
-    document.querySelectorAll('#root h3').forEach(header => {
-      header.addEventListener('click', function() {
-        const list = this.nextElementSibling;
-        if (list && list.tagName === 'UL') {
-          list.classList.toggle('collapsed'); 
-          this.classList.toggle('active');
-        }
+      document.querySelectorAll('#root h3').forEach(header => {
+        header.addEventListener('click', function() {
+          const list = this.nextElementSibling;
+          if (list && list.tagName === 'UL') {
+            list.classList.toggle('collapsed'); 
+            this.classList.toggle('active');
+          }
+        });
       });
-    });
+    } catch (e) {
+      root.innerHTML = `<h2>Effectif du Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
+    }
   }
 
   // --- ANNONCES ---
   async function renderAnnouncements() {
-    root.innerHTML = `<h2>Annonces Club</h2><p style="text-align: center;">Chargement des annonces...</p>`;
-
+    root.innerHTML = `<h2>Annonces Club</h2><p style="text-align: center;">Chargement...</p>`;
     try {
-      const response = await fetchFresh('annonces.json');
-      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
-
-      const annonces = await response.json();
-      
-      const annoncesListHTML = annonces.map(annonce => `
-        <li style="border-left-color: ${annonce.couleur_bordure || 'var(--primary-color)'};">
-          ${annonce.symbole} <strong>${annonce.titre}</strong>
-          <br>${annonce.details}
+      const res = await fetchFresh('annonces.json');
+      const annonces = await res.json();
+      const list = annonces.map(a => `
+        <li style="border-left-color: ${a.couleur_bordure || 'var(--primary-color)'};">
+          ${a.symbole} <strong>${a.titre}</strong><br>${a.details}
         </li>
       `).join('');
-      
-      root.innerHTML = `<h2>Annonces Club</h2><ul>${annoncesListHTML}</ul>`;
-      
-    } catch (error) {
-      console.error("Erreur de chargement des annonces :", error);
-      root.innerHTML = `<h2>Annonces Club</h2><p style="color: red; text-align: center;">Impossible de charger les annonces.</p>`;
+      root.innerHTML = `<h2>Annonces Club</h2><ul>${list}</ul>`;
+    } catch (e) {
+      root.innerHTML = `<h2>Annonces Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
     }
   }
 
@@ -502,27 +349,21 @@ document.addEventListener('DOMContentLoaded', function() {
       ).join('');
 
       let playerOptionsScorer = `<option value="CSC">[CSC] But contre son camp</option>` + players.map(p => {
-        const prenom = p.prenom || p.Prenom || p.prénom || '';
-        const nom = p.nom || p.Nom || '';
-        const fullName = prenom ? `${nom} ${prenom}` : nom;
-        return `<option value="${fullName}">${fullName}</option>`;
+        const name = getPlayerFullName(p);
+        return `<option value="${name}">${name}</option>`;
       }).join('');
 
       let playerOptionsPasser = players.map(p => {
-        const prenom = p.prenom || p.Prenom || p.prénom || '';
-        const nom = p.nom || p.Nom || '';
-        const fullName = prenom ? `${nom} ${prenom}` : nom;
-        return `<option value="${fullName}">${fullName}</option>`;
+        const name = getPlayerFullName(p);
+        return `<option value="${name}">${name}</option>`;
       }).join('');
 
       let playerCheckboxList = players.map(p => {
-        const prenom = p.prenom || p.Prenom || p.prénom || '';
-        const nom = p.nom || p.Nom || '';
-        const fullName = prenom ? `${nom} ${prenom}` : nom;
+        const name = getPlayerFullName(p);
         return `
           <label style="display:block; margin: 5px 0; font-size: 0.95em;">
-            <input type="checkbox" class="presence-check" value="${fullName}">
-            #${p.numero || ''} ${fullName} (${p.poste || ''})
+            <input type="checkbox" class="presence-check" value="${name}">
+            #${p.numero || ''} ${name} (${p.poste || ''})
           </label>
         `;
       }).join('');
@@ -556,16 +397,16 @@ document.addEventListener('DOMContentLoaded', function() {
             <button id="btn-add-goal" type="button" style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
           </div>
 
-          <label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Avertissement / Carton :</label>
+          <label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Carton :</label>
           <div style="display: flex; gap: 5px; margin-bottom: 10px;">
             <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
-              <option value="">-- Joueur Sanctionné --</option>
+              <option value="">-- Joueur --</option>
               ${playerOptionsPasser}
             </select>
             <select id="select-type-carton" style="width: 140px; padding: 6px; border-radius: 6px;">
               <option value="🟨">🟨 Jaune</option>
-              <option value="⬜">⬜ Blanc (Excl. temp.)</option>
-              <option value="🟥">🟥 Rouge Direct</option>
+              <option value="⬜">⬜ Blanc</option>
+              <option value="🟥">🟥 Rouge</option>
             </select>
             <button id="btn-add-card" type="button" style="background: #ffc107; color: black; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Ajouter</button>
           </div>
@@ -588,252 +429,138 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
 
       function renderGoalsUI() {
-        const goalsContainer = document.getElementById('goals-list');
+        const container = document.getElementById('goals-list');
         if (goalEvents.length === 0) {
-          goalsContainer.innerHTML = `<small style="color: #888;">Aucun but ajouté pour l'instant.</small>`;
+          container.innerHTML = `<small style="color: #888;">Aucun but ajouté.</small>`;
           return;
         }
-
-        goalsContainer.innerHTML = goalEvents.map((e, index) => {
-          const buteurLabel = e.buteur === 'CSC' ? '🤖 <em>[CSC] But contre son camp</em>' : `⚽ <strong>${e.buteur}</strong>`;
-          return `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid var(--accent-color);">
-              <span>${buteurLabel} ${e.passeur ? '<small style="color:#555;">(passe : ' + e.passeur + ')</small>' : ''}</span>
-              <button type="button" onclick="removeGoal(${index})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">❌</button>
-            </div>
-          `;
-        }).join('');
-      }
-
-      function renderCardsUI() {
-        const cardsContainer = document.getElementById('cards-list');
-        if (cardEvents.length === 0) {
-          cardsContainer.innerHTML = `<small style="color: #888;">Aucun carton ajouté pour l'instant.</small>`;
-          return;
-        }
-
-        cardsContainer.innerHTML = cardEvents.map((c, index) => `
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid #ffc107;">
-            <span>${c.type} <strong>${c.joueur}</strong></span>
-            <button type="button" onclick="removeCard(${index})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">❌</button>
+        container.innerHTML = goalEvents.map((e, idx) => `
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid var(--accent-color);">
+            <span>⚽ <strong>${e.buteur}</strong> ${e.passeur ? '<small>(passe : ' + e.passeur + ')</small>' : ''}</span>
+            <button type="button" onclick="removeGoal(${idx})" style="background:none; border:none; color:red; cursor:pointer;">❌</button>
           </div>
         `).join('');
       }
 
-      window.removeGoal = function(index) {
-        goalEvents.splice(index, 1);
-        renderGoalsUI();
-      };
+      function renderCardsUI() {
+        const container = document.getElementById('cards-list');
+        if (cardEvents.length === 0) {
+          container.innerHTML = `<small style="color: #888;">Aucun carton ajouté.</small>`;
+          return;
+        }
+        container.innerHTML = cardEvents.map((c, idx) => `
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid #ffc107;">
+            <span>${c.type} <strong>${c.joueur}</strong></span>
+            <button type="button" onclick="removeCard(${idx})" style="background:none; border:none; color:red; cursor:pointer;">❌</button>
+          </div>
+        `).join('');
+      }
 
-      window.removeCard = function(index) {
-        cardEvents.splice(index, 1);
-        renderCardsUI();
-      };
+      window.removeGoal = (idx) => { goalEvents.splice(idx, 1); renderGoalsUI(); };
+      window.removeCard = (idx) => { cardEvents.splice(idx, 1); renderCardsUI(); };
 
       renderGoalsUI();
       renderCardsUI();
 
       document.getElementById('btn-add-goal').addEventListener('click', () => {
-        const buteurSelect = document.getElementById('select-buteur');
-        const passeurSelect = document.getElementById('select-passeur');
-        const buteur = buteurSelect.value;
-        const passeur = passeurSelect.value;
-
-        if (!buteur) {
-          alert('Veuillez sélectionner un buteur.');
-          return;
-        }
-
-        goalEvents.push({ buteur: buteur, passeur: passeur });
+        const buteur = document.getElementById('select-buteur').value;
+        const passeur = document.getElementById('select-passeur').value;
+        if (!buteur) return alert('Sélectionnez un buteur');
+        goalEvents.push({ buteur, passeur });
         renderGoalsUI();
-
-        buteurSelect.value = '';
-        passeurSelect.value = '';
+        document.getElementById('select-buteur').value = '';
+        document.getElementById('select-passeur').value = '';
       });
 
       document.getElementById('btn-add-card').addEventListener('click', () => {
-        const joueurSelect = document.getElementById('select-joueur-carton');
-        const typeSelect = document.getElementById('select-type-carton');
-        const joueur = joueurSelect.value;
-        const type = typeSelect.value;
-
-        if (!joueur) {
-          alert('Veuillez sélectionner un joueur sanctionné.');
-          return;
-        }
-
-        cardEvents.push({ joueur: joueur, type: type });
+        const joueur = document.getElementById('select-joueur-carton').value;
+        const type = document.getElementById('select-type-carton').value;
+        if (!joueur) return alert('Sélectionnez un joueur');
+        cardEvents.push({ joueur, type });
         renderCardsUI();
-
-        joueurSelect.value = '';
+        document.getElementById('select-joueur-carton').value = '';
       });
 
       async function updateGitHubFile(filePath, newContent, commitMessage) {
         const getUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
-        const getRes = await fetch(getUrl, { 
-          headers: { 'Authorization': `token ${githubToken}` } 
-        });
-
-        if (!getRes.ok) {
-          throw new Error(`Impossible de lire ${filePath}. Vérifiez le Token.`);
-        }
-
+        const getRes = await fetch(getUrl, { headers: { 'Authorization': `token ${githubToken}` } });
+        if (!getRes.ok) throw new Error(`Lecture impossible de ${filePath}`);
         const fileData = await getRes.json();
 
         const putRes = await fetch(getUrl, {
           method: 'PUT',
-          headers: { 
-            'Authorization': `token ${githubToken}`, 
-            'Content-Type': 'application/json' 
-          },
+          headers: { 'Authorization': `token ${githubToken}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: commitMessage,
             content: btoa(unescape(encodeURIComponent(JSON.stringify(newContent, null, 2)))),
             sha: fileData.sha
           })
         });
-
-        if (!putRes.ok) {
-          throw new Error(`Erreur lors de la réécriture de ${filePath}`);
-        }
+        if (!putRes.ok) throw new Error(`Erreur d'écriture sur ${filePath}`);
       }
 
       document.getElementById('btn-save-direct').addEventListener('click', async () => {
         const statusMsg = document.getElementById('status-message');
-        
-        // Prise en compte si l'utilisateur n'a pas cliqué sur "+ Ajouter"
-        const pendingButeur = document.getElementById('select-buteur').value;
-        const pendingPasseur = document.getElementById('select-passeur').value;
-        if (pendingButeur) {
-          goalEvents.push({ buteur: pendingButeur, passeur: pendingPasseur });
-          document.getElementById('select-buteur').value = '';
-          document.getElementById('select-passeur').value = '';
-          renderGoalsUI();
-        }
-
         statusMsg.style.color = "orange";
-        statusMsg.innerText = "⏳ Envoi des données sur GitHub...";
+        statusMsg.innerText = "⏳ Publication sur GitHub...";
 
         try {
           const selectedMatchIdx = document.getElementById('select-match').value;
           const score = document.getElementById('match-score').value;
           const checkedBoxes = document.querySelectorAll('.presence-check:checked');
-          const presentNamesNorm = Array.from(checkedBoxes).map(cb => normalizeText(cb.value));
+          const presentList = Array.from(checkedBoxes).map(cb => cb.value);
 
-          // Cartographie des buts / passes en minuscules
-          let butsMap = {};
-          let passesMap = {};
+          // Comptage exact avec le format unique "NOM Prénom"
+          let butsMap = {}, passesMap = {}, jaunesMap = {}, blancsMap = {}, rougesMap = {};
 
           goalEvents.forEach(e => {
-            if (e.buteur && e.buteur !== 'CSC') {
-              const k = normalizeText(e.buteur);
-              butsMap[k] = (butsMap[k] || 0) + 1;
-            }
-            if (e.passeur) {
-              const k = normalizeText(e.passeur);
-              passesMap[k] = (passesMap[k] || 0) + 1;
-            }
+            if (e.buteur && e.buteur !== 'CSC') butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
+            if (e.passeur) passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
           });
-
-          let jaunesMap = {}, blancsMap = {}, rougesMap = {};
-          let totalCardsPerPlayer = {}; 
 
           cardEvents.forEach(c => {
-            const k = normalizeText(c.joueur);
-            if (!totalCardsPerPlayer[k]) totalCardsPerPlayer[k] = 0;
-
-            if (c.type === '🟨') {
-              jaunesMap[k] = (jaunesMap[k] || 0) + 1;
-              totalCardsPerPlayer[k] += 1;
-            } else if (c.type === '⬜') {
-              blancsMap[k] = (blancsMap[k] || 0) + 1;
-              totalCardsPerPlayer[k] += 1;
-            } else if (c.type === '🟥') {
-              rougesMap[k] = (rougesMap[k] || 0) + 1;
-            }
-
-            if (totalCardsPerPlayer[k] === 2) {
-              rougesMap[k] = (rougesMap[k] || 0) + 1;
-              jaunesMap[k] = 0;
-              blancsMap[k] = 0;
-            }
+            if (c.type === '🟨') jaunesMap[c.joueur] = (jaunesMap[c.joueur] || 0) + 1;
+            if (c.type === '⬜') blancsMap[c.joueur] = (blancsMap[c.joueur] || 0) + 1;
+            if (c.type === '🟥') rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
           });
 
-          // Mise à jour des joueurs avec vérification multiclés
+          // Mise à jour de players.json
           const updatedPlayers = players.map(p => {
+            const fullName = getPlayerFullName(p);
             let updatedP = { ...p };
-            let currentMatchs = parseInt(updatedP.matchs) || 0;
-            let currentButs = parseInt(updatedP.buts) || 0;
-            let currentPasses = parseInt(updatedP.passes) || 0;
-            let currentJaunes = parseInt(updatedP.cartons_jaunes) || 0;
-            let currentBlanc = parseInt(updatedP.cartons_blancs) || 0;
-            let currentRouges = parseInt(updatedP.cartons_rouges) || 0;
 
-            const nom = p.nom || p.Nom || '';
-            const prenom = p.prenom || p.Prenom || p.prénom || '';
-
-            const keysToTest = [
-              normalizeText(`${nom} ${prenom}`),
-              normalizeText(`${prenom} ${nom}`),
-              normalizeText(nom)
-            ].filter(Boolean);
-
-            // Vérification presence
-            const isPresent = keysToTest.some(k => presentNamesNorm.includes(k));
-            if (isPresent) {
-              updatedP.matchs = currentMatchs + 1;
+            if (presentList.includes(fullName)) {
+              updatedP.matchs = (parseInt(updatedP.matchs) || 0) + 1;
             }
-
-            // Calcul Buts
-            let addedButs = 0;
-            keysToTest.forEach(k => {
-              if (butsMap[k]) {
-                addedButs += butsMap[k];
-                butsMap[k] = 0; // éviter le double comptage
-              }
-            });
-            updatedP.buts = currentButs + addedButs;
-
-            // Calcul Passes
-            let addedPasses = 0;
-            keysToTest.forEach(k => {
-              if (passesMap[k]) {
-                addedPasses += passesMap[k];
-                passesMap[k] = 0;
-              }
-            });
-            updatedP.passes = currentPasses + addedPasses;
-
-            // Calcul Cartons
-            let addedJaunes = 0, addedBlancs = 0, addedRouges = 0;
-            keysToTest.forEach(k => {
-              if (jaunesMap[k]) { addedJaunes += jaunesMap[k]; jaunesMap[k] = 0; }
-              if (blancsMap[k]) { addedBlancs += blancsMap[k]; blancsMap[k] = 0; }
-              if (rougesMap[k]) { addedRouges += rougesMap[k]; rougesMap[k] = 0; }
-            });
-
-            updatedP.cartons_jaunes = currentJaunes + addedJaunes;
-            updatedP.cartons_blancs = currentBlanc + addedBlancs;
-            updatedP.cartons_rouges = currentRouges + addedRouges;
+            if (butsMap[fullName]) {
+              updatedP.buts = (parseInt(updatedP.buts) || 0) + butsMap[fullName];
+            }
+            if (passesMap[fullName]) {
+              updatedP.passes = (parseInt(updatedP.passes) || 0) + passesMap[fullName];
+            }
+            if (jaunesMap[fullName]) {
+              updatedP.cartons_jaunes = (parseInt(updatedP.cartons_jaunes) || 0) + jaunesMap[fullName];
+            }
+            if (blancsMap[fullName]) {
+              updatedP.cartons_blancs = (parseInt(updatedP.cartons_blancs) || 0) + blancsMap[fullName];
+            }
+            if (rougesMap[fullName]) {
+              updatedP.cartons_rouges = (parseInt(updatedP.cartons_rouges) || 0) + rougesMap[fullName];
+            }
 
             return updatedP;
           });
 
-          // Mise à jour du match dans matches.json
+          // Enregistrement dans matchs.json
           matches[selectedMatchIdx].resultat = score;
-          
-          let buteursList = goalEvents.map(e => e.buteur).join(', ');
-          let passeursList = goalEvents.map(e => e.passeur).filter(p => p).join(', ');
+          matches[selectedMatchIdx].buteurs = goalEvents.map(e => e.buteur).join(', ');
+          matches[selectedMatchIdx].passeurs = goalEvents.map(e => e.passeur).filter(Boolean).join(', ');
 
-          matches[selectedMatchIdx].buteurs = buteursList || "";
-          matches[selectedMatchIdx].passeurs = passeursList || "";
-
-          // Sauvegarde GitHub
-          await updateGitHubFile('players.json', updatedPlayers, 'Update players stats');
-          await updateGitHubFile('matchs.json', matches, 'Update match result');
+          await updateGitHubFile('players.json', updatedPlayers, 'Mise à jour des stats joueurs');
+          await updateGitHubFile('matchs.json', matches, 'Mise à jour des résultats matchs');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Match enregistré et publié avec succès !";
+          statusMsg.innerText = "✅ Publication effectuée avec succès !";
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
@@ -841,23 +568,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
-      // Remise à zéro
       document.getElementById('btn-reset-all').addEventListener('click', async () => {
-        if (!confirm("⚠️ ATTENTION : Voulez-vous vraiment remettre à ZÉRO tous les scores et statistiques ?")) return;
-
+        if (!confirm("⚠️ Tout réinitialiser ?")) return;
         const statusMsg = document.getElementById('status-message');
         statusMsg.style.color = "orange";
         statusMsg.innerText = "⏳ Réinitialisation...";
 
         try {
           const resetPlayers = players.map(p => ({
-            ...p,
-            matchs: 0,
-            buts: 0,
-            passes: 0,
-            cartons_jaunes: 0,
-            cartons_blancs: 0,
-            cartons_rouges: 0
+            ...p, matchs: 0, buts: 0, passes: 0, cartons_jaunes: 0, cartons_blancs: 0, cartons_rouges: 0
           }));
 
           const resetMatches = matches.map(m => {
@@ -867,48 +586,32 @@ document.addEventListener('DOMContentLoaded', function() {
             return m;
           });
 
-          await updateGitHubFile('players.json', resetPlayers, 'Reset players stats');
-          await updateGitHubFile('matchs.json', resetMatches, 'Reset matches results');
+          await updateGitHubFile('players.json', resetPlayers, 'Reset stats');
+          await updateGitHubFile('matchs.json', resetMatches, 'Reset matchs');
 
           statusMsg.style.color = "green";
           statusMsg.innerText = "✅ Réinitialisation réussie !";
         } catch (err) {
-          console.error(err);
           statusMsg.style.color = "red";
           statusMsg.innerText = "❌ Erreur : " + err.message;
         }
       });
 
     } catch (error) {
-      console.error("Erreur admin:", error);
-      root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="color: red; text-align: center;">Erreur de chargement des données.</p>`;
+      root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
     }
   }
 
-  // --- ROUTEUR SIMPLE (HASH) ---
   function handleRoute() {
     const hash = window.location.hash.substring(1) || 'home';
-
     switch (hash) {
-      case 'matches':
-        renderMatches();
-        break;
-      case 'stats':
-        renderStats();
-        break;
-      case 'players':
-        renderPlayers();
-        break;
-      case 'announcements':
-        renderAnnouncements();
-        break;
-      case 'admin':
-        renderAdmin();
-        break;
+      case 'matches': renderMatches(); break;
+      case 'stats': renderStats(); break;
+      case 'players': renderPlayers(); break;
+      case 'announcements': renderAnnouncements(); break;
+      case 'admin': renderAdmin(); break;
       case 'home':
-      default:
-        renderHome();
-        break;
+      default: renderHome(); break;
     }
   }
 
