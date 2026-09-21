@@ -94,12 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
         if (parts.length < 3) return false;
 
-        let month = 0;
-        if (parts[0].length === 4) {
-          month = parseInt(parts[1], 10);
-        } else {
-          month = parseInt(parts[1], 10);
-        }
+        const month = parseInt(parts[1], 10);
         return month === currentMonth;
       });
 
@@ -267,17 +262,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const players = await response.json();
 
-      // Tri des meilleurs buteurs
       const topScorers = [...players]
         .filter(p => (parseInt(p.buts) || 0) > 0)
         .sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
 
-      // Tri des meilleurs passeurs
       const topPassers = [...players]
         .filter(p => (parseInt(p.passes) || 0) > 0)
         .sort((a, b) => (parseInt(b.passes) || 0) - (parseInt(a.passes) || 0));
       
-      // Tri de la discipline
       const topCards = [...players]
         .filter(p => (parseInt(p.cartons_jaunes) || 0) > 0 || (parseInt(p.cartons_blancs) || 0) > 0 || (parseInt(p.cartons_rouges) || 0) > 0)
         .sort((a, b) => {
@@ -286,7 +278,6 @@ document.addEventListener('DOMContentLoaded', function() {
           return scoreB - scoreA;
         });
 
-      // Tri des joueurs les plus utilisés (matchs joués)
       const topPlayed = [...players]
         .filter(p => (parseInt(p.matchs) || 0) > 0)
         .sort((a, b) => (parseInt(b.matchs) || 0) - (parseInt(a.matchs) || 0));
@@ -334,7 +325,6 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul class="collapsed">${playedHTML}</ul>
       `;
 
-      // Ecouteur d'événement pour déplier/replier les accordéons
       document.querySelectorAll('#root h3.accordion-header').forEach(header => {
         header.addEventListener('click', function() {
           const list = this.nextElementSibling;
@@ -351,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- EFFECTIF COMPLET ---
+  // --- EFFECTIF COMPLETI ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
 
@@ -524,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </select>
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Score final :</label>
-          <input type="text" id="match-score" placeholder="Ex: Victoire 3 - 0 ou Défaite 1 -2" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc;">
+          <input type="text" id="match-score" placeholder="Ex: Victoire 3 - 0 ou Défaite 1 - 2" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc;">
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">3. Joueurs Présents :</label>
           <div style="max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 15px;">
@@ -730,54 +720,53 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
 
+          // Mise à jour des données joueurs
           const updatedPlayers = players.map(p => {
             let updatedP = { ...p };
             let currentMatchs = parseInt(updatedP.matchs) || 0;
             let currentButs = parseInt(updatedP.buts) || 0;
             let currentPasses = parseInt(updatedP.passes) || 0;
             let currentJaunes = parseInt(updatedP.cartons_jaunes) || 0;
-            let currentBlancs = parseInt(updatedP.cartons_blancs) || 0;
+            let currentBlanc = parseInt(updatedP.cartons_blancs) || 0;
             let currentRouges = parseInt(updatedP.cartons_rouges) || 0;
 
-            if (presentNames.includes(p.nom)) currentMatchs += 1;
-            if (butsMap[p.nom]) currentButs += butsMap[p.nom];
-            if (passesMap[p.nom]) currentPasses += passesMap[p.nom];
-            if (jaunesMap[p.nom]) currentJaunes += jaunesMap[p.nom];
-            if (blancsMap[p.nom]) currentBlancs += blancsMap[p.nom];
-            if (rougesMap[p.nom]) currentRouges += rougesMap[p.nom];
-
-            updatedP.matchs = currentMatchs;
-            updatedP.buts = currentButs;
-            updatedP.passes = currentPasses;
-            updatedP.cartons_jaunes = currentJaunes;
-            updatedP.cartons_blancs = currentBlancs;
-            updatedP.cartons_rouges = currentRouges;
+            if (presentNames.includes(p.nom)) {
+              updatedP.matchs = currentMatchs + 1;
+            }
+            if (butsMap[p.nom]) {
+              updatedP.buts = currentButs + butsMap[p.nom];
+            }
+            if (passesMap[p.nom]) {
+              updatedP.passes = currentPasses + passesMap[p.nom];
+            }
+            if (jaunesMap[p.nom]) {
+              updatedP.cartons_jaunes = currentJaunes + jaunesMap[p.nom];
+            }
+            if (blancsMap[p.nom]) {
+              updatedP.cartons_blancs = currentBlanc + blancsMap[p.nom];
+            }
+            if (rougesMap[p.nom]) {
+              updatedP.cartons_rouges = currentRouges + rougesMap[p.nom];
+            }
 
             return updatedP;
           });
 
-          // Mise à jour du match
-          const updatedMatches = matches.map((m, idx) => {
-            if (idx == selectedMatchIdx) {
-              let buteursStr = goalEvents.map(e => e.buteur === 'CSC' ? 'CSC' : e.buteur).join(', ');
-              let passeursStr = goalEvents.map(e => e.passeur).filter(Boolean).join(', ');
+          // Mise à jour des matchs
+          matches[selectedMatchIdx].resultat = score;
+          
+          let buteursList = goalEvents.map(e => e.buteur === 'CSC' ? '[CSC]' : e.buteur).join(', ');
+          let passeursList = goalEvents.map(e => e.passeur).filter(p => p).join(', ');
 
-              return {
-                ...m,
-                resultat: score || m.resultat,
-                buteurs: buteursStr,
-                passeurs: passeursStr
-              };
-            }
-            return m;
-          });
+          if (buteursList) matches[selectedMatchIdx].buteurs = buteursList;
+          if (passeursList) matches[selectedMatchIdx].passeurs = passeursList;
 
-          await updateGitHubFile('players.json', updatedPlayers, 'Mise à jour des stats joueurs');
-          await updateGitHubFile('matchs.json', updatedMatches, 'Mise à jour du résultat du match');
+          // Sauvegarde GitHub
+          await updateGitHubFile('players.json', updatedPlayers, 'Update players stats');
+          await updateGitHubFile('matchs.json', matches, 'Update match result');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Match et statistiques publiés avec succès !";
-
+          statusMsg.innerText = "✅ Match enregistré et publié avec succès !";
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
@@ -785,14 +774,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
+      // Remise à zéro
       document.getElementById('btn-reset-all').addEventListener('click', async () => {
-        if (!confirm("⚠️ Êtes-vous SÛR de vouloir réinitialiser TOUS les résultats et les stats à zéro ?")) {
-          return;
-        }
+        if (!confirm("⚠️ ATTENTION : Voulez-vous vraiment remettre à ZÉRO tous les scores et statistiques ?")) return;
 
         const statusMsg = document.getElementById('status-message');
         statusMsg.style.color = "orange";
-        statusMsg.innerText = "⏳ Réinitialisation globale...";
+        statusMsg.innerText = "⏳ Réinitialisation...";
 
         try {
           const resetPlayers = players.map(p => ({
@@ -805,55 +793,36 @@ document.addEventListener('DOMContentLoaded', function() {
             cartons_rouges: 0
           }));
 
-          const resetMatches = matches.map(m => ({
-            ...m,
-            resultat: "",
-            buteurs: "",
-            passeurs: ""
-          }));
+          const resetMatches = matches.map(m => {
+            delete m.resultat;
+            delete m.buteurs;
+            delete m.passeurs;
+            return m;
+          });
 
-          await updateGitHubFile('players.json', resetPlayers, 'Réinitialisation stats joueurs');
-          await updateGitHubFile('matchs.json', resetMatches, 'Réinitialisation calendrier matchs');
+          await updateGitHubFile('players.json', resetPlayers, 'Reset players stats');
+          await updateGitHubFile('matchs.json', resetMatches, 'Reset matches results');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Remise à zéro effectuée !";
-
+          statusMsg.innerText = "✅ Réinitialisation réussie !";
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
-          statusMsg.innerText = "❌ Erreur lors de la réinitialisation : " + err.message;
+          statusMsg.innerText = "❌ Erreur : " + err.message;
         }
       });
 
-    } catch (e) {
-      console.error(e);
-      root.innerHTML = `<h2>⚙️ Administration</h2><p style="color: red; text-align: center;">Erreur lors du chargement de l'interface admin.</p>`;
+    } catch (error) {
+      console.error("Erreur admin:", error);
+      root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="color: red; text-align: center;">Erreur de chargement des données.</p>`;
     }
   }
 
-  // --- ROUTEUR SIMPLE ---
-  function router() {
-    const hash = window.location.hash.slice(1) || 'home';
-
-    // Gestion de l'élément Admin dans le menu
-    const adminNavItem = document.getElementById('admin-nav-item');
-    if (adminNavItem) {
-      adminNavItem.style.display = (hash === 'admin') ? 'block' : 'none';
-    }
-
-    // Gestion active du menu
-    document.querySelectorAll('nav a').forEach(link => {
-      if (link.getAttribute('href') === `#${hash}`) {
-        link.classList.add('active');
-      } else {
-        link.classList.remove('active');
-      }
-    });
+  // --- ROUTEUR SIMPLE (HASH) ---
+  function handleRoute() {
+    const hash = window.location.hash.substring(1) || 'home';
 
     switch (hash) {
-      case 'home':
-        renderHome();
-        break;
       case 'matches':
         renderMatches();
         break;
@@ -869,11 +838,13 @@ document.addEventListener('DOMContentLoaded', function() {
       case 'admin':
         renderAdmin();
         break;
+      case 'home':
       default:
         renderHome();
+        break;
     }
   }
 
-  window.addEventListener('hashchange', router);
-  router();
+  window.addEventListener('hashchange', handleRoute);
+  handleRoute();
 });
