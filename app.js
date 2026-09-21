@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul class="collapsed">${renderList(topCards, p => `🟨 ${p.cartons_jaunes || 0} | ⬜ ${p.cartons_blancs \vert{}\vert{} 0} \vert{} 🟥 ${p.cartons_rouges || 0}`, "Aucun carton")}</ul>
         
         <h3 class="accordion-header">🏃 Joueurs les plus utilisés</h3>
-        <ul class="collapsed">${renderList(topPlayed, p => `🏃 ${p.matchs || 0} match(s)`, "Aucun match enregistree")}</ul>
+        <ul class="collapsed">${renderList(topPlayed, p => `🏃 ${p.matchs || 0} match(s)`, "Aucun match enregistré")}</ul>
       `;
 
       document.querySelectorAll('#root h3.accordion-header').forEach(header => {
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const annonces = await res.json();
       const list = annonces.map(a => `
         <li style="border-left-color: ${a.couleur_bordure || 'var(--primary-color)'};">
-          ${a.symbole} <strong>${a.titre}</strong><br>${a.details}
+          ${a.symbole || '📢'} <strong>${a.titre}</strong><br>${a.details}
         </li>
       `).join('');
       root.innerHTML = `<h2>Annonces Club</h2><ul>${list}</ul>`;
@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <option value="">-- Passeur --</option>
               ${playerOptionsPasser}
             </select>
-            <button id="btn-add-goal" type="button" style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
+            <button id="btn-add-goal" type="button" style="background: var(--primary-color, #007bff); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
           </div>
 
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Carton :</label>
@@ -435,11 +435,19 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
         container.innerHTML = goalEvents.map((e, idx) => `
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid var(--accent-color);">
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid #ffc107;">
             <span>⚽ <strong>${e.buteur}</strong> ${e.passeur ? '<small>(passe : ' + e.passeur + ')</small>' : ''}</span>
-            <button type="button" onclick="removeGoal(${idx})" style="background:none; border:none; color:red; cursor:pointer;">❌</button>
+            <button type="button" class="btn-remove-goal" data-idx="${idx}" style="background:none; border:none; color:red; cursor:pointer;">❌</button>
           </div>
         `).join('');
+
+        document.querySelectorAll('.btn-remove-goal').forEach(btn => {
+          btn.addEventListener('click', (ev) => {
+            const idx = parseInt(ev.target.getAttribute('data-idx'), 10);
+            goalEvents.splice(idx, 1);
+            renderGoalsUI();
+          });
+        });
       }
 
       function renderCardsUI() {
@@ -451,13 +459,18 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = cardEvents.map((c, idx) => `
           <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid #ffc107;">
             <span>${c.type} <strong>${c.joueur}</strong></span>
-            <button type="button" onclick="removeCard(${idx})" style="background:none; border:none; color:red; cursor:pointer;">❌</button>
+            <button type="button" class="btn-remove-card" data-idx="${idx}" style="background:none; border:none; color:red; cursor:pointer;">❌</button>
           </div>
         `).join('');
-      }
 
-      window.removeGoal = (idx) => { goalEvents.splice(idx, 1); renderGoalsUI(); };
-      window.removeCard = (idx) => { cardEvents.splice(idx, 1); renderCardsUI(); };
+        document.querySelectorAll('.btn-remove-card').forEach(btn => {
+          btn.addEventListener('click', (ev) => {
+            const idx = parseInt(ev.target.getAttribute('data-idx'), 10);
+            cardEvents.splice(idx, 1);
+            renderCardsUI();
+          });
+        });
+      }
 
       renderGoalsUI();
       renderCardsUI();
@@ -510,7 +523,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const checkedBoxes = document.querySelectorAll('.presence-check:checked');
           const presentList = Array.from(checkedBoxes).map(cb => cb.value);
 
-          // Comptage exact avec le format unique "NOM Prénom"
           let butsMap = {}, passesMap = {}, jaunesMap = {}, blancsMap = {}, rougesMap = {};
 
           goalEvents.forEach(e => {
@@ -524,7 +536,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (c.type === '🟥') rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
           });
 
-          // Mise à jour de players.json
           const updatedPlayers = players.map(p => {
             const fullName = getPlayerFullName(p);
             let updatedP = { ...p };
@@ -551,7 +562,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return updatedP;
           });
 
-          // Enregistrement dans matchs.json
           matches[selectedMatchIdx].resultat = score;
           matches[selectedMatchIdx].buteurs = goalEvents.map(e => e.buteur).join(', ');
           matches[selectedMatchIdx].passeurs = goalEvents.map(e => e.passeur).filter(Boolean).join(', ');
