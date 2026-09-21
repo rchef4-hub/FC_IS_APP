@@ -282,33 +282,45 @@ document.addEventListener('DOMContentLoaded', function() {
         .filter(p => (parseInt(p.matchs) || 0) > 0)
         .sort((a, b) => (parseInt(b.matchs) || 0) - (parseInt(a.matchs) || 0));
 
-      const scorersHTML = topScorers.length > 0 ? topScorers.map(p => `
-        <li>
-          <strong>${p.nom} ${p.prenom || p.Prenom || p.prénom || ''}</strong>
-          <br><small>⚽ ${parseInt(p.buts) || 0} but(s) en ${parseInt(p.matchs) || 0} match(s)</small>
-        </li>
-      `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun buteur pour l\'instant.</p>';
+      const scorersHTML = topScorers.length > 0 ? topScorers.map(p => {
+        const prenom = p.prenom || p.Prenom || p.prénom || '';
+        return `
+          <li>
+            <strong>${p.nom} ${prenom}</strong>
+            <br><small>⚽ ${parseInt(p.buts) || 0} but(s) en ${parseInt(p.matchs) || 0} match(s)</small>
+          </li>
+        `;
+      }).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun buteur pour l\'instant.</p>';
 
-      const passersHTML = topPassers.length > 0 ? topPassers.map(p => `
-        <li>
-          <strong>${p.nom} ${p.prenom || p.Prenom || p.prénom || ''}</strong>
-          <br><small>👟 ${parseInt(p.passes) || 0} passe(s) décisive(s)</small>
-        </li>
-      `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucune passe décisive pour l\'instant.</p>';
+      const passersHTML = topPassers.length > 0 ? topPassers.map(p => {
+        const prenom = p.prenom || p.Prenom || p.prénom || '';
+        return `
+          <li>
+            <strong>${p.nom} ${prenom}</strong>
+            <br><small>👟 ${parseInt(p.passes) || 0} passe(s) décisive(s)</small>
+          </li>
+        `;
+      }).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucune passe décisive pour l\'instant.</p>';
 
-      const cardsHTML = topCards.length > 0 ? topCards.map(p => `
-        <li>
-          <strong>${p.nom} ${p.prenom || p.Prenom || p.prénom || ''}</strong>
-          <br><small>🟨 ${parseInt(p.cartons_jaunes) || 0} jaune(s) | ⬜ ${parseInt(p.cartons_blancs) || 0} blanc(s) | 🟥 ${parseInt(p.cartons_rouges) || 0} rouge(s)</small>
-        </li>
-      `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun carton enregistré pour l\'instant.</p>';
+      const cardsHTML = topCards.length > 0 ? topCards.map(p => {
+        const prenom = p.prenom || p.Prenom || p.prénom || '';
+        return `
+          <li>
+            <strong>${p.nom} ${prenom}</strong>
+            <br><small>🟨 ${parseInt(p.cartons_jaunes) || 0} jaune(s) | ⬜ ${parseInt(p.cartons_blancs) || 0} blanc(s) | 🟥 ${parseInt(p.cartons_rouges) || 0} rouge(s)</small>
+          </li>
+        `;
+      }).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun carton enregistré pour l\'instant.</p>';
 
-      const playedHTML = topPlayed.length > 0 ? topPlayed.map(p => `
-        <li>
-          <strong>${p.nom} ${p.prenom || p.Prenom || p.prénom || ''}</strong>
-          <br><small>🏃 ${parseInt(p.matchs) || 0} match(s) disputé(s)</small>
-        </li>
-      `).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun match enregistré pour l\'instant.</p>';
+      const playedHTML = topPlayed.length > 0 ? topPlayed.map(p => {
+        const prenom = p.prenom || p.Prenom || p.prénom || '';
+        return `
+          <li>
+            <strong>${p.nom} ${prenom}</strong>
+            <br><small>🏃 ${parseInt(p.matchs) || 0} match(s) disputé(s)</small>
+          </li>
+        `;
+      }).join('') : '<p style="padding: 10px; color: #666; text-align: center;">Aucun match enregistré pour l\'instant.</p>';
 
       root.innerHTML = `
         <h2>Statistiques de la Saison</h2>
@@ -341,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- EFFECTIF COMPLETI ---
+  // --- EFFECTIF COMPLET ---
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement des données...</p>`;
 
@@ -490,20 +502,29 @@ document.addEventListener('DOMContentLoaded', function() {
         `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
       ).join('');
 
-      let playerOptionsScorer = `<option value="CSC">[CSC] But contre son camp</option>` + players.map(p => 
-        `<option value="${p.nom}">${p.nom}</option>`
-      ).join('');
+      // Utilisation du nom complet (ex: "BELOUET Remi") pour la correspondance exacte
+      let playerOptionsScorer = `<option value="CSC">[CSC] But contre son camp</option>` + players.map(p => {
+        const prenom = p.prenom || p.Prenom || p.prénom || '';
+        const fullName = prenom ? `${p.nom} ${prenom}` : p.nom;
+        return `<option value="${fullName}">${fullName}</option>`;
+      }).join('');
 
-      let playerOptionsPasser = players.map(p => 
-        `<option value="${p.nom}">${p.nom}</option>`
-      ).join('');
+      let playerOptionsPasser = players.map(p => {
+        const prenom = p.prenom || p.Prenom || p.prénom || '';
+        const fullName = prenom ? `${p.nom} ${prenom}` : p.nom;
+        return `<option value="${fullName}">${fullName}</option>`;
+      }).join('');
 
-      let playerCheckboxList = players.map(p => `
-        <label style="display:block; margin: 5px 0; font-size: 0.95em;">
-          <input type="checkbox" class="presence-check" value="${p.nom}">
-          #${p.numero || ''} ${p.nom} (${p.poste || ''})
-        </label>
-      `).join('');
+      let playerCheckboxList = players.map(p => {
+        const prenom = p.prenom || p.Prenom || p.prénom || '';
+        const fullName = prenom ? `${p.nom} ${prenom}` : p.nom;
+        return `
+          <label style="display:block; margin: 5px 0; font-size: 0.95em;">
+            <input type="checkbox" class="presence-check" value="${fullName}">
+            #${p.numero || ''} ${fullName} (${p.poste || ''})
+          </label>
+        `;
+      }).join('');
 
       root.innerHTML = `
         <h2>⚙️ Saisie d'un Match</h2>
@@ -730,32 +751,35 @@ document.addEventListener('DOMContentLoaded', function() {
             let currentBlanc = parseInt(updatedP.cartons_blancs) || 0;
             let currentRouges = parseInt(updatedP.cartons_rouges) || 0;
 
-            if (presentNames.includes(p.nom)) {
+            const prenom = p.prenom || p.Prenom || p.prénom || '';
+            const fullName = prenom ? `${p.nom} ${prenom}` : p.nom;
+
+            if (presentNames.includes(p.nom) || presentNames.includes(fullName)) {
               updatedP.matchs = currentMatchs + 1;
             }
-            if (butsMap[p.nom]) {
-              updatedP.buts = currentButs + butsMap[p.nom];
+            if (butsMap[fullName] || butsMap[p.nom]) {
+              updatedP.buts = currentButs + (butsMap[fullName] || butsMap[p.nom]);
             }
-            if (passesMap[p.nom]) {
-              updatedP.passes = currentPasses + passesMap[p.nom];
+            if (passesMap[fullName] || passesMap[p.nom]) {
+              updatedP.passes = currentPasses + (passesMap[fullName] || passesMap[p.nom]);
             }
-            if (jaunesMap[p.nom]) {
-              updatedP.cartons_jaunes = currentJaunes + jaunesMap[p.nom];
+            if (jaunesMap[fullName] || jaunesMap[p.nom]) {
+              updatedP.cartons_jaunes = currentJaunes + (jaunesMap[fullName] || jaunesMap[p.nom]);
             }
-            if (blancsMap[p.nom]) {
-              updatedP.cartons_blancs = currentBlanc + blancsMap[p.nom];
+            if (blancsMap[fullName] || blancsMap[p.nom]) {
+              updatedP.cartons_blancs = currentBlanc + (blancsMap[fullName] || blancsMap[p.nom]);
             }
-            if (rougesMap[p.nom]) {
-              updatedP.cartons_rouges = currentRouges + rougesMap[p.nom];
+            if (rougesMap[fullName] || rougesMap[p.nom]) {
+              updatedP.cartons_rouges = currentRouges + (rougesMap[fullName] || rougesMap[p.nom]);
             }
 
             return updatedP;
           });
 
-          // Mise à jour des matchs
+          // Mise à jour du match
           matches[selectedMatchIdx].resultat = score;
           
-          let buteursList = goalEvents.map(e => e.buteur === 'CSC' ? '[CSC]' : e.buteur).join(', ');
+          let buteursList = goalEvents.map(e => e.buteur).join(', ');
           let passeursList = goalEvents.map(e => e.passeur).filter(p => p).join(', ');
 
           if (buteursList) matches[selectedMatchIdx].buteurs = buteursList;
