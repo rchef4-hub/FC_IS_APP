@@ -1,12 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("root");
 
-  // Requête anti-cache
+  // Fonction anti-cache pour les requêtes JSON
   function fetchFresh(url) {
     return fetch(`${url}?_=${Date.now()}`, { cache: "no-store" });
   }
 
-  // Obtenir la couleur du score
+  // Calcul de la couleur du score
   function getScoreColor(resultat) {
     if (!resultat || resultat.trim() === '') return '#555';
     const res = resultat.toLowerCase();
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (res.includes('défaite') || res.includes('defaite')) return '#c62828'; // Rouge
     if (res.includes('nul')) return '#ef6c00'; // Orange
 
-    // Si seulement des chiffres (ex: "2 - 0" ou "0 - 9")
+    // Analyse numérique (ex: "2 - 0" ou "0 - 9")
     const nums = resultat.match(/\d+/g);
     if (nums && nums.length >= 2) {
       const n1 = parseInt(nums[0], 10);
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return '#6b1d44';
   }
 
-  // --- PAGE ACCUEIL ---
+  // --- PAGE ACCUEIL (#home) ---
   async function renderAccueil() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'accueil...</p>`;
     try {
@@ -139,38 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- PAGE EFFECTIF ---
-  async function renderEffectif() {
-    root.innerHTML = `<p style="text-align: center;">Chargement des joueurs...</p>`;
-    try {
-      const res = await fetchFresh('players.json');
-      const players = await res.json();
-
-      let html = `<h2>Effectif & Statistiques</h2><div class="players-list">`;
-
-      players.forEach(p => {
-        html += `
-          <div class="player-card" style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <strong>${p.symbole || '⚽'} ${p.nom}</strong>
-              <div style="font-size: 0.85em; color: #666;">${p.poste || 'Joueur'}</div>
-            </div>
-            <div style="text-align: right; font-size: 0.9em;">
-              <div>📋 Matchs: <strong>${p.matchs || 0}</strong></div>
-              <div>⚽ Buts: <strong>${p.buts || 0}</strong> | 👟 Passes: <strong>${p.passes || 0}</strong></div>
-            </div>
-          </div>
-        `;
-      });
-
-      html += `</div>`;
-      root.innerHTML = html;
-    } catch (e) {
-      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des joueurs.</p>`;
-    }
-  }
-
-  // --- PAGE MATCHS ---
+  // --- PAGE MATCHS (#matches) ---
   async function renderMatchs() {
     root.innerHTML = `<p style="text-align: center;">Chargement des matchs...</p>`;
     try {
@@ -219,10 +188,57 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- ROUTEUR SIMPLE ---
-  function navigate() {
-    const hash = window.location.hash || '#accueil';
+  // --- PAGE EFFECTIF (#players) ---
+  async function renderEffectif() {
+    root.innerHTML = `<p style="text-align: center;">Chargement des joueurs...</p>`;
+    try {
+      const res = await fetchFresh('players.json');
+      const players = await res.json();
 
+      let html = `<h2>Effectif & Statistiques</h2><div class="players-list">`;
+
+      players.forEach(p => {
+        html += `
+          <div class="player-card" style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong>${p.symbole || '⚽'} ${p.nom}</strong>
+              <div style="font-size: 0.85em; color: #666;">${p.poste || 'Joueur'}</div>
+            </div>
+            <div style="text-align: right; font-size: 0.9em;">
+              <div>📋 Matchs: <strong>${p.matchs || 0}</strong></div>
+              <div>⚽ Buts: <strong>${p.buts || 0}</strong> | 👟 Passes: <strong>${p.passes || 0}</strong></div>
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      root.innerHTML = html;
+    } catch (e) {
+      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des joueurs.</p>`;
+    }
+  }
+
+  // --- PAGE STATS (#stats) ---
+  function renderStats() {
+    root.innerHTML = `<h2>Statistiques</h2><p>Section statistiques en cours de développement.</p>`;
+  }
+
+  // --- PAGE ANNONCES (#announcements) ---
+  function renderAnnonces() {
+    root.innerHTML = `<h2>Annonces</h2><p>Aucune annonce pour le moment.</p>`;
+  }
+
+  // --- PAGE ADMIN (#admin) ---
+  function renderAdmin() {
+    root.innerHTML = `<h2>Administration</h2><p>Panneau d'administration.</p>`;
+  }
+
+  // --- ROUTEUR PRINCIPAL ---
+  function navigate() {
+    const hash = window.location.hash || '#home';
+
+    // Gestion de la classe active sur le menu
     document.querySelectorAll("nav a").forEach(a => {
       if (a.getAttribute("href") === hash) {
         a.classList.add("active");
@@ -231,18 +247,32 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    if (hash === '#effectif') {
-      renderEffectif();
-    } else if (hash === '#matchs') {
-      renderMatchs();
-    } else {
-      renderAccueil();
+    switch (hash) {
+      case '#matches':
+        renderMatchs();
+        break;
+      case '#players':
+        renderEffectif();
+        break;
+      case '#stats':
+        renderStats();
+        break;
+      case '#announcements':
+        renderAnnonces();
+        break;
+      case '#admin':
+        renderAdmin();
+        break;
+      case '#home':
+      default:
+        renderAccueil();
+        break;
     }
   }
 
   window.addEventListener("hashchange", navigate);
 
-  // Clic sur les liens de navigation
+  // Interception des clics du menu
   document.addEventListener("click", (e) => {
     const link = e.target.closest("nav a");
     if (link) {
