@@ -166,6 +166,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const badgeColor = isDomicile ? '#2e7d32' : '#00838f';
         const statusText = m.resultat && m.resultat.trim() !== '' ? m.resultat : 'À venir';
 
+        // Détermination de la couleur du score
+        let scoreColor = '#666666';
+        if (m.resultat) {
+          const resLower = m.resultat.toLowerCase();
+          if (resLower.includes('victoire')) {
+            scoreColor = '#2e7d32'; // Vert
+          } else if (resLower.includes('défaite') || resLower.includes('defaite')) {
+            scoreColor = '#c62828'; // Rouge
+          } else if (resLower.includes('nul')) {
+            scoreColor = '#ef6c00'; // Orange
+          }
+        }
+
         html += `
           <div class="match-card" style="background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 5px solid ${badgeColor}; position: relative;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -178,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             <div style="font-size: 0.95em; margin-top: 4px;">
-              Score : <strong style="color: #6b1d44;">${statusText}</strong>
+              Score : <strong style="color: ${scoreColor};">${statusText}</strong>
             </div>
         `;
 
