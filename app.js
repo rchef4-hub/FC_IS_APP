@@ -1,8 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
+  // Forcer l'absence de cache sur tous les chargements de fichiers
   function fetchFresh(url) {
-    return fetch(`${url}?t=${Date.now()}`);
+    return fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
   }
 
   // --- HELPER FORMAT UNIQUE : "NOM Prénom" ---
@@ -208,10 +209,18 @@ document.addEventListener('DOMContentLoaded', function() {
       const res = await fetchFresh('players.json');
       const players = await res.json();
 
-      const topScorers = [...players].filter(p => (parseInt(p.buts) || 0) > 0).sort((a, b) => (parseInt(b.buts) || 0) - (parseInt(a.buts) || 0));
-      const topPassers = [...players].filter(p => (parseInt(p.passes) || 0) > 0).sort((a, b) => (parseInt(b.passes) || 0) - (parseInt(a.passes) || 0));
-      const topCards = [...players].filter(p => (parseInt(p.cartons_jaunes) || 0) > 0 || (parseInt(p.cartons_blancs) || 0) > 0 || (parseInt(p.cartons_rouges) || 0) > 0);
-      const topPlayed = [...players].filter(p => (parseInt(p.matchs) || 0) > 0).sort((a, b) => (parseInt(b.matchs) || 0) - (parseInt(a.matchs) || 0));
+      // Tolérance sur la clé de présence (matchs ou matches)
+      const getNbMatchs = p => parseInt(p.matchs ?? p.matches ?? 0, 10) || 0;
+      const getNbButs = p => parseInt(p.buts ?? 0, 10) || 0;
+      const getNbPasses = p => parseInt(p.passes ?? 0, 10) || 0;
+      const getJaunes = p => parseInt(p.cartons_jaunes ?? 0, 10) || 0;
+      const getBlancs = p => parseInt(p.cartons_blancs ?? 0, 10) || 0;
+      const getRouges = p => parseInt(p.cartons_rouges ?? 0, 10) || 0;
+
+      const topScorers = [...players].filter(p => getNbButs(p) > 0).sort((a, b) => getNbButs(b) - getNbButs(a));
+      const topPassers = [...players].filter(p => getNbPasses(p) > 0).sort((a, b) => getNbPasses(b) - getNbPasses(a));
+      const topCards = [...players].filter(p => getJaunes(p) > 0 || getBlancs(p) > 0 || getRouges(p) > 0);
+      const topPlayed = [...players].filter(p => getNbMatchs(p) > 0).sort((a, b) => getNbMatchs(b) - getNbMatchs(a));
 
       const renderList = (arr, labelFn, emptyMsg) => arr.length > 0 ? arr.map(p => `
         <li>
@@ -222,16 +231,16 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = `
         <h2>Statistiques de la Saison</h2>
         <h3 class="accordion-header">⚽ Meilleurs Buteurs</h3>
-        <ul class="collapsed">${renderList(topScorers, p => `⚽ ${p.buts \vert{}\vert{} 0} but(s) en${p.matchs || 0} match(s)`, "Aucun buteur")}</ul>
+        <ul class="collapsed">${renderList(topScorers, p => `⚽ ${getNbButs(p)} but(s) en${getNbMatchs(p)} match(s)`, "Aucun buteur")}</ul>
         
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
-        <ul class="collapsed">${renderList(topPassers, p => `👟 ${p.passes || 0} passe(s)`, "Aucune passe décisive")}</ul>
+        <ul class="collapsed">${renderList(topPassers, p => `👟 ${getNbPasses(p)} passe(s)`, "Aucune passe décisive")}</ul>
         
         <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
-        <ul class="collapsed">${renderList(topCards, p => `🟨 ${p.cartons_jaunes || 0} | ⬜ ${p.cartons_blancs \vert{}\vert{} 0} \vert{} 🟥 ${p.cartons_rouges || 0}`, "Aucun carton")}</ul>
+        <ul class="collapsed">${renderList(topCards, p => `🟨 ${getJaunes(p)} | ⬜ ${getBlancs(p)} \vert{} 🟥 ${getRouges(p)}`, "Aucun carton")}</ul>
         
         <h3 class="accordion-header">🏃 Joueurs les plus utilisés</h3>
-        <ul class="collapsed">${renderList(topPlayed, p => `🏃 ${p.matchs || 0} match(s)`, "Aucun match enregistré")}</ul>
+        <ul class="collapsed">${renderList(topPlayed, p => `🏃 ${getNbMatchs(p)} match(s)`, "Aucun match enregistré")}</ul>
       `;
 
       document.querySelectorAll('#root h3.accordion-header').forEach(header => {
@@ -541,22 +550,22 @@ document.addEventListener('DOMContentLoaded', function() {
             let updatedP = { ...p };
 
             if (presentList.includes(fullName)) {
-              updatedP.matchs = (parseInt(updatedP.matchs) || 0) + 1;
+              updatedP.matchs = (parseInt(updatedP.matchs || updatedP.matches, 10) || 0) + 1;
             }
             if (butsMap[fullName]) {
-              updatedP.buts = (parseInt(updatedP.buts) || 0) + butsMap[fullName];
+              updatedP.buts = (parseInt(updatedP.buts, 10) || 0) + butsMap[fullName];
             }
             if (passesMap[fullName]) {
-              updatedP.passes = (parseInt(updatedP.passes) || 0) + passesMap[fullName];
+              updatedP.passes = (parseInt(updatedP.passes, 10) || 0) + passesMap[fullName];
             }
             if (jaunesMap[fullName]) {
-              updatedP.cartons_jaunes = (parseInt(updatedP.cartons_jaunes) || 0) + jaunesMap[fullName];
+              updatedP.cartons_jaunes = (parseInt(updatedP.cartons_jaunes, 10) || 0) + jaunesMap[fullName];
             }
             if (blancsMap[fullName]) {
-              updatedP.cartons_blancs = (parseInt(updatedP.cartons_blancs) || 0) + blancsMap[fullName];
+              updatedP.cartons_blancs = (parseInt(updatedP.cartons_blancs, 10) || 0) + blancsMap[fullName];
             }
             if (rougesMap[fullName]) {
-              updatedP.cartons_rouges = (parseInt(updatedP.cartons_rouges) || 0) + rougesMap[fullName];
+              updatedP.cartons_rouges = (parseInt(updatedP.cartons_rouges, 10) || 0) + rougesMap[fullName];
             }
 
             return updatedP;
