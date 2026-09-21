@@ -32,10 +32,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!posteStr) return '#6c757d'; 
     const p = posteStr.toLowerCase();
 
-    if (p.includes('gardien') || p.includes('gb')) return '#28a745'; // Vert
-    if (p.includes('défenseur') || p.includes('defenseur') || p.includes('def')) return '#17a2b8'; // Bleu Cyan
-    if (p.includes('milieu')) return '#fd7e14'; // Orange / Ambre
-    if (p.includes('attaquant') || p.includes('att')) return '#c9a227'; // Jaune Doré
+    if (p.includes('gardien') || p.includes('gb')) return '#28a745';
+    if (p.includes('défenseur') || p.includes('defenseur') || p.includes('def')) return '#17a2b8';
+    if (p.includes('milieu')) return '#fd7e14';
+    if (p.includes('attaquant') || p.includes('att')) return '#c9a227';
 
     return '#6c757d';
   }
@@ -65,20 +65,15 @@ document.addEventListener('DOMContentLoaded', function() {
       loadJsonSafe('arbitres.json')
     ]);
 
-    // Fusion de toutes les personnes
     const rawMembers = [...players, ...dirigeants, ...arbitres];
     const uniqueKeys = new Set();
     
-    // Dédoublonnage sur NOM + PRÉNOM
     const allMembers = rawMembers.filter(m => {
       if (!m.nom && !m.Nom) return false;
-      
       m.dateNaissanceValidee = m.naissance || m.date_de_naissance || m.Naissance;
-      
       const prenom = m.prenom || m.Prenom || m.prénom || '';
       const nom = m.nom || m.Nom || '';
       const uniqueKey = `${nom.trim().toLowerCase()}_${prenom.trim().toLowerCase()}`;
-      
       if (uniqueKeys.has(uniqueKey)) return false;
       uniqueKeys.add(uniqueKey);
       return true;
@@ -86,14 +81,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (allMembers.length > 0) {
       const currentMonth = new Date().getMonth() + 1;
-
       const monthBDays = allMembers.filter(m => {
         const dateStr = m.dateNaissanceValidee;
         if (!dateStr) return false;
-
         const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
         if (parts.length < 3) return false;
-
         const month = parseInt(parts[1], 10);
         return month === currentMonth;
       });
@@ -106,7 +98,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const day = isISO ? parts[2].padStart(2, '0') : parts[0].padStart(2, '0');
           const month = parts[1].padStart(2, '0');
           const icon = m.symbole || '🎂';
-          
           const prenom = m.prenom || m.Prenom || m.prénom || '';
           const nom = m.nom || m.Nom || '';
           const displayName = prenom ? `${nom} ${prenom}` : nom;
@@ -122,12 +113,10 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Chargement des matchs
     try {
       const resMatchs = await fetchFresh('matchs.json');
       if (resMatchs.ok) {
         const matches = await resMatchs.json();
-
         const playedMatches = matches.filter(m => m.resultat && m.resultat !== "");
         if (playedMatches.length > 0) {
           const lastMatch = playedMatches[playedMatches.length - 1];
@@ -502,7 +491,6 @@ document.addEventListener('DOMContentLoaded', function() {
         `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
       ).join('');
 
-      // Utilisation du nom complet (ex: "BELOUET Remi") pour la correspondance exacte
       let playerOptionsScorer = `<option value="CSC">[CSC] But contre son camp</option>` + players.map(p => {
         const prenom = p.prenom || p.Prenom || p.prénom || '';
         const fullName = prenom ? `${p.nom} ${prenom}` : p.nom;
@@ -699,6 +687,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
       document.getElementById('btn-save-direct').addEventListener('click', async () => {
         const statusMsg = document.getElementById('status-message');
+        
+        // Vérification de sécurité : si l'utilisateur a choisi un buteur sans cliquer sur le bouton + Ajouter
+        const pendingButeur = document.getElementById('select-buteur').value;
+        const pendingPasseur = document.getElementById('select-passeur').value;
+        if (pendingButeur) {
+          goalEvents.push({ buteur: pendingButeur, passeur: pendingPasseur });
+          document.getElementById('select-buteur').value = '';
+          document.getElementById('select-passeur').value = '';
+          renderGoalsUI();
+        }
+
         statusMsg.style.color = "orange";
         statusMsg.innerText = "⏳ Envoi des données sur GitHub...";
 
@@ -741,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
 
-          // Mise à jour des données joueurs
+          // Mise à jour des joueurs
           const updatedPlayers = players.map(p => {
             let updatedP = { ...p };
             let currentMatchs = parseInt(updatedP.matchs) || 0;
@@ -776,14 +775,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return updatedP;
           });
 
-          // Mise à jour du match
+          // Mise à jour obligatoire du match
           matches[selectedMatchIdx].resultat = score;
           
           let buteursList = goalEvents.map(e => e.buteur).join(', ');
           let passeursList = goalEvents.map(e => e.passeur).filter(p => p).join(', ');
 
-          if (buteursList) matches[selectedMatchIdx].buteurs = buteursList;
-          if (passeursList) matches[selectedMatchIdx].passeurs = passeursList;
+          // Forcer la clé buteurs et passeurs dans le JSON
+          matches[selectedMatchIdx].buteurs = buteursList || "";
+          matches[selectedMatchIdx].passeurs = passeursList || "";
 
           // Sauvegarde GitHub
           await updateGitHubFile('players.json', updatedPlayers, 'Update players stats');
