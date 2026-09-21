@@ -1,30 +1,29 @@
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("root");
 
-  // Fonction anti-cache pour les requêtes JSON
+  // Requête anti-cache
   function fetchFresh(url) {
     return fetch(`${url}?_=${Date.now()}`, { cache: "no-store" });
   }
 
-  // Fonction de calcul de la couleur du score
+  // Obtenir la couleur du score
   function getScoreColor(resultat) {
-    if (!resultat || resultat.trim() === '') return '#555555';
-    
-    const text = resultat.toLowerCase();
-    if (text.includes('victoire')) return '#2e7d32'; // Vert
-    if (text.includes('défaite') || text.includes('defaite')) return '#c62828'; // Rouge
-    if (text.includes('nul')) return '#ef6c00'; // Orange
+    if (!resultat || resultat.trim() === '') return '#555';
+    const res = resultat.toLowerCase();
 
-    // Si le résultat ne contient que des chiffres (ex: "2 - 0" ou "0 - 9")
-    const numbers = resultat.match(/\d+/g);
-    if (numbers && numbers.length >= 2) {
-      const score1 = parseInt(numbers[0], 10);
-      const score2 = parseInt(numbers[1], 10);
-      if (score1 > score2) return '#2e7d32'; // Vert
-      if (score1 < score2) return '#c62828'; // Rouge
-      return '#ef6c00'; // Orange
+    if (res.includes('victoire')) return '#2e7d32'; // Vert
+    if (res.includes('défaite') || res.includes('defaite')) return '#c62828'; // Rouge
+    if (res.includes('nul')) return '#ef6c00'; // Orange
+
+    // Si seulement des chiffres (ex: "2 - 0" ou "0 - 9")
+    const nums = resultat.match(/\d+/g);
+    if (nums && nums.length >= 2) {
+      const n1 = parseInt(nums[0], 10);
+      const n2 = parseInt(nums[1], 10);
+      if (n1 > n2) return '#2e7d32';
+      if (n1 < n2) return '#c62828';
+      return '#ef6c00';
     }
-
     return '#6b1d44';
   }
 
@@ -70,12 +69,12 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       if (dernierMatch) {
-        const color = getScoreColor(dernierMatch.resultat);
+        const c = getScoreColor(dernierMatch.resultat);
         html += `
           <div style="text-align: center;">
             <p style="margin: 5px 0; color: #666; font-size: 0.9em;">📅 ${dernierMatch.date}</p>
             <p style="font-size: 1.1em; margin: 10px 0;"><strong>vs ${dernierMatch.adversaire}</strong> (${dernierMatch.lieu})</p>
-            <p style="font-size: 1.2em; font-weight: bold; color: ${color};">${dernierMatch.resultat}</p>
+            <p style="font-size: 1.2em; font-weight: bold; color: ${c};">${dernierMatch.resultat}</p>
             ${dernierMatch.buteurs ? `<p style="font-size: 0.85em; color: #444; margin-top: 5px;">⚽ ${dernierMatch.buteurs}</p>` : ''}
           </div>
         `;
@@ -136,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       root.innerHTML = html;
     } catch (e) {
-      console.error("Erreur Accueil:", e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'accueil.</p>`;
     }
   }
@@ -168,7 +166,6 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `</div>`;
       root.innerHTML = html;
     } catch (e) {
-      console.error("Erreur Effectif:", e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des joueurs.</p>`;
     }
   }
@@ -186,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const isDomicile = m.lieu === 'Domicile';
         const badgeColor = isDomicile ? '#2e7d32' : '#00838f';
         const statusText = m.resultat && m.resultat.trim() !== '' ? m.resultat : 'À venir';
-        const scoreColor = getScoreColor(m.resultat);
+        const color = getScoreColor(m.resultat);
 
         html += `
           <div class="match-card" style="background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 5px solid ${badgeColor}; position: relative;">
@@ -200,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             <div style="font-size: 0.95em; margin-top: 4px;">
-              Score : <strong style="color: ${scoreColor};">${statusText}</strong>
+              Score : <strong style="color: ${color};">${statusText}</strong>
             </div>
         `;
 
@@ -218,21 +215,19 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `</div>`;
       root.innerHTML = html;
     } catch (e) {
-      console.error("Erreur Matchs:", e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des matchs.</p>`;
     }
   }
 
-  // --- ROUTEUR DE NAVIGATION ---
-  function route() {
+  // --- ROUTEUR SIMPLE ---
+  function navigate() {
     const hash = window.location.hash || '#accueil';
 
-    // Mise à jour de la classe active sur la navigation
-    document.querySelectorAll("nav a").forEach(link => {
-      if (link.getAttribute("href") === hash) {
-        link.classList.add("active");
+    document.querySelectorAll("nav a").forEach(a => {
+      if (a.getAttribute("href") === hash) {
+        a.classList.add("active");
       } else {
-        link.classList.remove("active");
+        a.classList.remove("active");
       }
     });
 
@@ -245,9 +240,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Écoute des changements de hash dans l'URL
-  window.addEventListener("hashchange", route);
+  window.addEventListener("hashchange", navigate);
 
-  // Exécution au chargement initial
-  route();
+  // Clic sur les liens de navigation
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("nav a");
+    if (link) {
+      const targetHash = link.getAttribute("href");
+      if (targetHash && targetHash.startsWith("#")) {
+        window.location.hash = targetHash;
+        navigate();
+      }
+    }
+  });
+
+  navigate();
 });
