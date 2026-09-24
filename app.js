@@ -178,35 +178,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
- // --- PAGE EFFECTIF (#players) AVEC CATÉGORIES DÉROULANTES ---
+ // --- PAGE EFFECTIF (#players) AVEC TROIS FICHIERS SÉPARÉS ---
   async function renderEffectif() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'effectif...</p>`;
     try {
-      const res = await fetchFresh('players.json');
-      const members = await res.json();
+      // Chargement en parallèle des trois fichiers
+      const [resPlayers, resDirigeants, resArbitres] = await Promise.all([
+        fetchFresh('players.json').catch(() => ({ json: () => [] })),
+        fetchFresh('dirigeants.json').catch(() => ({ json: () => [] })),
+        fetchFresh('arbitres.json').catch(() => ({ json: () => [] }))
+      ]);
 
-      const dirigeants = members.filter(p => {
-        const type = (p.type || '').toLowerCase();
-        const role = (p.role || '').toLowerCase();
-        return type === 'dirigeant' || role.includes('dirigeant') || role.includes('président') || role.includes('secrétaire') || role.includes('trésorier') || role.includes('dir.');
-      });
-
-      const arbitres = members.filter(p => {
-        const type = (p.type || '').toLowerCase();
-        const role = (p.role || '').toLowerCase();
-        const poste = (p.poste || '').toLowerCase();
-        return type.includes('arbitre') || role.includes('arbitre') || poste.includes('arbitre');
-      });
-
-      const joueurs = members.filter(p => {
-        return !dirigeants.includes(p) && !arbitres.includes(p);
-      });
+      const joueurs = await resPlayers.json();
+      const dirigeants = await resDirigeants.json();
+      const arbitres = await resArbitres.json();
 
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Effectif du Club</h2>
         <div style="display: flex; flex-direction: column; gap: 10px;">
       `;
 
+      // Fonction d'affichage d'une catégorie (sans le chiffre entre parenthèses)
       function renderCategorySection(title, icon, items, id) {
         if (!items || items.length === 0) return '';
         return `
@@ -219,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${items.map(p => `
                 <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
                   <div>
-                    <strong style="font-size: 1em; color: #222;">&#9917; ${p.nom}</strong>
+                    <strong style="font-size: 1em; color: #222;">${p.nom || p.name || 'Nom inconnu'}</strong>
                     <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || p.role || title.slice(0, -1)}</div>
                   </div>
                 </div>
@@ -236,6 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `</div>`;
       root.innerHTML = html;
 
+      // Gestion des menus déroulants (accordéons)
       root.querySelectorAll('.accordion-header').forEach(btn => {
         btn.addEventListener('click', () => {
           const targetId = btn.getAttribute('data-target');
@@ -255,6 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
     } catch (e) {
+      console.error(e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'effectif.</p>`;
     }
   }
