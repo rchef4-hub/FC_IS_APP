@@ -178,17 +178,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- PAGE EFFECTIF (#players) ---
-  async function renderEffectif() {
+  // --- PAGE EFFECTIF (#players) AVEC LES 3 MENUS PAR POSTE ---
+  async function renderEffectif(filtrePoste = 'Tous') {
     root.innerHTML = `<p style="text-align: center;">Chargement des joueurs...</p>`;
     try {
       const res = await fetchFresh('players.json');
       const players = await res.json();
 
-      let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Effectif de l'équipe</h2>`;
+      let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 10px;">Effectif de l'équipe</h2>`;
+
+      // Les 3 menus / boutons de tri par poste
+      const postes = ['Tous', 'Attaquant', 'Milieu', 'Défenseur'];
+      html += `<div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">`;
+      postes.forEach(p => {
+        const activeStyle = filtrePoste === p ? 'background: #6b1d44; color: white;' : 'background: #f1f1f1; color: #333;';
+        html += `<button class="filter-btn" data-poste="${p}" style="padding: 6px 14px; border: none; border-radius: 15px; font-size: 0.85em; font-weight: bold; cursor: pointer; ${activeStyle}">${p}</button>`;
+      });
+      html += `</div>`;
+
       html += `<div class="players-list" style="display: flex; flex-direction: column; gap: 10px;">`;
 
-      players.forEach(p => {
+      const filteredPlayers = filtrePoste === 'Tous' ? players : players.filter(p => p.poste && p.poste.toLowerCase().includes(filtrePoste.toLowerCase()));
+
+      filteredPlayers.forEach(p => {
         html += `
           <div class="player-card" style="background: white; border-radius: 8px; padding: 12px 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #6b1d44;">
             <div>
@@ -205,12 +217,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       html += `</div>`;
       root.innerHTML = html;
+
+      root.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          renderEffectif(btn.getAttribute('data-poste'));
+        });
+      });
+
     } catch (e) {
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des joueurs.</p>`;
     }
   }
 
-  // --- PAGE STATS (#stats) ---
+  // --- PAGE STATS (#stats) AVEC MENU DÉROULANT ET JOUEUR LE PLUS UTILISÉ ---
   async function renderStats() {
     root.innerHTML = `<p style="text-align: center;">Chargement des statistiques...</p>`;
     try {
@@ -223,103 +242,173 @@ document.addEventListener("DOMContentLoaded", () => {
       const players = await resPlayers.json();
 
       const joues = matchs.filter(m => m.resultat && m.resultat.trim() !== '');
-      let victoires = 0;
-      let nuls = 0;
-      let defaites = 0;
-      let butsPour = 0;
-      let butsContre = 0;
+      let victoires = 0, nuls = 0, defaites = 0;
 
       joues.forEach(m => {
         const res = m.resultat.toLowerCase();
         if (res.includes('victoire')) victoires++;
         else if (res.includes('nul')) nuls++;
         else if (res.includes('défaite') || res.includes('defaite')) defaites++;
-
-        const nums = m.resultat.match(/\d+/g);
-        if (nums && nums.length >= 2) {
-          const n1 = parseInt(nums[0], 10);
-          const n2 = parseInt(nums[1], 10);
-          if (n1 > n2) victoires++; // Note: Sécurité si format texte manquant
-          // Extraction simple basée sur le texte ou les chiffres si besoin
-        }
       });
 
-      // Top Buteurs & Passeurs triés
+      const joueurPlusUtilise = [...players].sort((a, b) => (b.matchs || 0) - (a.matchs || 0))[0];
       const topButeurs = [...players].sort((a, b) => (b.buts || 0) - (a.buts || 0)).slice(0, 5);
       const topPasseurs = [...players].sort((a, b) => (b.passes || 0) - (a.passes || 0)).slice(0, 5);
 
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Statistiques de la Saison</h2>
-        
-        <!-- Bilan Global -->
-        <div class="card" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-          <div style="background: #6b1d44; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 12px;">
-            📊 Bilan de l'équipe (${joues.length} matchs joués)
-          </div>
-          <div style="display: flex; justify-content: space-around; text-align: center;">
-            <div>
-              <div style="font-size: 1.3em; font-weight: bold; color: #2e7d32;">${victoires}</div>
-              <div style="font-size: 0.85em; color: #666;">Victoires</div>
-            </div>
-            <div>
-              <div style="font-size: 1.3em; font-weight: bold; color: #ef6c00;">${nuls}</div>
-              <div style="font-size: 0.85em; color: #666;">Nuls</div>
-            </div>
-            <div>
-              <div style="font-size: 1.3em; font-weight: bold; color: #c62828;">${defaites}</div>
-              <div style="font-size: 0.85em; color: #666;">Défaites</div>
-            </div>
-          </div>
+
+        <!-- MENU DÉROULANT DE SÉLECTION -->
+        <div style="margin-bottom: 15px; text-align: center;">
+          <label for="stat-select" style="font-size: 0.9em; font-weight: bold; color: #555; margin-right: 8px;">Afficher :</label>
+          <select id="stat-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 0.9em; background: white;">
+            <option value="global">Bilan & Joueur le plus utilisé</option>
+            <option value="buteurs">Classement Buteurs</option>
+            <option value="passeurs">Classement Passeurs</option>
+          </select>
         </div>
 
-        <!-- Top Buteurs -->
-        <div class="card" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-          <div style="background: #2e7d32; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 10px;">
-            ⚽ Meilleurs Buteurs
+        <div id="stat-content-area">
+          <!-- VUE PAR DÉFAUT : BILAN & JOUEUR LE PLUS UTILISÉ -->
+          <div class="card" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <div style="background: #6b1d44; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 12px;">
+              📊 Bilan Global (${joues.length} matchs joués)
+            </div>
+            <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 15px;">
+              <div>
+                <div style="font-size: 1.3em; font-weight: bold; color: #2e7d32;">${victoires}</div>
+                <div style="font-size: 0.85em; color: #666;">Victoires</div>
+              </div>
+              <div>
+                <div style="font-size: 1.3em; font-weight: bold; color: #ef6c00;">${nuls}</div>
+                <div style="font-size: 0.85em; color: #666;">Nuls</div>
+              </div>
+              <div>
+                <div style="font-size: 1.3em; font-weight: bold; color: #c62828;">${defaites}</div>
+                <div style="font-size: 0.85em; color: #666;">Défaites</div>
+              </div>
+            </div>
+
+            ${joueurPlusUtilise ? `
+              <div style="background: #fdf8fb; border: 1px solid #e8d7e2; padding: 10px; border-radius: 6px; text-align: center;">
+                ⭐ Joueur le plus utilisé : <strong>${joueurPlusUtilise.nom}</strong> (${joueurPlusUtilise.matchs || 0} matchs)
+              </div>
+            ` : ''}
           </div>
+        </div>
       `;
 
-      topButeurs.forEach((p, index) => {
-        if ((p.buts || 0) > 0) {
-          html += `
-            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
-              <span>${index + 1}. <strong>${p.nom}</strong></span>
-              <span style="color: #2e7d32; font-weight: bold;">${p.buts} buts</span>
-            </div>
-          `;
-        }
-      });
-
-      html += `</div>`;
-
-      // Top Passeurs
-      html += `
-        <div class="card" style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-          <div style="background: #00838f; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 10px;">
-            👟 Meilleurs Passeurs
-          </div>
-      `;
-
-      topPasseurs.forEach((p, index) => {
-        if ((p.passes || 0) > 0) {
-          html += `
-            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
-              <span>${index + 1}. <strong>${p.nom}</strong></span>
-              <span style="color: #00838f; font-weight: bold;">${p.passes} passes</span>
-            </div>
-          `;
-        }
-      });
-
-      html += `</div>`;
       root.innerHTML = html;
+
+      // Gestion dynamique du menu déroulant
+      const select = document.getElementById('stat-select');
+      select.addEventListener('change', (e) => {
+        const val = e.target.value;
+        const container = document.getElementById('stat-content-area');
+        
+        if (val === 'global') {
+          container.innerHTML = `
+            <div class="card" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+              <div style="background: #6b1d44; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 12px;">
+                📊 Bilan Global (${joues.length} matchs joués)
+              </div>
+              <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 15px;">
+                <div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #2e7d32;">${victoires}</div>
+                  <div style="font-size: 0.85em; color: #666;">Victoires</div>
+                </div>
+                <div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #ef6c00;">${nuls}</div>
+                  <div style="font-size: 0.85em; color: #666;">Nuls</div>
+                </div>
+                <div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #c62828;">${defaites}</div>
+                  <div style="font-size: 0.85em; color: #666;">Défaites</div>
+                </div>
+              </div>
+              ${joueurPlusUtilise ? `
+                <div style="background: #fdf8fb; border: 1px solid #e8d7e2; padding: 10px; border-radius: 6px; text-align: center;">
+                  ⭐ Joueur le plus utilisé : <strong>${joueurPlusUtilise.nom}</strong> (${joueurPlusUtilise.matchs || 0} matchs)
+                </div>
+              ` : ''}
+            </div>
+          `;
+        } else if (val === 'buteurs') {
+          let bHtml = `
+            <div class="card" style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+              <div style="background: #2e7d32; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 10px;">
+                ⚽ Classement des Buteurs
+              </div>
+          `;
+          topButeurs.forEach((p, index) => {
+            bHtml += `
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
+                <span>${index + 1}. <strong>${p.nom}</strong></span>
+                <span style="color: #2e7d32; font-weight: bold;">${p.buts || 0} buts</span>
+              </div>
+            `;
+          });
+          bHtml += `</div>`;
+          container.innerHTML = bHtml;
+        } else if (val === 'passeurs') {
+          let pHtml = `
+            <div class="card" style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+              <div style="background: #00838f; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 10px;">
+                👟 Classement des Passeurs
+              </div>
+          `;
+          topPasseurs.forEach((p, index) => {
+            pHtml += `
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
+                <span>${index + 1}. <strong>${p.nom}</strong></span>
+                <span style="color: #00838f; font-weight: bold;">${p.passes || 0} passes</span>
+              </div>
+            `;
+          });
+          pHtml += `</div>`;
+          container.innerHTML = pHtml;
+        }
+      });
+
     } catch (e) {
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des statistiques.</p>`;
     }
   }
 
-  function renderAnnonces() {
-    root.innerHTML = `<h2 style="color: #6b1d44; text-align: center;">Annonces</h2><p style="text-align: center; color: #666;">Aucune annonce pour le moment.</p>`;
+  // --- PAGE ANNONCES (#announcements) AVEC AFFICHAGE RESTAURÉ ---
+  async function renderAnnonces() {
+    root.innerHTML = `<p style="text-align: center;">Chargement des annonces...</p>`;
+    try {
+      let annonces = [];
+      try {
+        const res = await fetchFresh('annonces.json');
+        annonces = await res.json();
+      } catch (err) {
+        annonces = [
+          { titre: "Reprise des entraînements", date: "Septembre 2026", contenu: "Les entraînements ont lieu les mardi et jeudi à 19h." },
+          { titre: "Assemblée générale", date: "Prochainement", contenu: "Venez nombreux participer à la vie du club." }
+        ];
+      }
+
+      let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Annonces & Infos du Club</h2><div style="display: flex; flex-direction: column; gap: 12px;">`;
+
+      annonces.forEach(a => {
+        html += `
+          <div class="card" style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #6b1d44;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <strong style="color: #222; font-size: 1.05em;">📢 ${a.titre}</strong>
+              <span style="font-size: 0.85em; color: #666;">${a.date || ''}</span>
+            </div>
+            <p style="font-size: 0.9em; color: #444; margin: 0;">${a.contenu}</p>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      root.innerHTML = html;
+    } catch (e) {
+      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des annonces.</p>`;
+    }
   }
 
   function renderAdmin() {
