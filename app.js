@@ -375,7 +375,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- PAGE ANNONCES (#announcements) AVEC AFFICHAGE RESTAURÉ ---
+  // --- PAGE ANNONCES (#announcements) AVEC COULEURS ---
   async function renderAnnonces() {
     root.innerHTML = `<p style="text-align: center;">Chargement des annonces...</p>`;
     try {
@@ -390,13 +390,19 @@ document.addEventListener("DOMContentLoaded", () => {
         ];
       }
 
+      // Tableau de couleurs pour alterner ou colorer chaque annonce
+      const couleurs = ['#6b1d44', '#2e7d32', '#00838f', '#ef6c00', '#d4af37'];
+
       let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Annonces & Infos du Club</h2><div style="display: flex; flex-direction: column; gap: 12px;">`;
 
-      annonces.forEach(a => {
+      annonces.forEach((a, index) => {
+        // Attribue une couleur différente à chaque annonce en boucle
+        const couleurBordure = couleurs[index % couleurs.length];
+
         html += `
-          <div class="card" style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #6b1d44;">
+          <div class="card" style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid ${couleurBordure};">
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-              <strong style="color: #222; font-size: 1.05em;">📢 ${a.titre}</strong>
+              <strong style="color: ${couleurBordure}; font-size: 1.05em;">📢 ${a.titre}</strong>
               <span style="font-size: 0.85em; color: #666;">${a.date || ''}</span>
             </div>
             <p style="font-size: 0.9em; color: #444; margin: 0;">${a.contenu}</p>
