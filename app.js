@@ -178,14 +178,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- PAGE EFFECTIF (#players) AVEC CATÉGORIES DÉROULANTES ---
+ // --- PAGE EFFECTIF (#players) AVEC CATÉGORIES DÉROULANTES ---
   async function renderEffectif() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'effectif...</p>`;
     try {
       const res = await fetchFresh('players.json');
       const members = await res.json();
 
-      // Séparation stricte et propre basée sur les propriétés de chaque membre
       const dirigeants = members.filter(p => {
         const type = (p.type || '').toLowerCase();
         const role = (p.role || '').toLowerCase();
@@ -199,7 +198,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return type.includes('arbitre') || role.includes('arbitre') || poste.includes('arbitre');
       });
 
-      // Les joueurs sont ceux qui ne sont ni dirigeants ni arbitres
       const joueurs = members.filter(p => {
         return !dirigeants.includes(p) && !arbitres.includes(p);
       });
@@ -209,7 +207,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div style="display: flex; flex-direction: column; gap: 10px;">
       `;
 
-      // Fonction d'affichage d'une catégorie (sans le chiffre entre parenthèses)
       function renderCategorySection(title, icon, items, id) {
         if (!items || items.length === 0) return '';
         return `
@@ -222,7 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${items.map(p => `
                 <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
                   <div>
-                    <strong style="font-size: 1em; color: #222;">${p.symbole || '⚽'} ${p.nom}</strong>
+                    <strong style="font-size: 1em; color: #222;">&#9917; ${p.nom}</strong>
                     <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || p.role || title.slice(0, -1)}</div>
                   </div>
                 </div>
