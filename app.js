@@ -178,54 +178,83 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- PAGE EFFECTIF (#players) AVEC LES 3 MENUS PAR POSTE ---
-  async function renderEffectif(filtrePoste = 'Tous') {
-    root.innerHTML = `<p style="text-align: center;">Chargement des joueurs...</p>`;
+ // --- PAGE EFFECTIF (#players) AVEC CATÉGORIES DÉROULANTES ---
+  async function renderEffectif() {
+    root.innerHTML = `<p style="text-align: center;">Chargement de l'effectif...</p>`;
     try {
       const res = await fetchFresh('players.json');
-      const players = await res.json();
+      const members = await res.json();
 
-      let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 10px;">Effectif de l'équipe</h2>`;
+      // Vous pouvez adapter ces catégories selon la propriété de vos membres (ex: p.categorie, p.type ou p.poste)
+      // Ici, on trie par exemple en fonction d'un champ "categorie" ou "type", ou par défaut par rôle
+      const joueurs = members.filter(p => !p.type || p.type.toLowerCase() === 'joueur' || ['attaquant', 'milieu', 'défenseur', 'gardien'].includes((p.poste || '').toLowerCase()));
+      const dirigeants = members.filter(p => p.type && p.type.toLowerCase() === 'dirigeant');
+      const arbitres = members.filter(p => p.type && (p.type.toLowerCase() === 'arbitre' || p.type.toLowerCase() === 'arbitres'));
 
-      // Les 3 menus / boutons de tri par poste
-      const postes = ['Tous', 'Attaquant', 'Milieu', 'Défenseur'];
-      html += `<div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">`;
-      postes.forEach(p => {
-        const activeStyle = filtrePoste === p ? 'background: #6b1d44; color: white;' : 'background: #f1f1f1; color: #333;';
-        html += `<button class="filter-btn" data-poste="${p}" style="padding: 6px 14px; border: none; border-radius: 15px; font-size: 0.85em; font-weight: bold; cursor: pointer; ${activeStyle}">${p}</button>`;
-      });
-      html += `</div>`;
+      // S'il n'y a pas de champ "type" distinct dans le JSON, on peut tout regrouper intelligemment ou adapter
+      let html = `
+        <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Effectif du Club</h2>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+      `;
 
-      html += `<div class="players-list" style="display: flex; flex-direction: column; gap: 10px;">`;
-
-      const filteredPlayers = filtrePoste === 'Tous' ? players : players.filter(p => p.poste && p.poste.toLowerCase().includes(filtrePoste.toLowerCase()));
-
-      filteredPlayers.forEach(p => {
-        html += `
-          <div class="player-card" style="background: white; border-radius: 8px; padding: 12px 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #6b1d44;">
-            <div>
-              <strong style="font-size: 1.05em; color: #222;">${p.symbole || '⚽'} ${p.nom}</strong>
-              <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || 'Joueur'}</div>
-            </div>
-            <div style="text-align: right; font-size: 0.9em; color: #444;">
-              <div>📋 Matchs : <strong>${p.matchs || 0}</strong></div>
-              <div>⚽ Buts : <strong style="color: #2e7d32;">${p.buts || 0}</strong> | 👟 Passes : <strong style="color: #00838f;">${p.passes || 0}</strong></div>
+      // Fonction helper pour générer une section accordéon
+      function renderCategorySection(title, icon, items, id) {
+        if (!items || items.length === 0) return '';
+        return `
+          <div class="accordion-container">
+            <button class="accordion-header" data-target="${id}" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
+              <span>${icon} ${title} (${items.length})</span>
+              <span>▼</span>
+            </button>
+            <div id="${id}" style="display: none; background: #fff; padding: 10px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; display: none; flex-direction: column; gap: 8px;">
+              ${items.map(p => `
+                <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
+                  <div>
+                    <strong style="font-size: 1em; color: #222;">${p.symbole \vert{}\vert{} '⚽'}${p.nom}</strong>
+                    <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || p.role || 'Membre'}</div>
+                  </div>
+                </div>
+              `).join('')}
             </div>
           </div>
         `;
-      });
+      }
+
+      // Si le JSON ne sépare pas explicitement par "type", on met tout dans Joueurs ou on sépare selon les données disponibles
+      const listeJoueurs = joueurs.length > 0 ? joueurs : members;
+
+      html += renderCategorySection('Joueurs', '⚽', listeJoueurs, 'content-joueurs');
+      if (dirigeants.length > 0) {
+        html += renderCategorySection('Dirigeants', '👔', dirigeants, 'content-dirigeants');
+      }
+      if (arbitres.length > 0) {
+        html += renderCategorySection('Arbitres', '🟨', arbitres, 'content-arbitres');
+      }
 
       html += `</div>`;
       root.innerHTML = html;
 
-      root.querySelectorAll('.filter-btn').forEach(btn => {
+      // Gestion des clics pour ouvrir/fermer les accordéons de l'effectif
+      root.querySelectorAll('.accordion-header').forEach(btn => {
         btn.addEventListener('click', () => {
-          renderEffectif(btn.getAttribute('data-poste'));
+          const targetId = btn.getAttribute('data-target');
+          const content = document.getElementById(targetId);
+          const arrow = btn.querySelector('span:last-child');
+
+          if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'flex';
+            arrow.textContent = '▲';
+            btn.style.borderRadius = '8px 8px 0 0';
+          } else {
+            content.style.display = 'none';
+            arrow.textContent = '▼';
+            btn.style.borderRadius = '8px';
+          }
         });
       });
 
     } catch (e) {
-      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des joueurs.</p>`;
+      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'effectif.</p>`;
     }
   }
 
