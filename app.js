@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${items.map(p => `
                 <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
                   <div>
-                    <strong style="font-size: 1em; color: #222;">${p.symbole \vert{}\vert{} icon}${p.nom}</strong>
+                    <strong style="font-size: 1em; color: #222;">${p.symbole || '⚽'} ${p.nom}</strong>
                     <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || p.role || title.slice(0, -1)}</div>
                   </div>
                 </div>
