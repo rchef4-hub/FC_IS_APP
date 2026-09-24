@@ -346,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <!-- Menu déroulant : Discipline -->
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-discipline" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
-              <span>🟨🟨🟥 Discipline</span>
+              <span>⬜🟨🟥 Discipline</span>
               <span>▼</span>
             </button>
             <div id="content-discipline" style="display: none; background: white; padding: 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; text-align: center; color: #666; font-size: 0.9em;">
