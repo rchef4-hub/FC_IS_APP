@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
- // --- PAGE EFFECTIF (#players) AVEC CATÉGORIES DÉROULANTES ---
+  // --- PAGE EFFECTIF (#players) ---
   async function renderEffectif() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'effectif...</p>`;
     try {
@@ -252,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
- // --- PAGE STATS (#stats) AVEC ACCORDÉONS & BILAN GLOBAL ---
+  // --- PAGE STATS (#stats) ---
   async function renderStats() {
     root.innerHTML = `<p style="text-align: center;">Chargement des statistiques...</p>`;
     try {
@@ -275,13 +275,12 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const joueurPlusUtilise = [...players].sort((a, b) => (b.matchs || 0) - (a.matchs || 0))[0];
-      const topButeurs = [...players].sort((a, b) => (b.buts || 0) - (b.buts || 0)).slice(0, 5);
-      const topPasseurs = [...players].sort((a, b) => (b.passes || 0) - (a.passes || 0)).slice(0, 5);
+      const topButeurs = [...players].sort((a, b) => (b.buts || 0) - (a.buts || 0)).slice(0, 5);
+      const topPasseurs = [...players].sort((a, b) => (b.passes || 0) - (b.passes || 0)).slice(0, 5);
 
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Statistiques de la Saison</h2>
 
-        <!-- BILAN GLOBAL & JOUEUR LE PLUS UTILISÉ EN HAUT -->
         <div class="card" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
           <div style="background: #6b1d44; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 12px;">
             📊 Bilan Global (${joues.length} matchs joués)
@@ -308,10 +307,8 @@ document.addEventListener("DOMContentLoaded", () => {
           ` : ''}
         </div>
 
-        <!-- ACCORDÉONS (Buteurs, Passeurs, Discipline) -->
         <div style="display: flex; flex-direction: column; gap: 10px;">
           
-          <!-- ACCORDÉON BUTEURS -->
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-buteurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>⚽ Meilleurs Buteurs</span>
@@ -327,7 +324,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
 
-          <!-- ACCORDÉON PASSEURS -->
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-passeurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>👟 Meilleurs Passeurs</span>
@@ -343,7 +339,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
 
-          <!-- ACCORDÉON DISCIPLINE -->
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-discipline" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>🟨🟨🟥 Discipline</span>
@@ -359,7 +354,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       root.innerHTML = html;
 
-      // Gestion des clics pour ouvrir/fermer les accordéons
       root.querySelectorAll('.accordion-header').forEach(btn => {
         btn.addEventListener('click', () => {
           const targetId = btn.getAttribute('data-target');
@@ -369,7 +363,6 @@ document.addEventListener("DOMContentLoaded", () => {
           if (content.style.display === 'none' || content.style.display === '') {
             content.style.display = 'block';
             arrow.textContent = '▲';
-            // Arrondir le bas du bouton quand ouvert
             btn.style.borderRadius = '8px 8px 0 0';
           } else {
             content.style.display = 'none';
@@ -384,7 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- PAGE ANNONCES (#announcements) CORRIGÉE ---
+  // --- PAGE ANNONCES (#announcements) ---
   async function renderAnnonces() {
     root.innerHTML = `<p style="text-align: center;">Chargement des annonces...</p>`;
     try {
@@ -405,7 +398,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       annonces.forEach((a, index) => {
         const couleurBordure = couleurs[index % couleurs.length];
-        // Récupère le texte peu importe le nom de la clé dans votre JSON (contenu, texte ou description)
         const texteAnnonce = a.contenu || a.texte || a.description || '';
 
         html += `
