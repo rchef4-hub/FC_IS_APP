@@ -185,19 +185,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetchFresh('players.json');
       const members = await res.json();
 
-      // Vous pouvez adapter ces catégories selon la propriété de vos membres (ex: p.categorie, p.type ou p.poste)
-      // Ici, on trie par exemple en fonction d'un champ "categorie" ou "type", ou par défaut par rôle
       const joueurs = members.filter(p => !p.type || p.type.toLowerCase() === 'joueur' || ['attaquant', 'milieu', 'défenseur', 'gardien'].includes((p.poste || '').toLowerCase()));
       const dirigeants = members.filter(p => p.type && p.type.toLowerCase() === 'dirigeant');
       const arbitres = members.filter(p => p.type && (p.type.toLowerCase() === 'arbitre' || p.type.toLowerCase() === 'arbitres'));
 
-      // S'il n'y a pas de champ "type" distinct dans le JSON, on peut tout regrouper intelligemment ou adapter
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Effectif du Club</h2>
         <div style="display: flex; flex-direction: column; gap: 10px;">
       `;
 
-      // Fonction helper pour générer une section accordéon
       function renderCategorySection(title, icon, items, id) {
         if (!items || items.length === 0) return '';
         return `
@@ -206,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <span>${icon} ${title} (${items.length})</span>
               <span>▼</span>
             </button>
-            <div id="${id}" style="display: none; background: #fff; padding: 10px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; display: none; flex-direction: column; gap: 8px;">
+            <div id="${id}" style="display: none; background: #fff; padding: 10px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; flex-direction: column; gap: 8px;">
               ${items.map(p => `
                 <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
                   <div>
@@ -220,7 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       }
 
-      // Si le JSON ne sépare pas explicitement par "type", on met tout dans Joueurs ou on sépare selon les données disponibles
       const listeJoueurs = joueurs.length > 0 ? joueurs : members;
 
       html += renderCategorySection('Joueurs', '⚽', listeJoueurs, 'content-joueurs');
@@ -234,7 +229,6 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `</div>`;
       root.innerHTML = html;
 
-      // Gestion des clics pour ouvrir/fermer les accordéons de l'effectif
       root.querySelectorAll('.accordion-header').forEach(btn => {
         btn.addEventListener('click', () => {
           const targetId = btn.getAttribute('data-target');
