@@ -310,22 +310,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
-          
-          <!-- Menu déroulant : Matchs joués / Joueurs les plus utilisés -->
-          <div class="accordion-container">
-            <button class="accordion-header" data-target="content-matchs-joueurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
-              <span>⭐ Matchs Joués par les Joueurs</span>
-              <span>▼</span>
-            </button>
-            <div id="content-matchs-joueurs" style="display: none; background: white; padding: 10px 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px;">
-              ${classementMatchs.map((p, index) => `
-                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
-                  <span>${index + 1}. <strong>${p.nom}</strong></span>
-                  <span style="color: #6b1d44; font-weight: bold;">${p.matchs || 0} matchs</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
 
           <!-- Menu déroulant : Meilleurs Buteurs (> 0) -->
           <div class="accordion-container">
@@ -367,6 +351,21 @@ document.addEventListener("DOMContentLoaded", () => {
             </button>
             <div id="content-discipline" style="display: none; background: white; padding: 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; text-align: center; color: #666; font-size: 0.9em;">
               Aucune sanction enregistrée pour le moment.
+            </div>
+          </div>
+          <!-- Menu déroulant : Matchs joués / Joueurs les plus utilisés -->
+          <div class="accordion-container">
+            <button class="accordion-header" data-target="content-matchs-joueurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
+              <span>⭐ Matchs Joués par les Joueurs</span>
+              <span>▼</span>
+            </button>
+            <div id="content-matchs-joueurs" style="display: none; background: white; padding: 10px 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px;">
+              ${classementMatchs.map((p, index) => `
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
+                  <span>${index + 1}. <strong>${p.nom}</strong></span>
+                  <span style="color: #6b1d44; font-weight: bold;">${p.matchs || 0} matchs</span>
+                </div>
+              `).join('')}
             </div>
           </div>
 
