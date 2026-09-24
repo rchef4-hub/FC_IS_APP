@@ -223,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       html += renderCategorySection('Joueurs', '⚽', joueurs, 'content-joueurs');
       html += renderCategorySection('Dirigeants', '👔', dirigeants, 'content-dirigeants');
-      html += renderCategorySection('Arbitres', '🟨', arbitres, 'content-arbitres');
+      html += renderCategorySection('Arbitres', '⬜🟨🟥', arbitres, 'content-arbitres');
 
       html += `</div>`;
       root.innerHTML = html;
