@@ -178,16 +178,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- PAGE EFFECTIF (#players) ---
+  // --- PAGE EFFECTIF (#players) AVEC CATÉGORIES DÉROULANTES ---
   async function renderEffectif() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'effectif...</p>`;
     try {
       const res = await fetchFresh('players.json');
       const members = await res.json();
 
-      const joueurs = members.filter(p => !p.type || p.type.toLowerCase() === 'joueur' || ['attaquant', 'milieu', 'défenseur', 'gardien'].includes((p.poste || '').toLowerCase()));
-      const dirigeants = members.filter(p => p.type && p.type.toLowerCase() === 'dirigeant');
-      const arbitres = members.filter(p => p.type && (p.type.toLowerCase() === 'arbitre' || p.type.toLowerCase() === 'arbitres'));
+      // Séparation stricte basée sur le champ "type" ou le "poste"
+      const joueurs = members.filter(p => {
+        const type = (p.type || '').toLowerCase();
+        const poste = (p.poste || '').toLowerCase();
+        return type === 'joueur' || type === '' || ['attaquant', 'milieu', 'défenseur', 'gardien'].includes(poste);
+      });
+
+      const dirigeants = members.filter(p => (p.type || '').toLowerCase() === 'dirigeant' || (p.role || '').toLowerCase().includes('dirigeant'));
+      const arbitres = members.filter(p => {
+        const type = (p.type || '').toLowerCase();
+        const role = (p.role || '').toLowerCase();
+        const poste = (p.poste || '').toLowerCase();
+        return type.includes('arbitre') || role.includes('arbitre') || poste.includes('arbitre');
+      });
 
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Effectif du Club</h2>
@@ -206,8 +217,8 @@ document.addEventListener("DOMContentLoaded", () => {
               ${items.map(p => `
                 <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
                   <div>
-                     <strong style="font-size: 1em; color: #222;">${p.symbole || '⚽'} ${p.nom}</strong>
-                    <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || p.role || 'Membre'}</div>
+                    <strong style="font-size: 1em; color: #222;">${p.symbole \vert{}\vert{} icon}${p.nom}</strong>
+                    <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || p.role || title.slice(0, -1)}</div>
                   </div>
                 </div>
               `).join('')}
@@ -216,13 +227,12 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       }
 
-      const listeJoueurs = joueurs.length > 0 ? joueurs : members;
-
-      html += renderCategorySection('Joueurs', '⚽', listeJoueurs, 'content-joueurs');
-      if (dirigeants.length > 0) {
+      // Si le filtre est trop strict et ne trouve rien, on met tout dans joueurs par défaut, sinon on affiche les sections
+      if (joueurs.length === 0 && dirigeants.length === 0 && arbitres.length === 0) {
+        html += renderCategorySection('Membres', '⚽', members, 'content-membres');
+      } else {
+        html += renderCategorySection('Joueurs', '⚽', joueurs, 'content-joueurs');
         html += renderCategorySection('Dirigeants', '👔', dirigeants, 'content-dirigeants');
-      }
-      if (arbitres.length > 0) {
         html += renderCategorySection('Arbitres', '🟨', arbitres, 'content-arbitres');
       }
 
