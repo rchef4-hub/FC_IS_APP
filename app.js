@@ -185,14 +185,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetchFresh('players.json');
       const members = await res.json();
 
-      // Séparation stricte basée sur le champ "type" ou le "poste"
-      const joueurs = members.filter(p => {
+      // Séparation stricte et propre basée sur les propriétés de chaque membre
+      const dirigeants = members.filter(p => {
         const type = (p.type || '').toLowerCase();
-        const poste = (p.poste || '').toLowerCase();
-        return type === 'joueur' || type === '' || ['attaquant', 'milieu', 'défenseur', 'gardien'].includes(poste);
+        const role = (p.role || '').toLowerCase();
+        return type === 'dirigeant' || role.includes('dirigeant') || role.includes('président') || role.includes('secrétaire') || role.includes('trésorier') || role.includes('dir.');
       });
 
-      const dirigeants = members.filter(p => (p.type || '').toLowerCase() === 'dirigeant' || (p.role || '').toLowerCase().includes('dirigeant'));
       const arbitres = members.filter(p => {
         const type = (p.type || '').toLowerCase();
         const role = (p.role || '').toLowerCase();
@@ -200,24 +199,30 @@ document.addEventListener("DOMContentLoaded", () => {
         return type.includes('arbitre') || role.includes('arbitre') || poste.includes('arbitre');
       });
 
+      // Les joueurs sont ceux qui ne sont ni dirigeants ni arbitres
+      const joueurs = members.filter(p => {
+        return !dirigeants.includes(p) && !arbitres.includes(p);
+      });
+
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Effectif du Club</h2>
         <div style="display: flex; flex-direction: column; gap: 10px;">
       `;
 
+      // Fonction d'affichage d'une catégorie (sans le chiffre entre parenthèses)
       function renderCategorySection(title, icon, items, id) {
         if (!items || items.length === 0) return '';
         return `
           <div class="accordion-container">
             <button class="accordion-header" data-target="${id}" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
-              <span>${icon} ${title} (${items.length})</span>
+              <span>${icon} ${title}</span>
               <span>▼</span>
             </button>
             <div id="${id}" style="display: none; background: #fff; padding: 10px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; flex-direction: column; gap: 8px;">
               ${items.map(p => `
                 <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
                   <div>
-                    <strong style="font-size: 1em; color: #222;">${p.symbole || '⚽'} ${p.nom}</strong>
+                    <strong style="font-size: 1em; color: #222;">${p.symbole \vert{}\vert{} icon}${p.nom}</strong>
                     <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || p.role || title.slice(0, -1)}</div>
                   </div>
                 </div>
@@ -227,14 +232,9 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       }
 
-      // Si le filtre est trop strict et ne trouve rien, on met tout dans joueurs par défaut, sinon on affiche les sections
-      if (joueurs.length === 0 && dirigeants.length === 0 && arbitres.length === 0) {
-        html += renderCategorySection('Membres', '⚽', members, 'content-membres');
-      } else {
-        html += renderCategorySection('Joueurs', '⚽', joueurs, 'content-joueurs');
-        html += renderCategorySection('Dirigeants', '👔', dirigeants, 'content-dirigeants');
-        html += renderCategorySection('Arbitres', '🟨', arbitres, 'content-arbitres');
-      }
+      html += renderCategorySection('Joueurs', '⚽', joueurs, 'content-joueurs');
+      html += renderCategorySection('Dirigeants', '👔', dirigeants, 'content-dirigeants');
+      html += renderCategorySection('Arbitres', '🟨', arbitres, 'content-arbitres');
 
       html += `</div>`;
       root.innerHTML = html;
