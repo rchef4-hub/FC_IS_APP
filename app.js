@@ -284,9 +284,10 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (res.includes('défaite') || res.includes('defaite')) defaites++;
       });
 
-      const joueurPlusUtilise = [...players].sort((a, b) => (b.matchs || 0) - (a.matchs || 0))[0];
-      const topButeurs = [...players].sort((a, b) => (b.buts || 0) - (a.buts || 0)).slice(0, 5);
-      const topPasseurs = [...players].sort((a, b) => (b.passes || 0) - (b.passes || 0)).slice(0, 5);
+      // Tri des joueurs pour les différents menus
+      const classementMatchs = [...players].sort((a, b) => (b.matchs || 0) - (a.matchs || 0));
+      const topButeurs = [...players].filter(p => (p.buts || 0) > 0).sort((a, b) => (b.buts || 0) - (a.buts || 0));
+      const topPasseurs = [...players].filter(p => (p.passes || 0) > 0).sort((a, b) => (b.passes || 0) - (a.passes || 0));
 
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Statistiques de la Saison</h2>
@@ -295,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div style="background: #6b1d44; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 12px;">
             📊 Bilan Global (${joues.length} matchs joués)
           </div>
-          <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-around; text-align: center;">
             <div>
               <div style="font-size: 1.3em; font-weight: bold; color: #2e7d32;">${victoires}</div>
               <div style="font-size: 0.85em; color: #666;">Victoires</div>
@@ -309,50 +310,63 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="font-size: 0.85em; color: #666;">Défaites</div>
             </div>
           </div>
-
-          ${joueurPlusUtilise ? `
-            <div style="background: #fdf8fb; border: 1px solid #e8d7e2; padding: 10px; border-radius: 6px; text-align: center;">
-              ⭐ Joueur le plus utilisé : <strong>${joueurPlusUtilise.nom}</strong> (${joueurPlusUtilise.matchs || 0} matchs)
-            </div>
-          ` : ''}
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
           
+          <!-- Menu déroulant : Matchs joués / Joueurs les plus utilisés -->
+          <div class="accordion-container">
+            <button class="accordion-header" data-target="content-matchs-joueurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
+              <span>⭐ Matchs Joués par les Joueurs</span>
+              <span>▼</span>
+            </button>
+            <div id="content-matchs-joueurs" style="display: none; background: white; padding: 10px 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px;">
+              ${classementMatchs.map((p, index) => `
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
+                  <span>${index + 1}. <strong>${p.nom}</strong></span>
+                  <span style="color: #6b1d44; font-weight: bold;">${p.matchs || 0} matchs</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Menu déroulant : Meilleurs Buteurs (> 0) -->
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-buteurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>⚽ Meilleurs Buteurs</span>
-              <span class="arrow-buteurs">▼</span>
+              <span>▼</span>
             </button>
             <div id="content-buteurs" style="display: none; background: white; padding: 10px 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px;">
-              ${topButeurs.map((p, index) => `
+              ${topButeurs.length > 0 ? topButeurs.map((p, index) => `
                 <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
                   <span>${index + 1}. <strong>${p.nom}</strong></span>
-                  <span style="color: #2e7d32; font-weight: bold;">${p.buts || 0} buts</span>
+                  <span style="color: #2e7d32; font-weight: bold;">${p.buts} buts</span>
                 </div>
-              `).join('')}
+              `).join('') : '<p style="text-align: center; color: #666; font-size: 0.9em; padding: 5px 0;">Aucun but enregistré pour le moment</p>'}
             </div>
           </div>
 
+          <!-- Menu déroulant : Meilleurs Passeurs (> 0) -->
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-passeurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>👟 Meilleurs Passeurs</span>
-              <span class="arrow-passeurs">▼</span>
+              <span>▼</span>
             </button>
             <div id="content-passeurs" style="display: none; background: white; padding: 10px 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px;">
-              ${topPasseurs.map((p, index) => `
+              ${topPasseurs.length > 0 ? topPasseurs.map((p, index) => `
                 <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
                   <span>${index + 1}. <strong>${p.nom}</strong></span>
-                  <span style="color: #00838f; font-weight: bold;">${p.passes || 0} passes</span>
+                  <span style="color: #00838f; font-weight: bold;">${p.passes} passes</span>
                 </div>
-              `).join('')}
+              `).join('') : '<p style="text-align: center; color: #666; font-size: 0.9em; padding: 5px 0;">Aucune passe décisive enregistrée pour le moment</p>'}
             </div>
           </div>
 
+          <!-- Menu déroulant : Discipline -->
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-discipline" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>🟨🟨🟥 Discipline</span>
-              <span class="arrow-discipline">▼</span>
+              <span>▼</span>
             </button>
             <div id="content-discipline" style="display: none; background: white; padding: 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; text-align: center; color: #666; font-size: 0.9em;">
               Aucune sanction enregistrée pour le moment.
@@ -364,6 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       root.innerHTML = html;
 
+      // Gestion des clics sur les menus déroulants
       root.querySelectorAll('.accordion-header').forEach(btn => {
         btn.addEventListener('click', () => {
           const targetId = btn.getAttribute('data-target');
