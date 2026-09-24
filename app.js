@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- PAGE STATS (#stats) AVEC MENU DÉROULANT ET JOUEUR LE PLUS UTILISÉ ---
+ // --- PAGE STATS (#stats) AVEC ACCORDÉONS & BILAN GLOBAL ---
   async function renderStats() {
     root.innerHTML = `<p style="text-align: center;">Chargement des statistiques...</p>`;
     try {
@@ -252,122 +252,108 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const joueurPlusUtilise = [...players].sort((a, b) => (b.matchs || 0) - (a.matchs || 0))[0];
-      const topButeurs = [...players].sort((a, b) => (b.buts || 0) - (a.buts || 0)).slice(0, 5);
+      const topButeurs = [...players].sort((a, b) => (b.buts || 0) - (b.buts || 0)).slice(0, 5);
       const topPasseurs = [...players].sort((a, b) => (b.passes || 0) - (a.passes || 0)).slice(0, 5);
 
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Statistiques de la Saison</h2>
 
-        <!-- MENU DÉROULANT DE SÉLECTION -->
-        <div style="margin-bottom: 15px; text-align: center;">
-          <label for="stat-select" style="font-size: 0.9em; font-weight: bold; color: #555; margin-right: 8px;">Afficher :</label>
-          <select id="stat-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 0.9em; background: white;">
-            <option value="global">Bilan & Joueur le plus utilisé</option>
-            <option value="buteurs">Classement Buteurs</option>
-            <option value="passeurs">Classement Passeurs</option>
-          </select>
+        <!-- BILAN GLOBAL & JOUEUR LE PLUS UTILISÉ EN HAUT -->
+        <div class="card" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+          <div style="background: #6b1d44; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 12px;">
+            📊 Bilan Global (${joues.length} matchs joués)
+          </div>
+          <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 15px;">
+            <div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #2e7d32;">${victoires}</div>
+              <div style="font-size: 0.85em; color: #666;">Victoires</div>
+            </div>
+            <div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #ef6c00;">${nuls}</div>
+              <div style="font-size: 0.85em; color: #666;">Nuls</div>
+            </div>
+            <div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #c62828;">${defaites}</div>
+              <div style="font-size: 0.85em; color: #666;">Défaites</div>
+            </div>
+          </div>
+
+          ${joueurPlusUtilise ? `
+            <div style="background: #fdf8fb; border: 1px solid #e8d7e2; padding: 10px; border-radius: 6px; text-align: center;">
+              ⭐ Joueur le plus utilisé : <strong>${joueurPlusUtilise.nom}</strong> (${joueurPlusUtilise.matchs || 0} matchs)
+            </div>
+          ` : ''}
         </div>
 
-        <div id="stat-content-area">
-          <!-- VUE PAR DÉFAUT : BILAN & JOUEUR LE PLUS UTILISÉ -->
-          <div class="card" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <div style="background: #6b1d44; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 12px;">
-              📊 Bilan Global (${joues.length} matchs joués)
+        <!-- ACCORDÉONS (Buteurs, Passeurs, Discipline) -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          
+          <!-- ACCORDÉON BUTEURS -->
+          <div class="accordion-container">
+            <button class="accordion-header" data-target="content-buteurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
+              <span>⚽ Meilleurs Buteurs</span>
+              <span class="arrow-buteurs">▼</span>
+            </button>
+            <div id="content-buteurs" style="display: none; background: white; padding: 10px 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px;">
+              ${topButeurs.map((p, index) => `
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
+                  <span>${index + 1}. <strong>${p.nom}</strong></span>
+                  <span style="color: #2e7d32; font-weight: bold;">${p.buts || 0} buts</span>
+                </div>
+              `).join('')}
             </div>
-            <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 15px;">
-              <div>
-                <div style="font-size: 1.3em; font-weight: bold; color: #2e7d32;">${victoires}</div>
-                <div style="font-size: 0.85em; color: #666;">Victoires</div>
-              </div>
-              <div>
-                <div style="font-size: 1.3em; font-weight: bold; color: #ef6c00;">${nuls}</div>
-                <div style="font-size: 0.85em; color: #666;">Nuls</div>
-              </div>
-              <div>
-                <div style="font-size: 1.3em; font-weight: bold; color: #c62828;">${defaites}</div>
-                <div style="font-size: 0.85em; color: #666;">Défaites</div>
-              </div>
-            </div>
-
-            ${joueurPlusUtilise ? `
-              <div style="background: #fdf8fb; border: 1px solid #e8d7e2; padding: 10px; border-radius: 6px; text-align: center;">
-                ⭐ Joueur le plus utilisé : <strong>${joueurPlusUtilise.nom}</strong> (${joueurPlusUtilise.matchs || 0} matchs)
-              </div>
-            ` : ''}
           </div>
+
+          <!-- ACCORDÉON PASSEURS -->
+          <div class="accordion-container">
+            <button class="accordion-header" data-target="content-passeurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
+              <span>👟 Meilleurs Passeurs</span>
+              <span class="arrow-passeurs">▼</span>
+            </button>
+            <div id="content-passeurs" style="display: none; background: white; padding: 10px 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px;">
+              ${topPasseurs.map((p, index) => `
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
+                  <span>${index + 1}. <strong>${p.nom}</strong></span>
+                  <span style="color: #00838f; font-weight: bold;">${p.passes || 0} passes</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- ACCORDÉON DISCIPLINE -->
+          <div class="accordion-container">
+            <button class="accordion-header" data-target="content-discipline" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
+              <span>🟨🟨🟥 Discipline</span>
+              <span class="arrow-discipline">▼</span>
+            </button>
+            <div id="content-discipline" style="display: none; background: white; padding: 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; text-align: center; color: #666; font-size: 0.9em;">
+              Aucune sanction enregistrée pour le moment.
+            </div>
+          </div>
+
         </div>
       `;
 
       root.innerHTML = html;
 
-      // Gestion dynamique du menu déroulant
-      const select = document.getElementById('stat-select');
-      select.addEventListener('change', (e) => {
-        const val = e.target.value;
-        const container = document.getElementById('stat-content-area');
-        
-        if (val === 'global') {
-          container.innerHTML = `
-            <div class="card" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-              <div style="background: #6b1d44; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 12px;">
-                📊 Bilan Global (${joues.length} matchs joués)
-              </div>
-              <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 15px;">
-                <div>
-                  <div style="font-size: 1.3em; font-weight: bold; color: #2e7d32;">${victoires}</div>
-                  <div style="font-size: 0.85em; color: #666;">Victoires</div>
-                </div>
-                <div>
-                  <div style="font-size: 1.3em; font-weight: bold; color: #ef6c00;">${nuls}</div>
-                  <div style="font-size: 0.85em; color: #666;">Nuls</div>
-                </div>
-                <div>
-                  <div style="font-size: 1.3em; font-weight: bold; color: #c62828;">${defaites}</div>
-                  <div style="font-size: 0.85em; color: #666;">Défaites</div>
-                </div>
-              </div>
-              ${joueurPlusUtilise ? `
-                <div style="background: #fdf8fb; border: 1px solid #e8d7e2; padding: 10px; border-radius: 6px; text-align: center;">
-                  ⭐ Joueur le plus utilisé : <strong>${joueurPlusUtilise.nom}</strong> (${joueurPlusUtilise.matchs || 0} matchs)
-                </div>
-              ` : ''}
-            </div>
-          `;
-        } else if (val === 'buteurs') {
-          let bHtml = `
-            <div class="card" style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-              <div style="background: #2e7d32; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 10px;">
-                ⚽ Classement des Buteurs
-              </div>
-          `;
-          topButeurs.forEach((p, index) => {
-            bHtml += `
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
-                <span>${index + 1}. <strong>${p.nom}</strong></span>
-                <span style="color: #2e7d32; font-weight: bold;">${p.buts || 0} buts</span>
-              </div>
-            `;
-          });
-          bHtml += `</div>`;
-          container.innerHTML = bHtml;
-        } else if (val === 'passeurs') {
-          let pHtml = `
-            <div class="card" style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-              <div style="background: #00838f; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 10px;">
-                👟 Classement des Passeurs
-              </div>
-          `;
-          topPasseurs.forEach((p, index) => {
-            pHtml += `
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
-                <span>${index + 1}. <strong>${p.nom}</strong></span>
-                <span style="color: #00838f; font-weight: bold;">${p.passes || 0} passes</span>
-              </div>
-            `;
-          });
-          pHtml += `</div>`;
-          container.innerHTML = pHtml;
-        }
+      // Gestion des clics pour ouvrir/fermer les accordéons
+      root.querySelectorAll('.accordion-header').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-target');
+          const content = document.getElementById(targetId);
+          const arrow = btn.querySelector('span:last-child');
+
+          if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            arrow.textContent = '▲';
+            // Arrondir le bas du bouton quand ouvert
+            btn.style.borderRadius = '8px 8px 0 0';
+          } else {
+            content.style.display = 'none';
+            arrow.textContent = '▼';
+            btn.style.borderRadius = '8px';
+          }
+        });
       });
 
     } catch (e) {
