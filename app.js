@@ -182,7 +182,6 @@ document.addEventListener("DOMContentLoaded", () => {
   async function renderEffectif() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'effectif...</p>`;
     try {
-      // Chargement en parallèle des trois fichiers
       const [resPlayers, resDirigeants, resArbitres] = await Promise.all([
         fetchFresh('players.json').catch(() => ({ json: () => [] })),
         fetchFresh('dirigeants.json').catch(() => ({ json: () => [] })),
@@ -198,7 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div style="display: flex; flex-direction: column; gap: 10px;">
       `;
 
-      // Fonction d'affichage d'une catégorie (sans le chiffre entre parenthèses)
       function renderCategorySection(title, icon, items, id) {
         if (!items || items.length === 0) return '';
         return `
@@ -208,14 +206,24 @@ document.addEventListener("DOMContentLoaded", () => {
               <span>▼</span>
             </button>
             <div id="${id}" style="display: none; background: #fff; padding: 10px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; flex-direction: column; gap: 8px;">
-              ${items.map(p => `
-                <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
-                  <div>
-                    <strong style="font-size: 1em; color: #222;">${p.nom || p.name || 'Nom inconnu'}</strong>
-                    <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || p.role || title.slice(0, -1)}</div>
+              ${items.map(p => {
+                // Gestion intelligente du nom et du prénom (combine prenom + nom si séparés)
+                let fullName = '';
+                if (p.prenom && p.nom) {
+                  fullName = `${p.prenom}${p.nom}`;
+                } else {
+                  fullName = p.nom || p.prenom || p.name || 'Nom inconnu';
+                }
+
+                return `
+                  <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
+                    <div>
+                      <strong style="font-size: 1em; color: #222;">${fullName}</strong>
+                      <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || p.role || title.slice(0, -1)}</div>
+                    </div>
                   </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
           </div>
         `;
@@ -223,12 +231,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       html += renderCategorySection('Joueurs', '⚽', joueurs, 'content-joueurs');
       html += renderCategorySection('Dirigeants', '👔', dirigeants, 'content-dirigeants');
-      html += renderCategorySection('Arbitres', '⬜🟨🟥', arbitres, 'content-arbitres');
+      html += renderCategorySection('Arbitres', '🟨', arbitres, 'content-arbitres');
 
       html += `</div>`;
       root.innerHTML = html;
 
-      // Gestion des menus déroulants (accordéons)
       root.querySelectorAll('.accordion-header').forEach(btn => {
         btn.addEventListener('click', () => {
           const targetId = btn.getAttribute('data-target');
@@ -252,7 +259,6 @@ document.addEventListener("DOMContentLoaded", () => {
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'effectif.</p>`;
     }
   }
-
   // --- PAGE STATS (#stats) ---
   async function renderStats() {
     root.innerHTML = `<p style="text-align: center;">Chargement des statistiques...</p>`;
