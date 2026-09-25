@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Gestion intelligente du nom et du prénom (combine prenom + nom si séparés)
                 let fullName = '';
                 if (p.prenom && p.nom) {
-                  fullName = `${p.prenom}${p.nom}`;
+                  fullName = `${p.prenom} ${p.nom}`;
                 } else {
                   fullName = p.nom || p.prenom || p.name || 'Nom inconnu';
                 }
