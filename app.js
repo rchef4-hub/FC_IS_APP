@@ -43,14 +43,24 @@ document.addEventListener("DOMContentLoaded", () => {
       // On regroupe tout le monde
       const tousLesMembresBruts = [...players, ...dirigeants, ...arbitres];
 
-      // SUPPRESSION DES DOUBLONS (si un membre est dans plusieurs fichiers)
-      const nomsVus = new Set();
+      // FILTRE ANTI-DOUBLONS : basé sur le Nom ET la Date de naissance
+      // Cela permet de fusionner la même personne présente dans plusieurs fichiers (ex: Joueur + Dirigeant de 1984),
+      // tout en gardant les vrais homonymes (ex: le Julien de 1984 et celui de 2022).
+      const clesVues = new Set();
       const tousLesMembres = tousLesMembresBruts.filter(p => {
         const nomComplet = (p.nom || p.name || '').trim().toUpperCase();
-        if (!nomComplet || nomsVus.has(nomComplet)) {
-          return false; // On l'ignore si le nom est vide ou déjà vu
+        // On normalise un peu la date pour éviter les écarts de format (ex: 2022-09-09 vs 2022/09/09)
+        const dateStr = (p.naissance || p.date_de_naissance || '').trim().replace(/\//g, '-');
+        
+        if (!nomComplet) return false;
+
+        // Clé unique par personne (Nom + Date de naissance)
+        const cleUnique = `${nomComplet}_${dateStr}`;
+        
+        if (clesVues.has(cleUnique)) {
+          return false; // C'est exactement la même personne (même nom et même date de naissance), on l'ignore
         }
-        nomsVus.add(nomComplet);
+        clesVues.add(cleUnique);
         return true;
       });
 
@@ -186,7 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'accueil.</p>`;
     }
   }
-
   // --- PAGE MATCHS (#matches) ---
   async function renderMatchs() {
     root.innerHTML = `<p style="text-align: center;">Chargement des matchs...</p>`;
