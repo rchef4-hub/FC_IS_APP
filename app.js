@@ -285,7 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${items.map(p => {
                 let fullName = '';
                 if (p.prenom && p.nom) {
-                  fullName = `${p.prenom.trim()}${p.nom.trim()}`;
+                  fullName = `${p.prenom.trim()} ${p.nom.trim()}`;
                 } else {
                   fullName = p.nom || p.prenom || p.name || 'Nom inconnu';
                 }
