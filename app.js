@@ -51,15 +51,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const moisActuel = (new Date().getMonth() + 1).toString().padStart(2, '0');
       
-      // Filtrage et TRI des anniversaires par ordre chronologique
+      // Filtrage et TRI des anniversaires (gère 'naissance' ou 'date_de_naissance')
       const anniversaires = tousLesMembres.filter(p => {
-        if (!p.naissance) return false;
-        const parts = p.naissance.trim().split('/');
-        return parts.length === 3 && parts[1] === moisActuel;
+        const dateStr = p.naissance || p.date_de_naissance;
+        if (!dateStr) return false;
+        
+        // Supporte le format "AAAA-MM-JJ" ou "JJ/MM/AAAA"
+        if (dateStr.includes('-')) {
+          const parts = dateStr.split('-');
+          return parts.length === 3 && parts[1] === moisActuel;
+        } else if (dateStr.includes('/')) {
+          const parts = dateStr.split('/');
+          return parts.length === 3 && parts[1] === moisActuel;
+        }
+        return false;
       }).sort((a, b) => {
-        const jourA = parseInt(a.naissance.split('/')[0], 10);
-        const jourB = parseInt(b.naissance.split('/')[0], 10);
-        return jourA - jourB; // Du 1er jusqu'à la fin du mois
+        const dateA = a.naissance || a.date_de_naissance;
+        const dateB = b.naissance || b.date_de_naissance;
+        
+        let jourA, jourB;
+        if (dateA.includes('-')) {
+          jourA = parseInt(dateA.split('-')[2], 10);
+          jourB = parseInt(dateB.split('-')[2], 10);
+        } else {
+          jourA = parseInt(dateA.split('/')[0], 10);
+          jourB = parseInt(dateB.split('/')[0], 10);
+        }
+        return jourA - jourB; // Tri du 1er au dernier du mois
       });
 
       let html = `
@@ -123,7 +141,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (anniversaires.length > 0) {
         anniversaires.forEach(p => {
-          const jourMois = p.naissance ? p.naissance.substring(0, 5) : '';
+          const dateStr = p.naissance || p.date_de_naissance;
+          let jourMois = '';
+          
+          if (dateStr.includes('-')) {
+            const parts = dateStr.split('-'); // ex: 1990-09-10
+            jourMois = `${parts[2]}/${parts[1]}`; // Devient 10/09
+          } else {
+            jourMois = dateStr.substring(0, 5);
+          }
+
           let fullName = '';
           if (p.prenom && p.nom) {
             fullName = `${p.prenom.trim()} ${p.nom.trim()}`;
