@@ -30,7 +30,9 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const [resMatchs, resPlayers] = await Promise.all([
         fetchFresh('matchs.json'),
-        fetchFresh('players.json')
+        fetchFresh('players.json'),
+        fetchFresh('dirigeants.json'),
+        fetchFresh('arbitres.json')
       ]);
 
       const matchs = await resMatchs.json();
