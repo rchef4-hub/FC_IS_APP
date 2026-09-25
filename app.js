@@ -40,8 +40,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const dirigeants = await resDirigeants.json();
       const arbitres = await resArbitres.json();
 
-      // On regroupe tout le monde dans une seule liste générale
-      const tousLesMembres = [...players, ...dirigeants, ...arbitres];
+      // On regroupe tout le monde
+      const tousLesMembresBruts = [...players, ...dirigeants, ...arbitres];
+
+      // SUPPRESSION DES DOUBLONS (si un membre est dans plusieurs fichiers)
+      const nomsVus = new Set();
+      const tousLesMembres = tousLesMembresBruts.filter(p => {
+        const nomComplet = (p.nom || p.name || '').trim().toUpperCase();
+        if (!nomComplet || nomsVus.has(nomComplet)) {
+          return false; // On l'ignore si le nom est vide ou déjà vu
+        }
+        nomsVus.add(nomComplet);
+        return true;
+      });
 
       const joues = matchs.filter(m => m.resultat && m.resultat.trim() !== '');
       const aVenir = matchs.filter(m => !m.resultat || m.resultat.trim() === '');
@@ -51,12 +62,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const moisActuel = (new Date().getMonth() + 1).toString().padStart(2, '0');
       
-      // Filtrage et TRI des anniversaires (gère 'naissance' ou 'date_de_naissance')
+      // Filtrage et TRI des anniversaires par ordre chronologique
       const anniversaires = tousLesMembres.filter(p => {
         const dateStr = p.naissance || p.date_de_naissance;
         if (!dateStr) return false;
         
-        // Supporte le format "AAAA-MM-JJ" ou "JJ/MM/AAAA"
         if (dateStr.includes('-')) {
           const parts = dateStr.split('-');
           return parts.length === 3 && parts[1] === moisActuel;
@@ -145,8 +155,8 @@ document.addEventListener("DOMContentLoaded", () => {
           let jourMois = '';
           
           if (dateStr.includes('-')) {
-            const parts = dateStr.split('-'); // ex: 1990-09-10
-            jourMois = `${parts[2]}/${parts[1]}`; // Devient 10/09
+            const parts = dateStr.split('-');
+            jourMois = `${parts[2]}/${parts[1]}`;
           } else {
             jourMois = dateStr.substring(0, 5);
           }
