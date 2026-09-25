@@ -28,11 +28,11 @@ document.addEventListener("DOMContentLoaded", () => {
   async function renderAccueil() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'accueil...</p>`;
     try {
-      const [resMatchs, resPlayers] = await Promise.all([
-        fetchFresh('matchs.json'),
-        fetchFresh('players.json'),
-        fetchFresh('dirigeants.json'),
-        fetchFresh('arbitres.json')
+      const [resMatchs, resPlayers, resDirigeants, resArbitres] = await Promise.all([
+        fetchFresh('matchs.json').catch(() => ({ json: () => [] })),
+        fetchFresh('players.json').catch(() => ({ json: () => [] })),
+        fetchFresh('dirigeants.json').catch(() => ({ json: () => [] })),
+        fetchFresh('arbitres.json').catch(() => ({ json: () => [] }))
       ]);
 
       const matchs = await resMatchs.json();
@@ -117,10 +117,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (anniversaires.length > 0) {
         anniversaires.forEach(p => {
-          const jourMois = p.naissance.substring(0, 5);
+          const jourMois = p.naissance ? p.naissance.substring(0, 5) : '';
+          let fullName = '';
+          if (p.prenom && p.nom) {
+            fullName = `${p.prenom.trim()} ${p.nom.trim()}`;
+          } else {
+            fullName = p.nom || p.prenom || p.name || 'Membre';
+          }
+
           html += `
             <div style="display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px 12px; margin-bottom: 6px; border-radius: 5px; border-left: 4px solid #d4af37;">
-              <span>⚽ <strong>${p.nom.toUpperCase()}</strong></span>
+              <span>🎂 <strong>${fullName.toUpperCase()}</strong></span>
               <span style="color: #6b1d44; font-weight: bold;">${jourMois}</span>
             </div>
           `;
@@ -132,6 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `</div></div>`;
       root.innerHTML = html;
     } catch (e) {
+      console.error(e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'accueil.</p>`;
     }
   }
@@ -185,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
- // --- PAGE EFFECTIF (#players) AVEC TROIS FICHIERS SÉPARÉS ---
+  // --- PAGE EFFECTIF (#players) AVEC TROIS FICHIERS SÉPARÉS ---
   async function renderEffectif() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'effectif...</p>`;
     try {
@@ -214,10 +222,9 @@ document.addEventListener("DOMContentLoaded", () => {
             </button>
             <div id="${id}" style="display: none; background: #fff; padding: 10px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; flex-direction: column; gap: 8px;">
               ${items.map(p => {
-                // Gestion intelligente du nom et du prénom (combine prenom + nom si séparés)
                 let fullName = '';
                 if (p.prenom && p.nom) {
-                  fullName = `${p.prenom} ${p.nom}`;
+                  fullName = `${p.prenom.trim()}${p.nom.trim()}`;
                 } else {
                   fullName = p.nom || p.prenom || p.name || 'Nom inconnu';
                 }
@@ -266,6 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'effectif.</p>`;
     }
   }
+
   // --- PAGE STATS (#stats) ---
   async function renderStats() {
     root.innerHTML = `<p style="text-align: center;">Chargement des statistiques...</p>`;
@@ -288,7 +296,6 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (res.includes('défaite') || res.includes('defaite')) defaites++;
       });
 
-      // Tri des joueurs pour les différents menus
       const classementMatchs = [...players].sort((a, b) => (b.matchs || 0) - (a.matchs || 0));
       const topButeurs = [...players].filter(p => (p.buts || 0) > 0).sort((a, b) => (b.buts || 0) - (a.buts || 0));
       const topPasseurs = [...players].filter(p => (p.passes || 0) > 0).sort((a, b) => (b.passes || 0) - (a.passes || 0));
@@ -318,7 +325,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
 
-          <!-- Menu déroulant : Meilleurs Buteurs (> 0) -->
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-buteurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>⚽ Meilleurs Buteurs</span>
@@ -334,7 +340,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
 
-          <!-- Menu déroulant : Meilleurs Passeurs (> 0) -->
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-passeurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>👟 Meilleurs Passeurs</span>
@@ -350,7 +355,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
 
-          <!-- Menu déroulant : Discipline -->
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-discipline" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>⬜🟨🟥 Discipline</span>
@@ -360,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
               Aucune sanction enregistrée pour le moment.
             </div>
           </div>
-          <!-- Menu déroulant : Matchs joués / Joueurs les plus utilisés -->
+
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-matchs-joueurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>⭐ Matchs Joués par les Joueurs</span>
@@ -381,7 +385,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       root.innerHTML = html;
 
-      // Gestion des clics sur les menus déroulants
       root.querySelectorAll('.accordion-header').forEach(btn => {
         btn.addEventListener('click', () => {
           const targetId = btn.getAttribute('data-target');
