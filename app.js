@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return '#6b1d44';
   }
 
-
   // --- PAGE ACCUEIL (#home) ---
   async function renderAccueil() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'accueil...</p>`;
@@ -50,24 +49,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const nomComplet = (p.nom || p.name || '').trim().toUpperCase();
         if (!nomComplet) return false;
 
-        // On extrait proprement le mois et le jour indépendamment du format (JJ/MM ou AAAA-MM-JJ)
         let moisJour = '';
         const dateStr = (p.naissance || p.date_de_naissance || '').trim();
         if (dateStr) {
           if (dateStr.includes('-')) {
-            const parts = dateStr.split('-'); // ex: 1990-09-10 -> parts[1]=09, parts[2]=10
+            const parts = dateStr.split('-');
             if (parts.length === 3) moisJour = `${parts[1]}-${parts[2]}`;
           } else if (dateStr.includes('/')) {
-            const parts = dateStr.split('/'); // ex: 10/09/1990 -> parts[0]=10, parts[1]=09
+            const parts = dateStr.split('/');
             if (parts.length === 3) moisJour = `${parts[1]}-${parts[0]}`;
           }
         }
 
-        // Clé unique : Nom + Mois/Jour (permet de fusionner un joueur et dirigeant qui ont la même date)
         const cleUnique = `${nomComplet}_${moisJour}`;
-        
         if (clesVues.has(cleUnique)) {
-          return false; // Déjà présent, on l'ignore (évite le double de Guillaume Bret ou Julien Thibonnet)
+          return false;
         }
         clesVues.add(cleUnique);
         return true;
@@ -81,7 +77,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const moisActuel = (new Date().getMonth() + 1).toString().padStart(2, '0');
       
-      // Filtrage et TRI des anniversaires par ordre chronologique
+      // Fonction utilitaire propre pour extraire le jour numérique (1 à 31)
+      const getJourDuMois = (p) => {
+        const dateStr = p.naissance || p.date_de_naissance || '';
+        if (dateStr.includes('-')) {
+          // Format AAAA-MM-JJ -> le jour est à l'index 2
+          return parseInt(dateStr.split('-')[2], 10) || 0;
+        } else if (dateStr.includes('/')) {
+          // Format JJ/MM/AAAA -> le jour est à l'index 0
+          return parseInt(dateStr.split('/')[0], 10) || 0;
+        }
+        return 0;
+      };
+
+      // Filtrage et TRI CHRONOLOGIQUE STRICT
       const anniversaires = tousLesMembres.filter(p => {
         const dateStr = p.naissance || p.date_de_naissance;
         if (!dateStr) return false;
@@ -95,18 +104,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return false;
       }).sort((a, b) => {
-        const dateA = a.naissance || a.date_de_naissance;
-        const dateB = b.naissance || b.date_de_naissance;
-        
-        let jourA, jourB;
-        if (dateA.includes('-')) {
-          jourA = parseInt(dateA.split('-')[2], 10);
-          jourB = parseInt(dateB.split('-')[2], 10);
-        } else {
-          jourA = parseInt(dateA.split('/')[0], 10);
-          jourB = parseInt(dateB.split('/')[0], 10);
-        }
-        return jourA - jourB; // Tri du 1er au dernier du mois
+        // On compare directement les deux jours numériques extraits
+        return getJourDuMois(a) - getJourDuMois(b);
       });
 
       let html = `
