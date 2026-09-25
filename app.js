@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return '#6b1d44';
   }
 
+
   // --- PAGE ACCUEIL (#home) ---
   async function renderAccueil() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'accueil...</p>`;
@@ -43,22 +44,30 @@ document.addEventListener("DOMContentLoaded", () => {
       // On regroupe tout le monde
       const tousLesMembresBruts = [...players, ...dirigeants, ...arbitres];
 
-      // FILTRE ANTI-DOUBLONS : basé sur le Nom ET la Date de naissance
-      // Cela permet de fusionner la même personne présente dans plusieurs fichiers (ex: Joueur + Dirigeant de 1984),
-      // tout en gardant les vrais homonymes (ex: le Julien de 1984 et celui de 2022).
+      // FILTRE ANTI-DOUBLONS ROBUSTE
       const clesVues = new Set();
       const tousLesMembres = tousLesMembresBruts.filter(p => {
         const nomComplet = (p.nom || p.name || '').trim().toUpperCase();
-        // On normalise un peu la date pour éviter les écarts de format (ex: 2022-09-09 vs 2022/09/09)
-        const dateStr = (p.naissance || p.date_de_naissance || '').trim().replace(/\//g, '-');
-        
         if (!nomComplet) return false;
 
-        // Clé unique par personne (Nom + Date de naissance)
-        const cleUnique = `${nomComplet}_${dateStr}`;
+        // On extrait proprement le mois et le jour indépendamment du format (JJ/MM ou AAAA-MM-JJ)
+        let moisJour = '';
+        const dateStr = (p.naissance || p.date_de_naissance || '').trim();
+        if (dateStr) {
+          if (dateStr.includes('-')) {
+            const parts = dateStr.split('-'); // ex: 1990-09-10 -> parts[1]=09, parts[2]=10
+            if (parts.length === 3) moisJour = `${parts[1]}-${parts[2]}`;
+          } else if (dateStr.includes('/')) {
+            const parts = dateStr.split('/'); // ex: 10/09/1990 -> parts[0]=10, parts[1]=09
+            if (parts.length === 3) moisJour = `${parts[1]}-${parts[0]}`;
+          }
+        }
+
+        // Clé unique : Nom + Mois/Jour (permet de fusionner un joueur et dirigeant qui ont la même date)
+        const cleUnique = `${nomComplet}_${moisJour}`;
         
         if (clesVues.has(cleUnique)) {
-          return false; // C'est exactement la même personne (même nom et même date de naissance), on l'ignore
+          return false; // Déjà présent, on l'ignore (évite le double de Guillaume Bret ou Julien Thibonnet)
         }
         clesVues.add(cleUnique);
         return true;
@@ -196,6 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'accueil.</p>`;
     }
   }
+  
   // --- PAGE MATCHS (#matches) ---
   async function renderMatchs() {
     root.innerHTML = `<p style="text-align: center;">Chargement des matchs...</p>`;
