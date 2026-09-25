@@ -285,16 +285,27 @@ document.addEventListener("DOMContentLoaded", () => {
               ${items.map(p => {
                 let fullName = '';
                 if (p.prenom && p.nom) {
-                  fullName = `${p.prenom.trim()} ${p.nom.trim()}`;
+                  fullName = `${p.prenom.trim()}${p.nom.trim()}`;
                 } else {
                   fullName = p.nom || p.prenom || p.name || 'Nom inconnu';
+                }
+
+                // Gestion spécifique pour adapter le texte des arbitres selon leur catégorie
+                let sousTitre = p.poste || p.role || title.slice(0, -1);
+                if (id === 'content-arbitres') {
+                  const cat = (p.categorie || p.category || '').trim().toLowerCase();
+                  if (cat === 'district') {
+                    sousTitre = 'Arbitre officiel';
+                  } else if (cat === 'bénévole' || cat === 'benevole') {
+                    sousTitre = 'Arbitre bénévole';
+                  }
                 }
 
                 return `
                   <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
                     <div>
                       <strong style="font-size: 1em; color: #222;">${fullName}</strong>
-                      <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${p.poste || p.role || title.slice(0, -1)}</div>
+                      <div style="font-size: 0.85em; color: #666; margin-top: 2px;">${sousTitre}</div>
                     </div>
                   </div>
                 `;
