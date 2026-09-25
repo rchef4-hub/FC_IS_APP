@@ -50,10 +50,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const prochainMatch = aVenir.length > 0 ? aVenir[0] : null;
 
       const moisActuel = (new Date().getMonth() + 1).toString().padStart(2, '0');
+      
+      // Filtrage et TRI des anniversaires par ordre chronologique
       const anniversaires = tousLesMembres.filter(p => {
         if (!p.naissance) return false;
-        const parts = p.naissance.split('/');
+        const parts = p.naissance.trim().split('/');
         return parts.length === 3 && parts[1] === moisActuel;
+      }).sort((a, b) => {
+        const jourA = parseInt(a.naissance.split('/')[0], 10);
+        const jourB = parseInt(b.naissance.split('/')[0], 10);
+        return jourA - jourB; // Du 1er jusqu'à la fin du mois
       });
 
       let html = `
