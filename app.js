@@ -37,6 +37,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const matchs = await resMatchs.json();
       const players = await resPlayers.json();
+      const dirigeants = await resDirigeants.json();
+      const arbitres = await resArbitres.json();
+
+      // On regroupe tout le monde dans une seule liste générale
+      const tousLesMembres = [...players, ...dirigeants, ...arbitres];
 
       const joues = matchs.filter(m => m.resultat && m.resultat.trim() !== '');
       const aVenir = matchs.filter(m => !m.resultat || m.resultat.trim() === '');
@@ -45,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const prochainMatch = aVenir.length > 0 ? aVenir[0] : null;
 
       const moisActuel = (new Date().getMonth() + 1).toString().padStart(2, '0');
-      const anniversaires = players.filter(p => {
+      const anniversaires = tousLesMembres.filter(p => {
         if (!p.naissance) return false;
         const parts = p.naissance.split('/');
         return parts.length === 3 && parts[1] === moisActuel;
