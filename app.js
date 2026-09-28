@@ -71,9 +71,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
 
     // Chargement des données membres
-    const  = await Promise.all();
+    const [rawMembers] = await Promise.all([
+      loadJsonSafe('membres.json') // Adapte le nom du fichier si nécessaire
+    ]);
 
-    const rawMembers = ;
     const uniqueKeys = new Set();
     
     const allMembers = rawMembers.filter(m => {
