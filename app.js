@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return '#6b1d44';
   }
 
-  // Fonction de chargement sécurisée pour les matchs avec localStorage
   async function getMatchsData() {
     try {
       const localMatchs = localStorage.getItem('firexo_matchs');
@@ -36,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       return Array.isArray(data) ? data : [];
     } catch (e) {
+      console.warn("Impossible de charger matchs.json via fetch, utilisation du cache ou tableau vide.");
       return [];
     }
   }
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- PAGE ACCUEIL (#home) ---
   async function renderAccueil() {
-    root.innerHTML = `<p style="text-align: center;">Chargement de l'accueil...</p>`;
+    root.innerHTML = `<p style="text-align: center; padding: 20px;">Chargement de l'accueil...</p>`;
     try {
       const [matchs, players, dirigeants, arbitres] = await Promise.all([
         getMatchsData(),
@@ -116,13 +116,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }).sort((a, b) => getJourDuMois(a) - getJourDuMois(b));
 
       let html = `
-        <div class="accueil-container">
+        <div class="accueil-container" style="padding-bottom: 30px;">
           <p style="text-align: center; font-style: italic; color: #555;">Saison 2026-2027</p>
-
-          <div class="banner-boutique" style="background: #6b1d44; padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 15px;">
-            <span>🛍️ <strong>Boutique Officielle JAKO</strong></span>
-            <a href="#" style="background: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 5px 12px; border-radius: 15px; font-size: 0.9em;">Visiter ↗</a>
-          </div>
 
           <div class="card" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
             <div style="background: #6b1d44; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; margin-bottom: 10px;">
@@ -186,12 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
             jourMois = dateStr.substring(0, 5);
           }
 
-          let fullName = '';
-          if (p.prenom && p.nom) {
-            fullName = `${p.prenom.trim()} ${p.nom.trim()}`;
-          } else {
-            fullName = p.nom || p.prenom || p.name || 'Membre';
-          }
+          let fullName = p.nom || 'Membre';
 
           html += `
             <div style="display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px 12px; margin-bottom: 6px; border-radius: 5px; border-left: 4px solid #d4af37;">
@@ -208,17 +198,17 @@ document.addEventListener("DOMContentLoaded", () => {
       root.innerHTML = html;
     } catch (e) {
       console.error("Erreur Accueil:", e);
-      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'accueil.</p>`;
+      root.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Erreur de chargement. Vérifiez vos fichiers JSON.</p>`;
     }
   }
   
   // --- PAGE MATCHS (#matches) ---
   async function renderMatchs() {
-    root.innerHTML = `<p style="text-align: center;">Chargement des matchs...</p>`;
+    root.innerHTML = `<p style="text-align: center; padding: 20px;">Chargement des matchs...</p>`;
     try {
       const matchs = await getMatchsData();
 
-      let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Calendrier & Résultats</h2><div class="matchs-list" style="display: flex; flex-direction: column; gap: 15px;">`;
+      let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Calendrier & Résultats</h2><div class="matchs-list" style="display: flex; flex-direction: column; gap: 15px; padding-bottom: 30px;">`;
 
       matchs.forEach(m => {
         const isDomicile = (m.lieu || '').toLowerCase() === 'domicile';
@@ -257,13 +247,13 @@ document.addEventListener("DOMContentLoaded", () => {
       root.innerHTML = html;
     } catch (e) {
       console.error("Erreur Matchs:", e);
-      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des matchs.</p>`;
+      root.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Erreur lors du chargement des matchs.</p>`;
     }
   }
 
   // --- PAGE EFFECTIF (#players) ---
   async function renderEffectif() {
-    root.innerHTML = `<p style="text-align: center;">Chargement de l'effectif...</p>`;
+    root.innerHTML = `<p style="text-align: center; padding: 20px;">Chargement de l'effectif...</p>`;
     try {
       const [joueurs, dirigeants, arbitres] = await Promise.all([
         fetchFresh('players.json').then(r => r.json()).catch(() => []),
@@ -273,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Effectif du Club</h2>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px;">
       `;
 
       function renderCategorySection(title, icon, items, id) {
@@ -286,16 +276,8 @@ document.addEventListener("DOMContentLoaded", () => {
             </button>
             <div id="${id}" style="display: none; background: #fff; padding: 10px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; flex-direction: column; gap: 8px;">
               ${items.map(p => {
-                let fullName = '';
-                if (p.prenom && p.nom) {
-                  fullName = `${p.prenom.trim()}${p.nom.trim()}`;
-                } else {
-                  fullName = p.nom || p.prenom || p.name || 'Nom inconnu';
-                }
-
-                let sousTitre = p.poste || p.role || title.slice(0, -1);
-                if (id === 'content-dirigeants') sousTitre = p.fonction || 'Dirigeant';
-                if (id === 'content-arbitres') sousTitre = p.categorie || p.category || 'Arbitre';
+                const fullName = p.nom || 'Nom inconnu';
+                const sousTitre = p.poste || title.slice(0, -1);
 
                 return `
                   <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
@@ -338,13 +320,13 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     } catch (e) {
       console.error("Erreur Effectif:", e);
-      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'effectif.</p>`;
+      root.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Erreur lors du chargement de l'effectif.</p>`;
     }
   }
 
   // --- PAGE STATS (#stats) ---
   async function renderStats() {
-    root.innerHTML = `<p style="text-align: center;">Chargement des statistiques...</p>`;
+    root.innerHTML = `<p style="text-align: center; padding: 20px;">Chargement des statistiques...</p>`;
     try {
       const [matchs, players] = await Promise.all([
         getMatchsData(),
@@ -388,7 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px;">
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-buteurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>⚽ Meilleurs Buteurs</span>
@@ -458,27 +440,27 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     } catch (e) {
       console.error("Erreur Stats:", e);
-      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des statistiques.</p>`;
+      root.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Erreur lors du chargement des statistiques.</p>`;
     }
   }
 
   // --- PAGE ANNONCES (#announcements) ---
   async function renderAnnonces() {
-    root.innerHTML = `<p style="text-align: center;">Chargement des annonces...</p>`;
+    root.innerHTML = `<p style="text-align: center; padding: 20px;">Chargement des annonces...</p>`;
     try {
-      let annonces = [];
+      let annonces = [
+        { titre: "Reprise des entraînements", date: "Septembre 2026", contenu: "Les entraînements ont lieu les mardi et jeudi à 19h." },
+        { titre: "Assemblée générale", date: "Prochainement", contenu: "Venez nombreux participer à la vie du club." }
+      ];
+
       try {
         const res = await fetchFresh('annonces.json');
-        annonces = await res.json();
-      } catch (err) {
-        annonces = [
-          { titre: "Reprise des entraînements", date: "Septembre 2026", contenu: "Les entraînements ont lieu les mardi et jeudi à 19h." },
-          { titre: "Assemblée générale", date: "Prochainement", contenu: "Venez nombreux participer à la vie du club." }
-        ];
-      }
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) annonces = data;
+      } catch (err) {}
 
       const couleurs = ['#6b1d44', '#2e7d32', '#00838f', '#ef6c00', '#d4af37'];
-      let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Annonces & Infos du Club</h2><div style="display: flex; flex-direction: column; gap: 12px;">`;
+      let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Annonces & Infos du Club</h2><div style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 30px;">`;
 
       annonces.forEach((a, index) => {
         const couleurBordure = couleurs[index % couleurs.length];
@@ -497,13 +479,23 @@ document.addEventListener("DOMContentLoaded", () => {
       root.innerHTML = html;
     } catch (e) {
       console.error("Erreur Annonces:", e);
-      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des annonces.</p>`;
+      root.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Erreur lors du chargement des annonces.</p>`;
     }
   }
 
-  // --- PAGE ADMINISTRATION (#admin) ---
+  // --- PAGE ADMINISTRATION (#admin) PROTÉGÉE ---
   async function renderAdmin() {
-    root.innerHTML = `<p style="text-align: center;">Chargement de l'administration...</p>`;
+    // Mot de passe requis (modifiable ici si besoin)
+    const motDePasseAdmin = "508497"; 
+    const saisie = prompt("Veuillez entrer le mot de passe administrateur :");
+
+    if (saisie !== motDePasseAdmin) {
+      alert("Mot de passe incorrect.");
+      window.location.hash = "#home";
+      return;
+    }
+
+    root.innerHTML = `<p style="text-align: center; padding: 20px;">Chargement de l'administration...</p>`;
     try {
       const [matches, players] = await Promise.all([
         getMatchsData(),
@@ -554,19 +546,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
               <div style="margin-bottom: 15px;">
                 <label style="font-size: 0.85em; display: block; margin-bottom: 3px; font-weight: bold;">Buteurs</label>
-                <input type="text" id="admin-buteurs" value="${m.buteurs || ''}" placeholder="Ex: Jean (2), Marc" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="text" id="admin-buteurs" value="${m.buteurs || ''}" placeholder="Ex: BELOUET Remi, GIRAULT Lucas" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
               </div>
 
               <div style="margin-bottom: 15px;">
                 <label style="font-size: 0.85em; display: block; margin-bottom: 3px; font-weight: bold;">Passeurs</label>
-                <input type="text" id="admin-passeurs" value="${m.passeurs || ''}" placeholder="Ex: Paul, Luc" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="text" id="admin-passeurs" value="${m.passeurs || ''}" placeholder="Ex: PIERARD Thomas" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
               </div>
 
               <div style="margin-bottom: 15px;">
                 <label style="font-size: 0.85em; display: block; margin-bottom: 3px; font-weight: bold;">Feuille de match (Joueurs participants)</label>
                 <div style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; border-radius: 4px; padding: 8px; background: #fafafa;">
                   ${players.map(p => {
-                    const nomJoueur = `${p.prenom \vert{}\vert{} ''}${p.nom || ''}`.trim() || p.name || '';
+                    const nomJoueur = p.nom || '';
                     const participantsList = Array.isArray(m.participants) ? m.participants : [];
                     const isChecked = participantsList.includes(nomJoueur) ? 'checked' : '';
                     return `
@@ -596,14 +588,14 @@ document.addEventListener("DOMContentLoaded", () => {
               m.participants = checkedPlayers;
 
               await saveMatchsData(matches);
-              alert('✅ Modifications enregistrées avec succès ! Elles ne seront pas perdues même après un rafraîchissement (F5).');
+              alert('✅ Modifications enregistrées avec succès !');
             });
           }
         });
       }
     } catch (e) {
       console.error("Erreur Admin:", e);
-      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'administration.</p>`;
+      root.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Erreur lors du chargement de l'administration.</p>`;
     }
   }
 
@@ -613,9 +605,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll("nav a").forEach(a => {
       if (a.getAttribute("href") === hash) {
-        a.classList.add("active");
+        a.classList.add("actual-active");
       } else {
-        a.classList.remove("active");
+        a.classList.remove("actual-active");
       }
     });
 
