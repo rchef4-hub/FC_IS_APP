@@ -222,10 +222,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const getBlancs = p => parseInt(p.cartons_blancs ?? 0, 10) || 0;
       const getRouges = p => parseInt(p.cartons_rouges ?? 0, 10) || 0;
 
-      const topScorers = .filter(p => getNbButs(p) > 0).sort((a, b) => getNbButs(b) - getNbButs(a));
-      const topPassers = .filter(p => getNbPasses(p) > 0).sort((a, b) => getNbPasses(b) - getNbPasses(a));
-      const topCards = .filter(p => getJaunes(p) > 0 || getBlancs(p) > 0 || getRouges(p) > 0);
-      const topPlayed = .filter(p => getNbMatchs(p) > 0).sort((a, b) => getNbMatchs(b) - getNbMatchs(a));
+      // Correction : on applique le filtre sur 'players'
+      const topScorers = players.filter(p => getNbButs(p) > 0).sort((a, b) => getNbButs(b) - getNbButs(a));
+      const topPassers = players.filter(p => getNbPasses(p) > 0).sort((a, b) => getNbPasses(b) - getNbPasses(a));
+      const topCards = players.filter(p => getJaunes(p) > 0 || getBlancs(p) > 0 || getRouges(p) > 0);
+      const topPlayed = players.filter(p => getNbMatchs(p) > 0).sort((a, b) => getNbMatchs(b) - getNbMatchs(a));
 
       const renderList = (arr, labelFn, emptyMsg) => arr.length > 0 ? arr.map(p => `
         <li>
