@@ -568,14 +568,24 @@ let cardEvents = [];
           let butsMap = {}, passesMap = {}, jaunesMap = {}, blancsMap = {}, rougesMap = {};
 
           goalEvents.forEach(e => {
-            if (e.buteur && e.buteur !== 'CSC') butsMap = (butsMap || 0) + 1;
-            if (e.passeur) passesMap = (passesMap || 0) + 1;
+            if (e.buteur && e.buteur !== 'CSC') {
+              butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
+            }
+            if (e.passeur) {
+              passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
+            }
           });
 
           cardEvents.forEach(c => {
-            if (c.type === '🟨') jaunesMap = (jaunesMap || 0) + 1;
-            if (c.type === '⬜') blancsMap = (blancsMap || 0) + 1;
-            if (c.type === '🟥') rougesMap = (rougesMap || 0) + 1;
+            if (c.type === '🟨') {
+              jaunesMap[c.joueur] = (jaunesMap[c.joueur] || 0) + 1;
+            }
+            if (c.type === '⬜') {
+              blancsMap[c.joueur] = (blancsMap[c.joueur] || 0) + 1;
+            }
+            if (c.type === '🟥') {
+              rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
+            }
           });
 
           const updatedPlayers = players.map(p => {
