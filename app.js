@@ -455,7 +455,7 @@ let cardEvents = [];
           });
         }
         renderGoalsUI();
-        cardEvents = ;
+        cardEvents = [];
         renderCardsUI();
       }
 
