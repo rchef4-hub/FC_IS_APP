@@ -31,7 +31,9 @@
     "date": "27/09/2026 15H",
     "adversaire": "Esnouveaux As 2",
     "lieu": "Domicile",
-    "resultat": "Match nul 1 - 1"
+    "resultat": "",
+    "buteurs": "",
+    "passeurs": ""
   },
   {
     "date": "03/10/2026 17H",
