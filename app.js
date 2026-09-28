@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Fonction utilitaire pour charger du JSON avec gestion d'erreur centralisée
-  async function loadJson(filename, defaultValue = ) {
+  async function loadJson(filename, defaultValue = []) {
     try {
       const res = await fetchFresh(filename);
       if (!res.ok) {
