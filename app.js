@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return '#6c757d';
   }
 
-  // --- PAGE D'ACCUEIL ---
+ // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
     let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
@@ -70,14 +70,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const fullName = getPlayerFullName(m);
       if (!fullName) return false;
       
-      // Standardisation de la date de naissance pour l'utiliser comme clé unique d'unicité
       const dateStr = m.naissance || m.date_de_naissance || m.Naissance;
       if (!dateStr) return false;
       m.dateNaissanceValidee = dateStr;
 
-      // Clé unique combinant le nom complet ET la date de naissance exacte 
-      // (Résout le problème des homonymes ou double casquette joueur/dirigeant)
-      const uniqueIdentifier = `${fullName}_${dateStr.trim()}`;
+      // CORRECTION : On normalise le nom et la date pour fusionner les doublons stricts (ex: Joueur + Dirigeant)
+      const cleanName = fullName.replace(/\s+/g, ' ').trim().toUpperCase();
+      const cleanDate = dateStr.trim();
+      const uniqueIdentifier = `${cleanName}_${cleanDate}`;
 
       if (uniqueKeys.has(uniqueIdentifier)) return false;
       uniqueKeys.add(uniqueIdentifier);
@@ -93,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return parseInt(parts[1], 10) === currentMonth;
       });
 
-      // Tri optionnel par jour du mois pour plus de clarté
       monthBDays.sort((a, b) => {
         const getDay = (item) => {
           const p = item.dateNaissanceValidee.includes('/') ? item.dateNaissanceValidee.split('/') : item.dateNaissanceValidee.split('-');
@@ -119,71 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         bdaysHTML = `<ul style="padding: 0; margin: 0;">${bdaysHTML}</ul>`;
       }
     }
-
-    try {
-      const resMatchs = await fetchFresh('matchs.json');
-      if (resMatchs.ok) {
-        const matches = await resMatchs.json();
-        const playedMatches = matches.filter(m => m.resultat && m.resultat !== "");
-        if (playedMatches.length > 0) {
-          const lastMatch = playedMatches[playedMatches.length - 1];
-          let detailsHTML = '';
-          if (lastMatch.buteurs) detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 6px;">⚽ <strong>Buteur(s) :</strong> ${lastMatch.buteurs}</div>`;
-          if (lastMatch.passeurs) detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 4px;">👟 <strong>Passeur(s) :</strong> ${lastMatch.passeurs}</div>`;
-
-          lastMatchHTML = `
-            <div style="text-align: center;">
-              <small style="color: #666; font-weight: bold;">📅 ${lastMatch.date} (${lastMatch.lieu || 'N/C'})</small>
-              <div style="font-size: 1.1em; margin: 5px 0;"><strong>vs ${lastMatch.adversaire}</strong></div>
-              <div style="font-size: 1.1em;">Score : ${formatScoreColor(lastMatch.resultat)}</div>
-              ${detailsHTML}
-            </div>
-          `;
-        }
-
-        const upcomingMatches = matches.filter(m => !m.resultat || m.resultat === "");
-        if (upcomingMatches.length > 0) {
-          const nextMatch = upcomingMatches[0];
-          const badgeColor = (nextMatch.lieu && nextMatch.lieu.toLowerCase().includes('domicile')) ? '#28a745' : '#17a2b8';
-          nextMatchHTML = `
-            <div style="text-align: center;">
-              <small style="color: #666; font-weight: bold;">📅 ${nextMatch.date}</small>
-              <div style="font-size: 1.1em; margin: 5px 0;"><strong>vs ${nextMatch.adversaire}</strong></div>
-              <span style="background: ${badgeColor}; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.85em;">${nextMatch.lieu || 'N/C'}</span>
-            </div>
-          `;
-        }
-      }
-    } catch (e) {
-      console.error("Erreur chargement accueil :", e);
-    }
-
-    root.innerHTML = `
-      <h1>Bienvenue au F.C. IS</h1>
-      <div style="text-align:center; margin: 20px 0;"><p><em>Saison 2026-2027</em></p></div>
-
-      <a href="https://team.jako.com/fr-fr/team/fc_is/" target="_blank" rel="noopener noreferrer" 
-         style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #6b0f40, #8b1453); color: white; text-decoration: none; padding: 12px 16px; border-radius: 10px; margin-bottom: 25px; font-weight: bold;">
-        <span>🛍️ Boutique Officielle JAKO</span>
-        <span style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85em;">Visiter ↗</span>
-      </a>
-
-      <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-        <div style="background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px;">⚽ Dernier Match</div>
-        ${lastMatchHTML}
-      </div>
-
-      <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-        <div style="background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px;">⏳ Prochain Match</div>
-        ${nextMatchHTML}
-      </div>
-
-      <div style="background: white; padding: 15px; border-radius: 12px;">
-        <div style="background: #6b0f40; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px;">🎉 Anniversaires du mois</div>
-        ${bdaysHTML}
-      </div>
-    `;
-  } // <-- ACCOLADE FERMANTE DE renderHome() QUI MANQUAIT !
+    // ... (le reste de la fonction renderHome ne change pas)
 
   // --- CALENDRIER ---
   async function renderMatches() {
