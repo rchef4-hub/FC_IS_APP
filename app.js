@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (arbitres.length > 0) {
         const list = arbitres.map(a => `<li style="border-left: 4px solid #6c757d;">${a.symbole || '🟨'} <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
-        html += `<h3 class="accordion-header">🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
+        html += `<h3 class="accordion-header">⬜🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
       }
 
       root.innerHTML = html;
