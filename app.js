@@ -81,10 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const getJourDuMois = (p) => {
         const dateStr = p.naissance || p.date_de_naissance || '';
         if (dateStr.includes('-')) {
-          // Format AAAA-MM-JJ -> le jour est à l'index 2
           return parseInt(dateStr.split('-')[2], 10) || 0;
         } else if (dateStr.includes('/')) {
-          // Format JJ/MM/AAAA -> le jour est à l'index 0
           return parseInt(dateStr.split('/')[0], 10) || 0;
         }
         return 0;
@@ -104,7 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return false;
       }).sort((a, b) => {
-        // On compare directement les deux jours numériques extraits
         return getJourDuMois(a) - getJourDuMois(b);
       });
 
@@ -285,27 +282,27 @@ document.addEventListener("DOMContentLoaded", () => {
               ${items.map(p => {
                 let fullName = '';
                 if (p.prenom && p.nom) {
-                  fullName = `${p.prenom.trim()} ${p.nom.trim()}`;
+                  fullName = `${p.prenom.trim()}${p.nom.trim()}`;
                 } else {
                   fullName = p.nom || p.prenom || p.name || 'Nom inconnu';
                 }
 
                 let sousTitre = p.poste || p.role || title.slice(0, -1);
 
-// Gestion spécifique pour les dirigeants (pour afficher Président, Trésorier, etc.)
-if (id === 'content-dirigeants') {
-  sousTitre = p.fonction || 'Dirigeant';
-}
+                // Gestion spécifique pour les dirigeants (pour afficher Président, Trésorier, etc.)
+                if (id === 'content-dirigeants') {
+                  sousTitre = p.fonction || 'Dirigeant';
+                }
 
-// Gestion spécifique pour les arbitres
-if (id === 'content-arbitres') {
-  const cat = (p.categorie || p.category || '').trim().toLowerCase();
-  if (cat === 'district') {
-    sousTitre = 'Arbitre officiel';
-  } else if (cat === 'bénévole' || cat === 'benevole') {
-    sousTitre = 'Arbitre bénévole';
-  }
-}
+                // Gestion spécifique pour les arbitres
+                if (id === 'content-arbitres') {
+                  const cat = (p.categorie || p.category || '').trim().toLowerCase();
+                  if (cat === 'district') {
+                    sousTitre = 'Arbitre officiel';
+                  } else if (cat === 'bénévole' || cat === 'benevole') {
+                    sousTitre = 'Arbitre bénévole';
+                  }
+                }
 
                 return `
                   <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
@@ -376,7 +373,7 @@ if (id === 'content-arbitres') {
 
       const classementMatchs = [...players].sort((a, b) => (b.matchs || 0) - (a.matchs || 0));
       const topButeurs = [...players].filter(p => (p.buts || 0) > 0).sort((a, b) => (b.buts || 0) - (a.buts || 0));
-      const topPasseurs = [...players].filter(p => (p.passes || 0) > 0).sort((a, b) => (b.passes || 0) - (a.passes || 0));
+      const topPasseurs = [...players].filter(p => (p.passes || 0) > 0).sort((a, b) => (b.passes || 0) - (b.passes || 0));
 
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Statistiques de la Saison</h2>
@@ -527,8 +524,119 @@ if (id === 'content-arbitres') {
     }
   }
 
-  function renderAdmin() {
-    root.innerHTML = `<h2 style="color: #6b1d44; text-align: center;">Administration</h2><p style="text-align: center; color: #666;">Panneau d'administration.</p>`;
+  // --- PAGE ADMINISTRATION (#admin) ADAPTÉE POUR LES RÉSULTATS & FEUILLES DE MATCH ---
+  async function renderAdmin() {
+    root.innerHTML = `<p style="text-align: center;">Chargement de l'administration...</p>`;
+    try {
+      let matches = [];
+      let players = [];
+
+      try {
+        const resM = await fetchFresh('matchs.json');
+        matches = await resM.json();
+      } catch (e) {}
+
+      try {
+        const resP = await fetchFresh('players.json');
+        players = await resP.json();
+      } catch (e) {}
+
+      let html = `
+        <div style="max-width: 600px; margin: 0 auto; padding-bottom: 40px;">
+          <h2 style="color: #6b1d44; text-align: center; margin-bottom: 20px;">Panneau d'Administration</h2>
+          
+          <div class="card" style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <h3 style="color: #6b1d44; margin-top: 0; font-size: 1.1em;">Saisie des Résultats & Feuilles de match</h3>
+            <p style="font-size: 0.9em; color: #666;">Sélectionnez un match pour renseigner le score, les buteurs, les passeurs et les participants :</p>
+            
+            <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em;">Choisir un match :</label>
+            <select id="admin-match-select" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; margin-bottom: 15px;">
+              <option value="">-- Sélectionnez un match --</option>
+              ${matches.map((m, idx) => `<option value="${idx}">${m.date || 'Date'} - vs ${m.adversaire \vert{}\vert{} 'Adversaire'} (${m.lieu || 'Domicile'})</option>`).join('')}
+            </select>
+
+            <div id="admin-match-form-container">
+              <!-- Le formulaire dynamique s'affiche ici lors de la sélection -->
+            </div>
+          </div>
+        </div>
+      `;
+
+      root.innerHTML = html;
+
+      const selectMatch = document.getElementById('admin-match-select');
+      const formContainer = document.getElementById('admin-match-form-container');
+
+      if (selectMatch) {
+        selectMatch.addEventListener('change', (e) => {
+          const index = e.target.value;
+          if (index === '') {
+            formContainer.innerHTML = '';
+            return;
+          }
+          const m = matches[index];
+
+          formContainer.innerHTML = `
+            <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px;">
+              <p style="font-size: 0.9em; font-weight: bold; color: #333; margin-bottom: 10px;">Match vs ${m.adversaire} (${m.lieu})</p>
+              
+              <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85em; display: block; margin-bottom: 3px; font-weight: bold;">Résultat / Score (ex: Victoire 3-1, Nul 1-1...)</label>
+                <input type="text" id="admin-resultat" value="${m.resultat || ''}" placeholder="Ex: Victoire 2-0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85em; display: block; margin-bottom: 3px; font-weight: bold;">Buteurs</label>
+                <input type="text" id="admin-buteurs" value="${m.buteurs || ''}" placeholder="Ex: Jean (2), Marc" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85em; display: block; margin-bottom: 3px; font-weight: bold;">Passeurs</label>
+                <input type="text" id="admin-passeurs" value="${m.passeurs || ''}" placeholder="Ex: Paul, Luc" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85em; display: block; margin-bottom: 3px; font-weight: bold;">Feuille de match (Joueurs participants)</label>
+                <div style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; border-radius: 4px; padding: 8px; background: #fafafa;">
+                  ${players.map(p => {
+                    const nomJoueur = `${p.prenom \vert{}\vert{} ''}${p.nom || ''}`.trim() || p.name || '';
+                    const participantsList = Array.isArray(m.participants) ? m.participants : [];
+                    const isChecked = participantsList.includes(nomJoueur) ? 'checked' : '';
+                    return `
+                      <label style="display: block; font-size: 0.85em; margin-bottom: 4px; cursor: pointer;">
+                        <input type="checkbox" class="admin-player-checkbox" value="${nomJoueur}" ${isChecked}>${nomJoueur}
+                      </label>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+
+              <button id="admin-save-match" style="background: #6b1d44; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;">Enregistrer les modifications</button>
+            </div>
+          `;
+
+          const btnSave = document.getElementById('admin-save-match');
+          if (btnSave) {
+            btnSave.addEventListener('click', () => {
+              m.resultat = document.getElementById('admin-resultat').value;
+              m.buteurs = document.getElementById('admin-buteurs').value;
+              m.passeurs = document.getElementById('admin-passeurs').value;
+              
+              const checkedPlayers = [];
+              formContainer.querySelectorAll('.admin-player-checkbox:checked').forEach(cb => {
+                checkedPlayers.push(cb.value);
+              });
+              m.participants = checkedPlayers;
+
+              alert('Modifications enregistrées pour ce match !\n(Note : Pensez à exporter/mettre à jour votre fichier matchs.json si vous travaillez en local)');
+            });
+          }
+        });
+      }
+
+    } catch (e) {
+      root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'administration.</p>`;
+    }
   }
 
   // --- ROUTEUR PRINCIPAL ---
