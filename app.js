@@ -1,9 +1,32 @@
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
-  // Forcer l'absence de cache sur tous les chargements de fichiers
+  // --- GESTION DES FETCH ROBUSTE ---
+  // Utilise les en-têtes et options natifs pour forcer le non-cache
   function fetchFresh(url) {
-    return fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
+    return fetch(url, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
+  }
+
+  // Fonction utilitaire pour charger du JSON avec gestion d'erreur centralisée
+  async function loadJson(filename, defaultValue = ) {
+    try {
+      const res = await fetchFresh(filename);
+      if (!res.ok) {
+        console.warn(`Fichier ${filename} introuvable ou erreur HTTP ${res.status}`);
+        return defaultValue;
+      }
+      return await res.json();
+    } catch (e) {
+      console.error(`Erreur lors du chargement de ${filename}:`, e);
+      return defaultValue;
+    }
   }
 
   // --- HELPER FORMAT UNIQUE : "NOM Prénom" ---
@@ -47,16 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
     let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
 
-    const loadJsonSafe = async (filename) => {
-      try {
-        const res = await fetchFresh(filename);
-        if (res.ok) return await res.json();
-      } catch (e) {
-        console.warn(`Fichier ${filename} introuvable.`, e);
-      }
-      return ;
-    };
-
+    // Chargement des données membres
     const  = await Promise.all();
 
     const rawMembers = ;
@@ -70,6 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!dateStr) return false;
       m.dateNaissanceValidee = dateStr;
 
+      // Normalisation pour fusionner les doublons
       const cleanName = fullName.replace(/\s+/g, ' ').trim().toUpperCase();
       const cleanDate = dateStr.trim();
       const uniqueIdentifier = `${cleanName}_${cleanDate}`;
@@ -114,20 +129,14 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // --- CHARGEMENT DES MATCHS POUR L'ACCUEIL ---
-    let matches = ;
-    try {
-      const res = await fetchFresh('matchs.json');
-      if (res.ok) matches = await res.json();
-    } catch (e) {
-      console.warn("Impossible de charger matchs.json pour l'accueil", e);
-    }
+    // Chargement des matchs pour l'accueil
+    const matches = await loadJson('matchs.json');
 
     if (matches.length > 0) {
-      // Trier par date (supposant un format ISO ou lisible par Date)
-      const sortedMatches = .sort((a, b) => new Date(b.date) - new Date(a.date));
+      // Trier par date (supposant un format lisible par Date)
+      const sortedMatches = matches.sort((a, b) => new Date(b.date) - new Date(a.date));
       
-      // Dernier match joué (celui qui a un résultat)
+      // Dernier match joué
       const lastPlayed = sortedMatches.find(m => m.resultat);
       if (lastPlayed) {
         lastMatchHTML = `
@@ -140,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
       }
 
-      // Prochain match (celui sans résultat, le plus proche)
+      // Prochain match
       const nextMatch = sortedMatches.find(m => !m.resultat);
       if (nextMatch) {
         nextMatchHTML = `
@@ -152,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Affichage final de l'accueil
+    // Affichage final
     root.innerHTML = `
       <h2>Accueil</h2>
       <h3>🎂 Anniversaires du mois</h3>
@@ -164,14 +173,13 @@ document.addEventListener('DOMContentLoaded', function() {
       <h3>🏆 Prochain Match</h3>
       ${nextMatchHTML}
     `;
-  } // <--- FERMETURE DE LA FONCTION renderHome AJOUTÉE ICI
+  }
 
   // --- CALENDRIER ---
   async function renderMatches() {
     root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement...</p>`;
     try {
-      const res = await fetchFresh('matchs.json');
-      const matches = await res.json();
+      const matches = await loadJson('matchs.json');
 
       const matchesHTML = matches.map(m => {
         const isDomicile = m.lieu && m.lieu.toLowerCase().includes('domicile');
@@ -204,8 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
   async function renderStats() {
     root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement...</p>`;
     try {
-      const res = await fetchFresh('players.json');
-      const players = await res.json();
+      const players = await loadJson('players.json');
 
       const getNbMatchs = p => parseInt(p.matchs ?? p.matches ?? 0, 10) || 0;
       const getNbButs = p => parseInt(p.buts ?? 0, 10) || 0;
@@ -214,10 +221,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const getBlancs = p => parseInt(p.cartons_blancs ?? 0, 10) || 0;
       const getRouges = p => parseInt(p.cartons_rouges ?? 0, 10) || 0;
 
-      const topScorers = [...players].filter(p => getNbButs(p) > 0).sort((a, b) => getNbButs(b) - getNbButs(a));
-      const topPassers = [...players].filter(p => getNbPasses(p) > 0).sort((a, b) => getNbPasses(b) - getNbPasses(a));
-      const topCards = [...players].filter(p => getJaunes(p) > 0 || getBlancs(p) > 0 || getRouges(p) > 0);
-      const topPlayed = [...players].filter(p => getNbMatchs(p) > 0).sort((a, b) => getNbMatchs(b) - getNbMatchs(a));
+      const topScorers = .filter(p => getNbButs(p) > 0).sort((a, b) => getNbButs(b) - getNbButs(a));
+      const topPassers = .filter(p => getNbPasses(p) > 0).sort((a, b) => getNbPasses(b) - getNbPasses(a));
+      const topCards = .filter(p => getJaunes(p) > 0 || getBlancs(p) > 0 || getRouges(p) > 0);
+      const topPlayed = .filter(p => getNbMatchs(p) > 0).sort((a, b) => getNbMatchs(b) - getNbMatchs(a));
 
       const renderList = (arr, labelFn, emptyMsg) => arr.length > 0 ? arr.map(p => `
         <li>
@@ -258,11 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement...</p>`;
     try {
-      const [players, dirigeants, arbitres] = await Promise.all([
-        fetchFresh('players.json').then(r => r.ok ? r.json() : []),
-        fetchFresh('dirigeants.json').then(r => r.ok ? r.json() : []),
-        fetchFresh('arbitres.json').then(r => r.ok ? r.json() : [])
-      ]);
+      const  = await Promise.all();
 
       let html = '<h2>Effectif du Club</h2>';
 
@@ -299,8 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
   async function renderAnnouncements() {
     root.innerHTML = `<h2>Annonces Club</h2><p style="text-align: center;">Chargement...</p>`;
     try {
-      const res = await fetchFresh('annonces.json');
-      const annonces = await res.json();
+      const annonces = await loadJson('annonces.json');
       const list = annonces.map(a => `
         <li style="border-left-color: ${a.couleur_bordure || 'var(--primary-color)'};">
           ${a.symbole || '📢'} <strong>${a.titre}</strong><br>${a.details}
@@ -339,22 +341,16 @@ document.addEventListener('DOMContentLoaded', function() {
     root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="text-align: center;">Chargement des données...</p>`;
 
     try {
-      const [playersRes, matchesRes] = await Promise.all([
-        fetchFresh('players.json'),
-        fetchFresh('matchs.json')
-      ]);
+      const  = await Promise.all();
 
-      const players = await playersRes.json();
-      const matches = await matchesRes.json();
-
-      let goalEvents = [];
-      let cardEvents = [];
+      let goalEvents = ;
+      let cardEvents = ;
 
       let matchOptions = matches.map((m, idx) => 
         `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
       ).join('');
 
-      let playerOptionsScorer = `<option value="CSC">[CSC] But contre son camp</option>` + players.map(p => {
+      let playerOptionsScorer = `<option value="CSC"> But contre son camp</option>` + players.map(p => {
         const name = getPlayerFullName(p);
         return `<option value="${name}">${name}</option>`;
       }).join('');
@@ -439,11 +435,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const matchScoreEl = document.getElementById('match-score');
 
       function loadMatchDataToForm(matchIndex) {
-        const m = matches[matchIndex];
+        const m = matches;
         if (!m) return;
         matchScoreEl.value = m.resultat || '';
         
-        goalEvents = [];
+        goalEvents = ;
         if (m.buteurs) {
           const bList = m.buteurs.split(',').map(s => s.trim());
           bList.forEach(b => {
@@ -451,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         }
         renderGoalsUI();
-        cardEvents = [];
+        cardEvents = ;
         renderCardsUI();
       }
 
@@ -564,14 +560,14 @@ document.addEventListener('DOMContentLoaded', function() {
           let butsMap = {}, passesMap = {}, jaunesMap = {}, blancsMap = {}, rougesMap = {};
 
           goalEvents.forEach(e => {
-            if (e.buteur && e.buteur !== 'CSC') butsMap[e.buteur] = (butsMap[e.buteur] || 0) + 1;
-            if (e.passeur) passesMap[e.passeur] = (passesMap[e.passeur] || 0) + 1;
+            if (e.buteur && e.buteur !== 'CSC') butsMap = (butsMap || 0) + 1;
+            if (e.passeur) passesMap = (passesMap || 0) + 1;
           });
 
           cardEvents.forEach(c => {
-            if (c.type === '🟨') jaunesMap[c.joueur] = (jaunesMap[c.joueur] || 0) + 1;
-            if (c.type === '⬜') blancsMap[c.joueur] = (blancsMap[c.joueur] || 0) + 1;
-            if (c.type === '🟥') rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
+            if (c.type === '🟨') jaunesMap = (jaunesMap || 0) + 1;
+            if (c.type === '⬜') blancsMap = (blancsMap || 0) + 1;
+            if (c.type === '🟥') rougesMap = (rougesMap || 0) + 1;
           });
 
           const updatedPlayers = players.map(p => {
@@ -582,88 +578,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (presentList.includes(fullName)) {
               updatedP.matchs = (parseInt(updatedP.matchs || updatedP.matches, 10) || 0) + 1;
             }
-            if (butsMap[fullName]) {
-              updatedP.buts = (parseInt(updatedP.buts, 10) || 0) + butsMap[fullName];
+            if (butsMap) {
+              updatedP.buts = (parseInt(updatedP.buts, 10) || 0) + butsMap;
             }
-            if (passesMap[fullName]) {
-              updatedP.passes = (parseInt(updatedP.passes, 10) || 0) + passesMap[fullName];
+            if (passesMap) {
+              updatedP.passes = (parseInt(updatedP.passes, 10) || 0) + passesMap;
             }
-            if (jaunesMap[fullName]) {
-              updatedP.cartons_jaunes = (parseInt(updatedP.cartons_jaunes, 10) || 0) + jaunesMap[fullName];
+            if (jaunesMap) {
+              updatedP.cartons_jaunes = (parseInt(updatedP.cartons_jaunes, 10) || 0) + jaunesMap;
             }
-            if (blancsMap[fullName]) {
-              updatedP.cartons_blancs = (parseInt(updatedP.cartons_blancs, 10) || 0) + blancsMap[fullName];
+            if (blancsMap) {
+              updatedP.cartons_blancs = (parseInt(updatedP.cartons_blancs, 10) || 0) + blancsMap;
             }
-            if (rougesMap[fullName]) {
-              updatedP.cartons_rouges = (parseInt(updatedP.cartons_rouges, 10) || 0) + rougesMap[fullName];
+            if (rougesMap) {
+              updatedP.cartons_rouges = (parseInt(updatedP.cartons_rouges, 10) || 0) + rougesMap;
             }
 
-            return updatedP;
-          });
-
-          matches[selectedMatchIdx].resultat = score;
-          matches[selectedMatchIdx].buteurs = goalEvents.map(e => e.buteur).join(', ');
-          matches[selectedMatchIdx].passeurs = goalEvents.map(e => e.passeur).filter(Boolean).join(', ');
-
-          await updateGitHubFile('players.json', updatedPlayers, 'Mise à jour des stats joueurs');
-          await updateGitHubFile('matchs.json', matches, 'Mise à jour des résultats matchs');
-
-          statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Publication effectuée avec succès ! Les onglets Matchs et Accueil s'actualiseront automatiquement.";
-        } catch (err) {
-          console.error(err);
-          statusMsg.style.color = "red";
-          statusMsg.innerText = "❌ Erreur : " + err.message;
-        }
-      });
-
-      document.getElementById('btn-reset-all').addEventListener('click', async () => {
-        if (!confirm("⚠️ Tout réinitialiser ?")) return;
-        const statusMsg = document.getElementById('status-message');
-        statusMsg.style.color = "orange";
-        statusMsg.innerText = "⏳ Réinitialisation...";
-
-        try {
-          const resetPlayers = players.map(p => ({
-            ...p, matchs: 0, buts: 0, passes: 0, cartons_jaunes: 0, cartons_blancs: 0, cartons_rouges: 0
-          }));
-
-          const resetMatches = matches.map(m => {
-            delete m.resultat;
-            delete m.buteurs;
-            delete m.passeurs;
-            return m;
-          });
-
-          await updateGitHubFile('players.json', resetPlayers, 'Reset stats');
-          await updateGitHubFile('matchs.json', resetMatches, 'Reset matchs');
-
-          statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Réinitialisation réussie !";
-        } catch (err) {
-          statusMsg.style.color = "red";
-          statusMsg.innerText = "❌ Erreur : " + err.message;
-        }
-      });
-
-    } catch (error) {
-      root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
-    }
-  }
-
-  function handleRoute() {
-    const hash = window.location.hash.substring(1) || 'home';
-    switch (hash) {
-      case 'matches': renderMatches(); break;
-      case 'stats': renderStats(); break;
-      case 'players': renderPlayers(); break;
-      case 'announcements': renderAnnouncements(); break;
-      case 'admin': renderAdmin(); break;
-      case 'home':
-      default: renderHome(); break;
-    }
-  }
-
-  window.addEventListener('hashchange', handleRoute);
-  handleRoute();
-});
+           
