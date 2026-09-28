@@ -267,8 +267,11 @@ document.addEventListener('DOMContentLoaded', function() {
   async function renderPlayers() {
     root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement...</p>`;
     try {
-      const  = await Promise.all();
-
+const [players, dirigeants, arbitres] = await Promise.all([
+  loadJson('players.json'),
+  loadJson('dirigeants.json'),
+  loadJson('arbitres.json')
+]);
       let html = '<h2>Effectif du Club</h2>';
 
       if (players.length > 0) {
