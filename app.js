@@ -513,7 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em;">Choisir un match :</label>
             <select id="admin-match-select" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; margin-bottom: 15px;">
               <option value="">-- Sélectionnez un match --</option>
-              ${matches.map((m, idx) => `<option value="${idx}">${m.date || 'Date'} - vs ${m.adversaire \vert{}\vert{} 'Adversaire'} (${m.lieu || 'Domicile'})</option>`).join('')}
+            ${matches.map((m, idx) => `<option value="${idx}">${m.date || 'Date'} - vs ${m.adversaire || 'Adversaire'} (${m.lieu || 'Domicile'})</option>`).join('')}
             </select>
 
             <div id="admin-match-form-container"></div>
