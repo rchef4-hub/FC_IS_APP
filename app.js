@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("root");
+  if (!root) return;
 
   function fetchFresh(url) {
     return fetch(`${url}?_=${Date.now()}`, { cache: "no-store" });
@@ -24,28 +25,43 @@ document.addEventListener("DOMContentLoaded", () => {
     return '#6b1d44';
   }
 
+  // Fonction de chargement sécurisée pour les matchs avec localStorage
+  async function getMatchsData() {
+    try {
+      const localMatchs = localStorage.getItem('firexo_matchs');
+      if (localMatchs) {
+        return JSON.parse(localMatchs);
+      }
+      const res = await fetchFresh('matchs.json');
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  async function saveMatchsData(matchs) {
+    try {
+      localStorage.setItem('firexo_matchs', JSON.stringify(matchs));
+    } catch (e) {}
+  }
+
   // --- PAGE ACCUEIL (#home) ---
   async function renderAccueil() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'accueil...</p>`;
     try {
-      const [resMatchs, resPlayers, resDirigeants, resArbitres] = await Promise.all([
-        fetchFresh('matchs.json').catch(() => ({ json: () => [] })),
-        fetchFresh('players.json').catch(() => ({ json: () => [] })),
-        fetchFresh('dirigeants.json').catch(() => ({ json: () => [] })),
-        fetchFresh('arbitres.json').catch(() => ({ json: () => [] }))
+      const [matchs, players, dirigeants, arbitres] = await Promise.all([
+        getMatchsData(),
+        fetchFresh('players.json').then(r => r.json()).catch(() => []),
+        fetchFresh('dirigeants.json').then(r => r.json()).catch(() => []),
+        fetchFresh('arbitres.json').then(r => r.json()).catch(() => [])
       ]);
 
-      const matchs = await resMatchs.json();
-      const players = await resPlayers.json();
-      const dirigeants = await resDirigeants.json();
-      const arbitres = await resArbitres.json();
+      const tousLesMembresBruts = [...(players || []), ...(dirigeants || []), ...(arbitres || [])];
 
-      // On regroupe tout le monde
-      const tousLesMembresBruts = [...players, ...dirigeants, ...arbitres];
-
-      // FILTRE ANTI-DOUBLONS ROBUSTE
       const clesVues = new Set();
       const tousLesMembres = tousLesMembresBruts.filter(p => {
+        if (!p) return false;
         const nomComplet = (p.nom || p.name || '').trim().toUpperCase();
         if (!nomComplet) return false;
 
@@ -62,9 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const cleUnique = `${nomComplet}_${moisJour}`;
-        if (clesVues.has(cleUnique)) {
-          return false;
-        }
+        if (clesVues.has(cleUnique)) return false;
         clesVues.add(cleUnique);
         return true;
       });
@@ -77,7 +91,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const moisActuel = (new Date().getMonth() + 1).toString().padStart(2, '0');
       
-      // Fonction utilitaire propre pour extraire le jour numérique (1 à 31)
       const getJourDuMois = (p) => {
         const dateStr = p.naissance || p.date_de_naissance || '';
         if (dateStr.includes('-')) {
@@ -88,7 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return 0;
       };
 
-      // Filtrage et TRI CHRONOLOGIQUE STRICT
       const anniversaires = tousLesMembres.filter(p => {
         const dateStr = p.naissance || p.date_de_naissance;
         if (!dateStr) return false;
@@ -101,9 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return parts.length === 3 && parts[1] === moisActuel;
         }
         return false;
-      }).sort((a, b) => {
-        return getJourDuMois(a) - getJourDuMois(b);
-      });
+      }).sort((a, b) => getJourDuMois(a) - getJourDuMois(b));
 
       let html = `
         <div class="accueil-container">
@@ -124,8 +134,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const c = getScoreColor(dernierMatch.resultat);
         html += `
           <div style="text-align: center;">
-            <p style="margin: 5px 0; color: #666; font-size: 0.9em;">📅 ${dernierMatch.date}</p>
-            <p style="font-size: 1.1em; margin: 10px 0;"><strong>vs ${dernierMatch.adversaire}</strong> (${dernierMatch.lieu})</p>
+            <p style="margin: 5px 0; color: #666; font-size: 0.9em;">📅 ${dernierMatch.date || ''}</p>
+            <p style="font-size: 1.1em; margin: 10px 0;"><strong>vs ${dernierMatch.adversaire || ''}</strong> (${dernierMatch.lieu || ''})</p>
             <p style="font-size: 1.2em; font-weight: bold; color: ${c};">${dernierMatch.resultat}</p>
             ${dernierMatch.buteurs ? `<p style="font-size: 0.85em; color: #444; margin-top: 5px;">⚽ ${dernierMatch.buteurs}</p>` : ''}
           </div>
@@ -146,9 +156,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (prochainMatch) {
         html += `
           <div style="text-align: center;">
-            <p style="margin: 5px 0; color: #666; font-size: 0.9em;">📅 ${prochainMatch.date}</p>
-            <p style="font-size: 1.1em; margin: 10px 0;"><strong>vs ${prochainMatch.adversaire}</strong></p>
-            <p style="font-size: 0.9em; color: #888;">📍 Match à ${prochainMatch.lieu}</p>
+            <p style="margin: 5px 0; color: #666; font-size: 0.9em;">📅 ${prochainMatch.date || ''}</p>
+            <p style="font-size: 1.1em; margin: 10px 0;"><strong>vs ${prochainMatch.adversaire || ''}</strong></p>
+            <p style="font-size: 0.9em; color: #888;">📍 Match à ${prochainMatch.lieu || 'Domicile'}</p>
           </div>
         `;
       } else {
@@ -169,10 +179,10 @@ document.addEventListener("DOMContentLoaded", () => {
           const dateStr = p.naissance || p.date_de_naissance;
           let jourMois = '';
           
-          if (dateStr.includes('-')) {
+          if (dateStr && dateStr.includes('-')) {
             const parts = dateStr.split('-');
             jourMois = `${parts[2]}/${parts[1]}`;
-          } else {
+          } else if (dateStr) {
             jourMois = dateStr.substring(0, 5);
           }
 
@@ -197,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `</div></div>`;
       root.innerHTML = html;
     } catch (e) {
-      console.error(e);
+      console.error("Erreur Accueil:", e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'accueil.</p>`;
     }
   }
@@ -206,13 +216,12 @@ document.addEventListener("DOMContentLoaded", () => {
   async function renderMatchs() {
     root.innerHTML = `<p style="text-align: center;">Chargement des matchs...</p>`;
     try {
-      const res = await fetchFresh('matchs.json');
-      const matchs = await res.json();
+      const matchs = await getMatchsData();
 
       let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Calendrier & Résultats</h2><div class="matchs-list" style="display: flex; flex-direction: column; gap: 15px;">`;
 
       matchs.forEach(m => {
-        const isDomicile = m.lieu === 'Domicile';
+        const isDomicile = (m.lieu || '').toLowerCase() === 'domicile';
         const badgeColor = isDomicile ? '#2e7d32' : '#00838f';
         const statusText = m.resultat && m.resultat.trim() !== '' ? m.resultat : 'À venir';
         const color = getScoreColor(m.resultat);
@@ -225,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             <div style="font-size: 1.1em; font-weight: bold; color: #222; margin: 6px 0;">
-              vs ${m.adversaire}
+              vs ${m.adversaire || ''}
             </div>
 
             <div style="font-size: 0.95em; margin-top: 4px;">
@@ -247,23 +256,20 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `</div>`;
       root.innerHTML = html;
     } catch (e) {
+      console.error("Erreur Matchs:", e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des matchs.</p>`;
     }
   }
 
-  // --- PAGE EFFECTIF (#players) AVEC TROIS FICHIERS SÉPARÉS ---
+  // --- PAGE EFFECTIF (#players) ---
   async function renderEffectif() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'effectif...</p>`;
     try {
-      const [resPlayers, resDirigeants, resArbitres] = await Promise.all([
-        fetchFresh('players.json').catch(() => ({ json: () => [] })),
-        fetchFresh('dirigeants.json').catch(() => ({ json: () => [] })),
-        fetchFresh('arbitres.json').catch(() => ({ json: () => [] }))
+      const [joueurs, dirigeants, arbitres] = await Promise.all([
+        fetchFresh('players.json').then(r => r.json()).catch(() => []),
+        fetchFresh('dirigeants.json').then(r => r.json()).catch(() => []),
+        fetchFresh('arbitres.json').then(r => r.json()).catch(() => [])
       ]);
-
-      const joueurs = await resPlayers.json();
-      const dirigeants = await resDirigeants.json();
-      const arbitres = await resArbitres.json();
 
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Effectif du Club</h2>
@@ -288,21 +294,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 let sousTitre = p.poste || p.role || title.slice(0, -1);
-
-                // Gestion spécifique pour les dirigeants (pour afficher Président, Trésorier, etc.)
-                if (id === 'content-dirigeants') {
-                  sousTitre = p.fonction || 'Dirigeant';
-                }
-
-                // Gestion spécifique pour les arbitres
-                if (id === 'content-arbitres') {
-                  const cat = (p.categorie || p.category || '').trim().toLowerCase();
-                  if (cat === 'district') {
-                    sousTitre = 'Arbitre officiel';
-                  } else if (cat === 'bénévole' || cat === 'benevole') {
-                    sousTitre = 'Arbitre bénévole';
-                  }
-                }
+                if (id === 'content-dirigeants') sousTitre = p.fonction || 'Dirigeant';
+                if (id === 'content-arbitres') sousTitre = p.categorie || p.category || 'Arbitre';
 
                 return `
                   <div style="background: #fafafa; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; border-left: 4px solid #d4af37;">
@@ -330,6 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const targetId = btn.getAttribute('data-target');
           const content = document.getElementById(targetId);
           const arrow = btn.querySelector('span:last-child');
+          if (!content) return;
 
           if (content.style.display === 'none' || content.style.display === '') {
             content.style.display = 'flex';
@@ -342,9 +336,8 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       });
-
     } catch (e) {
-      console.error(e);
+      console.error("Erreur Effectif:", e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'effectif.</p>`;
     }
   }
@@ -353,13 +346,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function renderStats() {
     root.innerHTML = `<p style="text-align: center;">Chargement des statistiques...</p>`;
     try {
-      const [resMatchs, resPlayers] = await Promise.all([
-        fetchFresh('matchs.json'),
-        fetchFresh('players.json')
+      const [matchs, players] = await Promise.all([
+        getMatchsData(),
+        fetchFresh('players.json').then(r => r.json()).catch(() => [])
       ]);
-
-      const matchs = await resMatchs.json();
-      const players = await resPlayers.json();
 
       const joues = matchs.filter(m => m.resultat && m.resultat.trim() !== '');
       let victoires = 0, nuls = 0, defaites = 0;
@@ -373,7 +363,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const classementMatchs = [...players].sort((a, b) => (b.matchs || 0) - (a.matchs || 0));
       const topButeurs = [...players].filter(p => (p.buts || 0) > 0).sort((a, b) => (b.buts || 0) - (a.buts || 0));
-      const topPasseurs = [...players].filter(p => (p.passes || 0) > 0).sort((a, b) => (b.passes || 0) - (b.passes || 0));
+      const topPasseurs = [...players].filter(p => (p.passes || 0) > 0).sort((a, b) => (b.passes || 0) - (a.passes || 0));
 
       let html = `
         <h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Statistiques de la Saison</h2>
@@ -399,7 +389,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
-
           <div class="accordion-container">
             <button class="accordion-header" data-target="content-buteurs" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
               <span>⚽ Meilleurs Buteurs</span>
@@ -408,10 +397,10 @@ document.addEventListener("DOMContentLoaded", () => {
             <div id="content-buteurs" style="display: none; background: white; padding: 10px 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px;">
               ${topButeurs.length > 0 ? topButeurs.map((p, index) => `
                 <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
-                  <span>${index + 1}. <strong>${p.nom}</strong></span>
+                  <span>${index + 1}. <strong>${p.nom || ''}</strong></span>
                   <span style="color: #2e7d32; font-weight: bold;">${p.buts} buts</span>
                 </div>
-              `).join('') : '<p style="text-align: center; color: #666; font-size: 0.9em; padding: 5px 0;">Aucun but enregistré pour le moment</p>'}
+              `).join('') : '<p style="text-align: center; color: #666; font-size: 0.9em; padding: 5px 0;">Aucun but enregistré</p>'}
             </div>
           </div>
 
@@ -423,20 +412,10 @@ document.addEventListener("DOMContentLoaded", () => {
             <div id="content-passeurs" style="display: none; background: white; padding: 10px 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px;">
               ${topPasseurs.length > 0 ? topPasseurs.map((p, index) => `
                 <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
-                  <span>${index + 1}. <strong>${p.nom}</strong></span>
+                  <span>${index + 1}. <strong>${p.nom || ''}</strong></span>
                   <span style="color: #00838f; font-weight: bold;">${p.passes} passes</span>
                 </div>
-              `).join('') : '<p style="text-align: center; color: #666; font-size: 0.9em; padding: 5px 0;">Aucune passe décisive enregistrée pour le moment</p>'}
-            </div>
-          </div>
-
-          <div class="accordion-container">
-            <button class="accordion-header" data-target="content-discipline" style="width: 100%; background: #6b1d44; color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 1em;">
-              <span>⬜🟨🟥 Discipline</span>
-              <span>▼</span>
-            </button>
-            <div id="content-discipline" style="display: none; background: white; padding: 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px; text-align: center; color: #666; font-size: 0.9em;">
-              Aucune sanction enregistrée pour le moment.
+              `).join('') : '<p style="text-align: center; color: #666; font-size: 0.9em; padding: 5px 0;">Aucune passe décisive enregistrée</p>'}
             </div>
           </div>
 
@@ -448,13 +427,12 @@ document.addEventListener("DOMContentLoaded", () => {
             <div id="content-matchs-joueurs" style="display: none; background: white; padding: 10px 15px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: -2px;">
               ${classementMatchs.map((p, index) => `
                 <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.95em;">
-                  <span>${index + 1}. <strong>${p.nom}</strong></span>
+                  <span>${index + 1}. <strong>${p.nom || ''}</strong></span>
                   <span style="color: #6b1d44; font-weight: bold;">${p.matchs || 0} matchs</span>
                 </div>
               `).join('')}
             </div>
           </div>
-
         </div>
       `;
 
@@ -465,6 +443,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const targetId = btn.getAttribute('data-target');
           const content = document.getElementById(targetId);
           const arrow = btn.querySelector('span:last-child');
+          if (!content) return;
 
           if (content.style.display === 'none' || content.style.display === '') {
             content.style.display = 'block';
@@ -477,8 +456,8 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       });
-
     } catch (e) {
+      console.error("Erreur Stats:", e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des statistiques.</p>`;
     }
   }
@@ -499,20 +478,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const couleurs = ['#6b1d44', '#2e7d32', '#00838f', '#ef6c00', '#d4af37'];
-
       let html = `<h2 style="color: #6b1d44; text-align: center; margin-bottom: 15px;">Annonces & Infos du Club</h2><div style="display: flex; flex-direction: column; gap: 12px;">`;
 
       annonces.forEach((a, index) => {
         const couleurBordure = couleurs[index % couleurs.length];
-        const texteAnnonce = a.contenu || a.texte || a.description || '';
-
         html += `
           <div class="card" style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid ${couleurBordure};">
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-              <strong style="color: ${couleurBordure}; font-size: 1.05em;">📢 ${a.titre}</strong>
+              <strong style="color: ${couleurBordure}; font-size: 1.05em;">📢 ${a.titre || ''}</strong>
               <span style="font-size: 0.85em; color: #666;">${a.date || ''}</span>
             </div>
-            <p style="font-size: 0.9em; color: #444; margin: 0;">${texteAnnonce}</p>
+            <p style="font-size: 0.9em; color: #444; margin: 0;">${a.contenu || a.texte || a.description || ''}</p>
           </div>
         `;
       });
@@ -520,26 +496,19 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `</div>`;
       root.innerHTML = html;
     } catch (e) {
+      console.error("Erreur Annonces:", e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement des annonces.</p>`;
     }
   }
 
-  // --- PAGE ADMINISTRATION (#admin) ADAPTÉE POUR LES RÉSULTATS & FEUILLES DE MATCH ---
+  // --- PAGE ADMINISTRATION (#admin) ---
   async function renderAdmin() {
     root.innerHTML = `<p style="text-align: center;">Chargement de l'administration...</p>`;
     try {
-      let matches = [];
-      let players = [];
-
-      try {
-        const resM = await fetchFresh('matchs.json');
-        matches = await resM.json();
-      } catch (e) {}
-
-      try {
-        const resP = await fetchFresh('players.json');
-        players = await resP.json();
-      } catch (e) {}
+      const [matches, players] = await Promise.all([
+        getMatchsData(),
+        fetchFresh('players.json').then(r => r.json()).catch(() => [])
+      ]);
 
       let html = `
         <div style="max-width: 600px; margin: 0 auto; padding-bottom: 40px;">
@@ -555,9 +524,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${matches.map((m, idx) => `<option value="${idx}">${m.date || 'Date'} - vs ${m.adversaire \vert{}\vert{} 'Adversaire'} (${m.lieu || 'Domicile'})</option>`).join('')}
             </select>
 
-            <div id="admin-match-form-container">
-              <!-- Le formulaire dynamique s'affiche ici lors de la sélection -->
-            </div>
+            <div id="admin-match-form-container"></div>
           </div>
         </div>
       `;
@@ -567,7 +534,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectMatch = document.getElementById('admin-match-select');
       const formContainer = document.getElementById('admin-match-form-container');
 
-      if (selectMatch) {
+      if (selectMatch && formContainer) {
         selectMatch.addEventListener('change', (e) => {
           const index = e.target.value;
           if (index === '') {
@@ -578,7 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           formContainer.innerHTML = `
             <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px;">
-              <p style="font-size: 0.9em; font-weight: bold; color: #333; margin-bottom: 10px;">Match vs ${m.adversaire} (${m.lieu})</p>
+              <p style="font-size: 0.9em; font-weight: bold; color: #333; margin-bottom: 10px;">Match vs ${m.adversaire || ''} (${m.lieu || ''})</p>
               
               <div style="margin-bottom: 15px;">
                 <label style="font-size: 0.85em; display: block; margin-bottom: 3px; font-weight: bold;">Résultat / Score (ex: Victoire 3-1, Nul 1-1...)</label>
@@ -617,7 +584,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const btnSave = document.getElementById('admin-save-match');
           if (btnSave) {
-            btnSave.addEventListener('click', () => {
+            btnSave.addEventListener('click', async () => {
               m.resultat = document.getElementById('admin-resultat').value;
               m.buteurs = document.getElementById('admin-buteurs').value;
               m.passeurs = document.getElementById('admin-passeurs').value;
@@ -628,13 +595,14 @@ document.addEventListener("DOMContentLoaded", () => {
               });
               m.participants = checkedPlayers;
 
-              alert('Modifications enregistrées pour ce match !\n(Note : Pensez à exporter/mettre à jour votre fichier matchs.json si vous travaillez en local)');
+              await saveMatchsData(matches);
+              alert('✅ Modifications enregistrées avec succès ! Elles ne seront pas perdues même après un rafraîchissement (F5).');
             });
           }
         });
       }
-
     } catch (e) {
+      console.error("Erreur Admin:", e);
       root.innerHTML = `<p style="color: red; text-align: center;">Erreur lors du chargement de l'administration.</p>`;
     }
   }
