@@ -54,16 +54,12 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (e) {
         console.warn(`Fichier ${filename} introuvable.`, e);
       }
-      return [];
+      return ;
     };
 
-    const [players, dirigeants, arbitres] = await Promise.all([
-      loadJsonSafe('players.json'),
-      loadJsonSafe('dirigeants.json'),
-      loadJsonSafe('arbitres.json')
-    ]);
+    const  = await Promise.all();
 
-    const rawMembers = [...players, ...dirigeants, ...arbitres];
+    const rawMembers = ;
     const uniqueKeys = new Set();
     
     const allMembers = rawMembers.filter(m => {
@@ -74,7 +70,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!dateStr) return false;
       m.dateNaissanceValidee = dateStr;
 
-      // CORRECTION : On normalise le nom et la date pour fusionner les doublons stricts (ex: Joueur + Dirigeant)
       const cleanName = fullName.replace(/\s+/g, ' ').trim().toUpperCase();
       const cleanDate = dateStr.trim();
       const uniqueIdentifier = `${cleanName}_${cleanDate}`;
@@ -90,13 +85,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const dateStr = m.dateNaissanceValidee;
         const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
         if (parts.length < 3) return false;
-        return parseInt(parts[1], 10) === currentMonth;
+        return parseInt(parts, 10) === currentMonth;
       });
 
       monthBDays.sort((a, b) => {
         const getDay = (item) => {
           const p = item.dateNaissanceValidee.includes('/') ? item.dateNaissanceValidee.split('/') : item.dateNaissanceValidee.split('-');
-          return parseInt(p[0].length === 4 ? p[2] : p[0], 10);
+          return parseInt(p.length === 4 ? p : p, 10);
         };
         return getDay(a) - getDay(b);
       });
@@ -105,9 +100,9 @@ document.addEventListener('DOMContentLoaded', function() {
         bdaysHTML = monthBDays.map(m => {
           const dateStr = m.dateNaissanceValidee;
           const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
-          const isISO = parts[0].length === 4;
-          const day = isISO ? parts[2].padStart(2, '0') : parts[0].padStart(2, '0');
-          const month = parts[1].padStart(2, '0');
+          const isISO = parts.length === 4;
+          const day = isISO ? parts.padStart(2, '0') : parts.padStart(2, '0');
+          const month = parts.padStart(2, '0');
           return `
             <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
               <span>${m.symbole || '🎂'} <strong>${getPlayerFullName(m)}</strong></span>
@@ -118,7 +113,58 @@ document.addEventListener('DOMContentLoaded', function() {
         bdaysHTML = `<ul style="padding: 0; margin: 0;">${bdaysHTML}</ul>`;
       }
     }
-    // ... (le reste de la fonction renderHome ne change pas)
+
+    // --- CHARGEMENT DES MATCHS POUR L'ACCUEIL ---
+    let matches = ;
+    try {
+      const res = await fetchFresh('matchs.json');
+      if (res.ok) matches = await res.json();
+    } catch (e) {
+      console.warn("Impossible de charger matchs.json pour l'accueil", e);
+    }
+
+    if (matches.length > 0) {
+      // Trier par date (supposant un format ISO ou lisible par Date)
+      const sortedMatches = .sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      // Dernier match joué (celui qui a un résultat)
+      const lastPlayed = sortedMatches.find(m => m.resultat);
+      if (lastPlayed) {
+        lastMatchHTML = `
+          <div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">
+            <small style="color: #666;">Dernier match : ${lastPlayed.date} - ${lastPlayed.lieu}</small><br>
+            <strong>vs ${lastPlayed.adversaire}</strong><br>
+            Score : ${formatScoreColor(lastPlayed.resultat)}
+            ${lastPlayed.buteurs ? `<br><small>Buteurs : ${lastPlayed.buteurs}</small>` : ''}
+          </div>
+        `;
+      }
+
+      // Prochain match (celui sans résultat, le plus proche)
+      const nextMatch = sortedMatches.find(m => !m.resultat);
+      if (nextMatch) {
+        nextMatchHTML = `
+          <div style="padding: 10px; background: #f8f9fa; border-radius: 8px;">
+            <small style="color: #666;">Prochain match : ${nextMatch.date} - ${nextMatch.lieu}</small><br>
+            <strong>vs ${nextMatch.adversaire}</strong>
+          </div>
+        `;
+      }
+    }
+
+    // Affichage final de l'accueil
+    root.innerHTML = `
+      <h2>Accueil</h2>
+      <h3>🎂 Anniversaires du mois</h3>
+      ${bdaysHTML}
+      
+      <h3>📅 Dernier Match</h3>
+      ${lastMatchHTML}
+      
+      <h3>🏆 Prochain Match</h3>
+      ${nextMatchHTML}
+    `;
+  } // <--- FERMETURE DE LA FONCTION renderHome AJOUTÉE ICI
 
   // --- CALENDRIER ---
   async function renderMatches() {
