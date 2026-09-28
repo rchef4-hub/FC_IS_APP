@@ -346,10 +346,13 @@ const [players, dirigeants, arbitres] = await Promise.all([
     root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="text-align: center;">Chargement des données...</p>`;
 
     try {
-      const  = await Promise.all();
+     const [matches, players] = await Promise.all([
+  loadJson('matchs.json'),
+  loadJson('players.json')
+]);
 
-      let goalEvents = ;
-      let cardEvents = ;
+let goalEvents = [];
+let cardEvents = [];
 
       let matchOptions = matches.map((m, idx) => 
         `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
