@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Chargement des données membres
     const [rawMembers] = await Promise.all([
-      loadJsonSafe('membres.json') // Adapte le nom du fichier si nécessaire
+      loadJson('membres.json') // Adapte le nom du fichier si nécessaire
     ]);
 
     const uniqueKeys = new Set();
@@ -98,11 +98,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (allMembers.length > 0) {
       const currentMonth = new Date().getMonth() + 1;
       const monthBDays = allMembers.filter(m => {
-        const dateStr = m.dateNaissanceValidee;
-        const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
-        if (parts.length < 3) return false;
-        return parseInt(parts, 10) === currentMonth;
-      });
+      const dateStr = m.dateNaissanceValidee;
+      const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
+      if (parts.length < 3) return false;
+      const monthIndex = parts[0].length === 4 ? 1 : 1;
+      return parseInt(parts[monthIndex], 10) === currentMonth;
+    });
 
       monthBDays.sort((a, b) => {
         const getDay = (item) => {
