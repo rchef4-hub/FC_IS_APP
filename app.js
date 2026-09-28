@@ -436,6 +436,33 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       `;
 
+      // Pré-remplir le score et les événements si le match sélectionné possède déjà des infos
+      const selectMatchEl = document.getElementById('select-match');
+      const matchScoreEl = document.getElementById('match-score');
+
+      function loadMatchDataToForm(matchIndex) {
+        const m = matches[matchIndex];
+        if (!m) return;
+        matchScoreEl.value = m.resultat || '';
+        
+        goalEvents = [];
+        if (m.buteurs) {
+          // Découpage intelligent des buteurs enregistrés
+          const bList = m.buteurs.split(',').map(s => s.trim());
+          bList.forEach(b => {
+            if (b) goalEvents.push({ buteur: b, passeur: '' });
+          });
+        }
+        renderGoalsUI();
+        cardEvents = [];
+        renderCardsUI();
+      }
+
+      loadMatchDataToForm(selectMatchEl.value);
+      selectMatchEl.addEventListener('change', (e) => {
+        loadMatchDataToForm(e.target.value);
+      });
+
       function renderGoalsUI() {
         const container = document.getElementById('goals-list');
         if (goalEvents.length === 0) {
@@ -548,6 +575,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const fullName = getPlayerFullName(p);
             let updatedP = { ...p };
 
+            // Ne rajoute un match joué que si explicitement coché
             if (presentList.includes(fullName)) {
               updatedP.matchs = (parseInt(updatedP.matchs || updatedP.matches, 10) || 0) + 1;
             }
@@ -578,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
           await updateGitHubFile('matchs.json', matches, 'Mise à jour des résultats matchs');
 
           statusMsg.style.color = "green";
-          statusMsg.innerText = "✅ Publication effectuée avec succès !";
+          statusMsg.innerText = "✅ Publication effectuée avec succès ! Les onglets Matchs et Accueil s'actualiseront automatiquement.";
         } catch (err) {
           console.error(err);
           statusMsg.style.color = "red";
