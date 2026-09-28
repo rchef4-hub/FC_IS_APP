@@ -443,11 +443,11 @@ let cardEvents = [];
       const matchScoreEl = document.getElementById('match-score');
 
       function loadMatchDataToForm(matchIndex) {
-        const m = matches;
+        const m = matches[matchIndex]; // ✅ Correction : on cible le bon match dans le tableau
         if (!m) return;
         matchScoreEl.value = m.resultat || '';
         
-        goalEvents = ;
+        goalEvents = []; // ✅ Correction : tableau vide syntaxiquement correct
         if (m.buteurs) {
           const bList = m.buteurs.split(',').map(s => s.trim());
           bList.forEach(b => {
