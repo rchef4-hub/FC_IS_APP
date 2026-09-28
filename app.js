@@ -486,12 +486,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!getRes.ok) throw new Error(`Lecture impossible de ${filePath}`);
         const fileData = await getRes.json();
 
+        const jsonString = JSON.stringify(newContent, null, 2);
+        const bytes = new TextEncoder().encode(jsonString);
+        let binary = '';
+        bytes.forEach((b) => binary += String.fromCharCode(b));
+        const base64Content = btoa(binary);
+
         const putRes = await fetch(getUrl, {
           method: 'PUT',
           headers: { 'Authorization': `token ${githubToken}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: commitMessage,
-            content: btoa(unescape(encodeURIComponent(JSON.stringify(newContent, null, 2)))),
+            content: base64Content,
             sha: fileData.sha
           })
         });
