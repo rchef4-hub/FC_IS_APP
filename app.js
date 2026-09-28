@@ -586,20 +586,44 @@ let cardEvents = [];
             if (presentList.includes(fullName)) {
               updatedP.matchs = (parseInt(updatedP.matchs || updatedP.matches, 10) || 0) + 1;
             }
-            if (butsMap) {
-              updatedP.buts = (parseInt(updatedP.buts, 10) || 0) + butsMap;
-            }
-            if (passesMap) {
-              updatedP.passes = (parseInt(updatedP.passes, 10) || 0) + passesMap;
-            }
-            if (jaunesMap) {
-              updatedP.cartons_jaunes = (parseInt(updatedP.cartons_jaunes, 10) || 0) + jaunesMap;
-            }
-            if (blancsMap) {
-              updatedP.cartons_blancs = (parseInt(updatedP.cartons_blancs, 10) || 0) + blancsMap;
-            }
-            if (rougesMap) {
-              updatedP.cartons_rouges = (parseInt(updatedP.cartons_rouges, 10) || 0) + rougesMap;
-            }
+            if (butsMap[fullName]) {
+            updatedP.buts = (parseInt(updatedP.buts, 10) || 0) + butsMap[fullName];
+          }
+          if (passesMap[fullName]) {
+            updatedP.passes = (parseInt(updatedP.passes, 10) || 0) + passesMap[fullName];
+          }
+          if (jaunesMap[fullName]) {
+            updatedP.cartons_jaunes = (parseInt(updatedP.cartons_jaunes, 10) || 0) + jaunesMap[fullName];
+          }
+          if (blancsMap[fullName]) {
+            updatedP.cartons_blancs = (parseInt(updatedP.cartons_blancs, 10) || 0) + blancsMap[fullName];
+          }
+          if (rougesMap[fullName]) {
+            updatedP.cartons_rouges = (parseInt(updatedP.cartons_rouges, 10) || 0) + rougesMap[fullName];
+          }
+        }
+        return updatedP;
+      });
 
-           
+      matches[selectedMatchIdx].resultat = score;
+      matches[selectedMatchIdx].buteurs = goalEvents.map(e => e.buteur + (e.passeur ? ` (passe : ${e.passeur})` : '')).join(', ');
+
+      await updateGitHubFile('players.json', updatedPlayers, `Mise à jour stats match vs ${matches[selectedMatchIdx].adversaire}`);
+      await updateGitHubFile('matchs.json', matches, `Mise à jour résultat match vs ${matches[selectedMatchIdx].adversaire}`);
+
+      statusMsg.style.color = "green";
+      statusMsg.innerText = "✅ Publication réussie !";
+      setTimeout(() => { window.location.hash = "home"; }, 1500);
+
+    } catch (err) {
+      console.error(err);
+      statusMsg.style.color = "red";
+      statusMsg.innerText = "❌ Erreur : " + err.message;
+    }
+  });
+
+} catch (e) {
+  root.innerHTML = `<h2>Administration</h2><p style="color: red; text-align: center;">Erreur de chargement des données d'administration.</p>`;
+}
+}
+});
