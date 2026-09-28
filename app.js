@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (e) {
       root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
     }
-  }
+  
 
   // --- EFFECTIF ---
   async function renderPlayers() {
