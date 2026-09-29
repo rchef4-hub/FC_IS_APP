@@ -32,27 +32,22 @@ document.addEventListener('DOMContentLoaded', function() {
     return prenom ? `${nom} ${prenom}` : nom;
   }
 
-  // --- DÉDUPLICATION ULTRA-ROBUSTE ---
+  // --- DÉDUPLICATION RADICALE (Par Nom + Prénom uniquement) ---
   function removeDuplicates(membersArray) {
     const map = new Map();
     membersArray.forEach(member => {
       const rawName = getPlayerFullName(member);
       if (rawName) {
-        // Normalisation agressive (suppression des accents et espaces superflus)
+        // Nettoyage radical des espaces et accents pour fusionner les doublons parfaits
         const cleanName = rawName
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "")
           .toUpperCase()
-          .replace(/[^A-Z]/g, ''); // On ne garde que les lettres pour comparer
-
-        const bdayRaw = member.naissance || member.date_de_naissance || member.Naissance || '';
-        const cleanDigits = bdayRaw.replace(/\D/g, '');
-        const dayMonthKey = cleanDigits.length >= 4 ? cleanDigits.substring(0, 4) : cleanDigits;
+          .replace(/\s+/g, ' ')
+          .trim();
         
-        const uniqueKey = `${cleanName}_${dayMonthKey}`;
-        
-        if (!map.has(uniqueKey)) {
-          map.set(uniqueKey, member);
+        if (!map.has(cleanName)) {
+          map.set(cleanName, member);
         }
       }
     });
@@ -77,22 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (p.includes('milieu')) return '#28a745';
     if (p.includes('attaquant')) return '#dc3545';
     return '#6c757d';
-  }
-
-  // Convertisseur de date "DD/MM/YYYY" en objet Date JS
-  function parseMatchDate(dateStr) {
-    if (!dateStr) return new Date(0);
-    const clean = dateStr.trim();
-    // Format JJ/MM/AAAA ou JJ/MM/AA
-    if (clean.includes('/')) {
-      const p = clean.split('/');
-      if (p.length === 3) {
-        let year = p[2];
-        if (year.length === 2) year = '20' + year;
-        return new Date(`${year}-${p[1]}-${p[0]}`);
-      }
-    }
-    return new Date(clean);
   }
 
   // --- PAGE D'ACCUEIL ---
@@ -142,20 +121,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const matches = await loadJson('matchs.json');
     if (Array.isArray(matches) && matches.length > 0) {
-      const now = new Date();
-
-      // Tri chronologique global
-      const sortedMatches = [...matches].sort((a, b) => parseMatchDate(a.date) - parseMatchDate(b.date));
-      
-      // Dernier match : un match dont la date est passée (ou aujourd'hui) ET qui a un résultat
-      const pastMatches = sortedMatches.filter(m => {
-        const d = parseMatchDate(m.date);
-        return d <= now && m.resultat && m.resultat.trim() !== '';
-      });
-
-      const lastPlayed = pastMatches.length > 0 ? pastMatches[pastMatches.length - 1] : null;
-
-      if (lastPlayed) {
+      // Filtrer les matchs qui ont un score (pour le dernier match joué)
+      const playedMatches = matches.filter(m => m.resultat && m.resultat.trim() !== '');
+      if (playedMatches.length > 0) {
+        const lastPlayed = playedMatches[playedMatches.length - 1]; // Prend le dernier du fichier
         let detailsHTML = lastPlayed.buteurs ? `<div style="font-size: 0.85em; color: #555; margin-top: 6px;">⚽ <strong>Buteurs :</strong> ${lastPlayed.buteurs}</div>` : '';
         lastMatchHTML = `
           <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; text-align: center;">
@@ -167,13 +136,10 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
       }
 
-      // Prochain match : un match dont la date est future (ou aujourd'hui) et sans résultat
-      const nextMatch = sortedMatches.find(m => {
-        const d = parseMatchDate(m.date);
-        return d >= now && (!m.resultat || m.resultat.trim() === '');
-      });
-
-      if (nextMatch) {
+      // Filtrer les matchs sans score (pour le prochain match)
+      const upcomingMatches = matches.filter(m => !m.resultat || m.resultat.trim() === '');
+      if (upcomingMatches.length > 0) {
+        const nextMatch = upcomingMatches[0]; // Prend le premier match à venir du fichier
         nextMatchHTML = `
           <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center;">
             <small style="color: #666;">Prochain match : ${nextMatch.date || ''} - ${nextMatch.lieu || ''}</small><br>
