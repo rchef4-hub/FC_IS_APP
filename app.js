@@ -70,9 +70,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
     let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
 
-    // Chargement des données membres
+// Chargement des données membres depuis players.json (ou le fichier existant)
     const [rawMembers] = await Promise.all([
-      loadJson('membres.json') // Adapte le nom du fichier si nécessaire
+      loadJson('players.json') // Adapte le nom du fichier si nécessaire
     ]);
 
     const uniqueKeys = new Set();
