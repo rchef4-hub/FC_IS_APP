@@ -177,28 +177,35 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-  // --- CALENDRIER ---
+ // --- CALENDRIER ---
   async function renderMatches() {
     root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement...</p>`;
     try {
       const matches = await loadJson('matchs.json');
 
+      // Sécurité : on s'assure que matches est bien un tableau
+      if (!Array.isArray(matches)) {
+        throw new Error("Le format des matchs n'est pas un tableau valide.");
+      }
+
       const matchesHTML = matches.map(m => {
-        const isDomicile = m.lieu && m.lieu.toLowerCase().includes('domicile');
+        const isDomicile = m.lieu && typeof m.lieu === 'string' && m.lieu.toLowerCase().includes('domicile');
         const badgeColor = isDomicile ? '#28a745' : '#17a2b8';
         
         let detailsHTML = '';
         if (m.buteurs) detailsHTML += `<div style="font-size: 0.85em; color: #555; margin-top: 4px;">⚽ <strong>Buteurs :</strong> ${m.buteurs}</div>`;
         if (m.passeurs) detailsHTML += `<div style="font-size: 0.85em; color: #555; margin-top: 2px;">👟 <strong>Passeurs :</strong> ${m.passeurs}</div>`;
 
+        const scoreDisplay = m.resultat ? formatScoreColor(m.resultat) : '<em>À venir</em>';
+
         return `
-          <li style="border-left-color: ${badgeColor}; padding: 12px; margin-bottom: 10px; background: white; border-radius: 8px; list-style: none; box-shadow: var(--shadow);">
+          <li style="border-left: 4px solid ${badgeColor}; padding: 12px; margin-bottom: 10px; background: white; border-radius: 8px; list-style: none; box-shadow: var(--shadow);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-              <small style="color: #666; font-weight: bold;">📅 ${m.date}</small>
+              <small style="color: #666; font-weight: bold;">📅 ${m.date || 'Date inconnue'}</small>
               <span style="background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">${m.lieu || 'N/C'}</span>
             </div>
-            <div style="font-size: 1.1em; margin-bottom: 5px;"><strong>vs ${m.adversaire}</strong></div>
-            <div>Score : ${m.resultat ? formatScoreColor(m.resultat) : '<em>À venir</em>'}</div>
+            <div style="font-size: 1.1em; margin-bottom: 5px;"><strong>vs ${m.adversaire || 'Adversaire inconnu'}</strong></div>
+            <div>Score : ${scoreDisplay}</div>
             ${detailsHTML}
           </li>
         `;
@@ -206,7 +213,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
       root.innerHTML = `<h2>Calendrier & Résultats</h2><ul style="padding: 0;">${matchesHTML}</ul>`;
     } catch (e) {
-      root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
+      console.error("Erreur renderMatches :", e);
+      root.innerHTML = `<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Erreur de chargement des matchs.</p>`;
     }
   }
 
