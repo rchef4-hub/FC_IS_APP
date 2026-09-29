@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return '#6c757d';
   }
 
-  // --- PAGE D'ACCUEIL ---
+ // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
     let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
@@ -81,7 +81,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const fullName = getPlayerFullName(member);
       const bdayRaw = member.naissance || member.date_de_naissance || member.Naissance || '';
       if (fullName && bdayRaw) {
-        // Clé unique combinant le nom complet ET la date de naissance pour différencier les homonymes
         const uniqueKey = `${fullName}_${bdayRaw.trim()}`;
         if (!allMembersMap.has(uniqueKey)) {
           allMembersMap.set(uniqueKey, {
@@ -98,21 +97,19 @@ document.addEventListener('DOMContentLoaded', function() {
       const monthBDays = allMembers.filter(m => {
         const parts = m.naissance.includes('/') ? m.naissance.split('/') : m.naissance.split('-');
         if (parts.length < 3) return false;
-        // Détection de la position du mois (format JJ/MM/AAAA ou AAAA-MM-JJ)
         const monthIndex = parts[0].length === 4 ? 1 : 1; 
         return parseInt(parts[monthIndex], 10) === currentMonth;
       });
 
       if (monthBDays.length > 0) {
         bdaysHTML = monthBDays.map(m => {
-          // Extraction uniquement du jour et du mois (ex: "15/04") pour masquer l'année
           const parts = m.naissance.includes('/') ? m.naissance.split('/') : m.naissance.split('-');
           let shortDate = m.naissance;
           if (parts.length >= 3) {
             if (parts[0].length === 4) {
-              shortDate = `${parts[2]}/${parts[1]}`; // Format AAAA-MM-JJ -> JJ/MM
+              shortDate = `${parts[2]}/${parts[1]}`;
             } else {
-              shortDate = `${parts[0]}/${parts[1]}`; // Format JJ/MM/AAAA -> JJ/MM
+              shortDate = `${parts[0]}/${parts[1]}`;
             }
           }
 
@@ -152,24 +149,24 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    // Ordre inversé : Boutique -> Dernier Match -> Prochain Match -> Anniversaires
     root.innerHTML = `
       <h2>Accueil</h2>
       
-      <!-- Lien vers la boutique du club -->
       <div style="margin-bottom: 20px; text-align: center;">
-        <a href="https://team.jako.com/fr-fr/team/fc_is/" target="_blank" style="display: block; background: linear-gradient(135deg, var(--primary-color, #007bff), var(--accent-color, #ffc107)); color: white; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; box-shadow: var(--shadow);">
+        <a href="https://example.com/boutique" target="_blank" style="display: block; background: linear-gradient(135deg, var(--primary-color, #007bff), var(--accent-color, #ffc107)); color: white; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; box-shadow: var(--shadow);">
           🛍️ Visiter la Boutique du Club
         </a>
       </div>
 
-      <h3>🎂 Anniversaires du mois</h3>
-      ${bdaysHTML}
-      
       <h3>📅 Dernier Match</h3>
       ${lastMatchHTML}
       
       <h3>🏆 Prochain Match</h3>
       ${nextMatchHTML}
+
+      <h3>🎂 Anniversaires du mois</h3>
+      ${bdaysHTML}
     `;
   }
 
