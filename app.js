@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       <!-- Lien vers la boutique du club -->
       <div style="margin-bottom: 20px; text-align: center;">
-        <a href="https://example.com/boutique" target="_blank" style="display: block; background: linear-gradient(135deg, var(--primary-color, #007bff), var(--accent-color, #ffc107)); color: white; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; box-shadow: var(--shadow);">
+        <a href="https://team.jako.com/fr-fr/team/fc_is/" target="_blank" style="display: block; background: linear-gradient(135deg, var(--primary-color, #007bff), var(--accent-color, #ffc107)); color: white; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; box-shadow: var(--shadow);">
           🛍️ Visiter la Boutique du Club
         </a>
       </div>
