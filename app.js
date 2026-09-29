@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
   // --- GESTION DES FETCH ROBUSTE ---
-  // Utilise les en-têtes et options natifs pour forcer le non-cache
   function fetchFresh(url) {
     return fetch(url, {
       cache: 'no-store',
@@ -14,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Fonction utilitaire pour charger du JSON avec gestion d'erreur centralisée
   async function loadJson(filename, defaultValue = []) {
     try {
       const res = await fetchFresh(filename);
@@ -64,128 +62,76 @@ document.addEventListener('DOMContentLoaded', function() {
     return '#6c757d';
   }
 
- // --- PAGE D'ACCUEIL ---
+  // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
     let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
     let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
 
-// Chargement des données membres depuis players.json (ou le fichier existant)
-    const [rawMembers] = await Promise.all([
-      loadJson('players.json') // Adapte le nom du fichier si nécessaire
-    ]);
-
-    const uniqueKeys = new Set();
-    
-    const allMembers = rawMembers.filter(m => {
-      const fullName = getPlayerFullName(m);
-      if (!fullName) return false;
-      
-      const dateStr = m.naissance || m.date_de_naissance || m.Naissance;
-      if (!dateStr) return false;
-      m.dateNaissanceValidee = dateStr;
-
-      // Normalisation pour fusionner les doublons
-      const cleanName = fullName.replace(/\s+/g, ' ').trim().toUpperCase();
-      const cleanDate = dateStr.trim();
-      const uniqueIdentifier = `${cleanName}_${cleanDate}`;
-
-      if (uniqueKeys.has(uniqueIdentifier)) return false;
-      uniqueKeys.add(uniqueIdentifier);
-      return true;
-    });
-
-    if (allMembers.length > 0) {
+    const players = await loadJson('players.json');
+    if (Array.isArray(players) && players.length > 0) {
       const currentMonth = new Date().getMonth() + 1;
-      const monthBDays = allMembers.filter(m => {
-      const dateStr = m.dateNaissanceValidee;
-      const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
-      if (parts.length < 3) return false;
-      const monthIndex = parts[0].length === 4 ? 1 : 1;
-      return parseInt(parts[monthIndex], 10) === currentMonth;
-    });
-
-      monthBDays.sort((a, b) => {
-        const getDay = (item) => {
-          const p = item.dateNaissanceValidee.includes('/') ? item.dateNaissanceValidee.split('/') : item.dateNaissanceValidee.split('-');
-          return parseInt(p.length === 4 ? p : p, 10);
-        };
-        return getDay(a) - getDay(b);
+      const monthBDays = players.filter(p => {
+        const dateStr = p.naissance || p.date_de_naissance || p.Naissance;
+        if (!dateStr) return false;
+        const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
+        if (parts.length < 3) return false;
+        return parseInt(parts[1], 10) === currentMonth;
       });
 
       if (monthBDays.length > 0) {
-        bdaysHTML = monthBDays.map(m => {
-          const dateStr = m.dateNaissanceValidee;
-          const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
-          const isISO = parts.length === 4;
-          const day = isISO ? parts.padStart(2, '0') : parts.padStart(2, '0');
-          const month = parts.padStart(2, '0');
-          return `
-            <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
-              <span>${m.symbole || '🎂'} <strong>${getPlayerFullName(m)}</strong></span>
-              <small style="color: var(--primary-color, #007bff); font-weight: bold;">${day}/${month}</small>
-            </li>
-          `;
-        }).join('');
+        bdaysHTML = monthBDays.map(p => `
+          <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
+            <span>🎂 <strong>${getPlayerFullName(p)}</strong></span>
+            <small style="color: var(--primary-color, #007bff); font-weight: bold;">${p.naissance || ''}</small>
+          </li>
+        `).join('');
         bdaysHTML = `<ul style="padding: 0; margin: 0;">${bdaysHTML}</ul>`;
       }
     }
 
-    // Chargement des matchs pour l'accueil
     const matches = await loadJson('matchs.json');
-
-    if (matches.length > 0) {
-      // Trier par date (supposant un format lisible par Date)
-      const sortedMatches = matches.sort((a, b) => new Date(b.date) - new Date(a.date));
-      
-      // Dernier match joué
+    if (Array.isArray(matches) && matches.length > 0) {
+      const sortedMatches = [...matches].sort((a, b) => new Date(b.date) - new Date(a.date));
       const lastPlayed = sortedMatches.find(m => m.resultat);
       if (lastPlayed) {
         lastMatchHTML = `
           <div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">
-            <small style="color: #666;">Dernier match : ${lastPlayed.date} - ${lastPlayed.lieu}</small><br>
-            <strong>vs ${lastPlayed.adversaire}</strong><br>
+            <small style="color: #666;">Dernier match : ${lastPlayed.date || ''} - ${lastPlayed.lieu || ''}</small><br>
+            <strong>vs ${lastPlayed.adversaire || ''}</strong><br>
             Score : ${formatScoreColor(lastPlayed.resultat)}
-            ${lastPlayed.buteurs ? `<br><small>Buteurs : ${lastPlayed.buteurs}</small>` : ''}
           </div>
         `;
       }
 
-      // Prochain match
       const nextMatch = sortedMatches.find(m => !m.resultat);
       if (nextMatch) {
         nextMatchHTML = `
           <div style="padding: 10px; background: #f8f9fa; border-radius: 8px;">
-            <small style="color: #666;">Prochain match : ${nextMatch.date} - ${nextMatch.lieu}</small><br>
-            <strong>vs ${nextMatch.adversaire}</strong>
+            <small style="color: #666;">Prochain match : ${nextMatch.date || ''} - ${nextMatch.lieu || ''}</small><br>
+            <strong>vs ${nextMatch.adversaire || ''}</strong>
           </div>
         `;
       }
     }
 
-    // Affichage final
     root.innerHTML = `
       <h2>Accueil</h2>
       <h3>🎂 Anniversaires du mois</h3>
       ${bdaysHTML}
-      
       <h3>📅 Dernier Match</h3>
       ${lastMatchHTML}
-      
       <h3>🏆 Prochain Match</h3>
       ${nextMatchHTML}
     `;
   }
 
-// --- CALENDRIER ---
+  // --- CALENDRIER ---
   async function renderMatches() {
     root.innerHTML = '<h2>Calendrier & Résultats</h2><p style="text-align: center;">Chargement...</p>';
     try {
       const matches = await loadJson('matchs.json');
-
-      if (!Array.isArray(matches)) {
-        throw new Error("Le format des matchs n'est pas un tableau valide.");
-      }
+      if (!Array.isArray(matches)) throw new Error("Format invalide");
 
       const matchesHTML = matches.map(m => {
         const isDomicile = m.lieu && typeof m.lieu === 'string' && m.lieu.toLowerCase().includes('domicile');
@@ -203,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <small style="color: #666; font-weight: bold;">Date : ${m.date || 'Inconnue'}</small>
               <span style="background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">${m.lieu || 'N/C'}</span>
             </div>
-            <div style="font-size: 1.1em; margin-bottom: 5px;"><strong>vs ${m.adversaire || 'Adversaire inconnu'}</strong></div>
+            <div style="font-size: 1.1em; margin-bottom: 5px;"><strong>vs ${m.adversaire || 'Inconnu'}</strong></div>
             <div>Score : ${scoreDisplay}</div>
             ${detailsHTML}
           </li>
@@ -212,17 +158,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
       root.innerHTML = '<h2>Calendrier & Résultats</h2><ul style="padding: 0;">' + matchesHTML + '</ul>';
     } catch (e) {
-      console.error("Erreur renderMatches :", e);
       root.innerHTML = '<h2>Calendrier & Résultats</h2><p style="color: red; text-align: center;">Erreur de chargement des matchs.</p>';
     }
   }
 
   // --- STATISTIQUES ---
   async function renderStats() {
-    root.innerHTML = `<h2>Statistiques</h2><p style="text-align: center;">Chargement...</p>`;
+    root.innerHTML = '<h2>Statistiques</h2><p style="text-align: center;">Chargement...</p>';
     try {
       const players = await loadJson('players.json');
-
       const getNbMatchs = p => parseInt(p.matchs ?? p.matches ?? 0, 10) || 0;
       const getNbButs = p => parseInt(p.buts ?? 0, 10) || 0;
       const getNbPasses = p => parseInt(p.passes ?? 0, 10) || 0;
@@ -230,28 +174,25 @@ document.addEventListener('DOMContentLoaded', function() {
       const getBlancs = p => parseInt(p.cartons_blancs ?? 0, 10) || 0;
       const getRouges = p => parseInt(p.cartons_rouges ?? 0, 10) || 0;
 
-      // Correction : on applique le filtre sur 'players'
       const topScorers = players.filter(p => getNbButs(p) > 0).sort((a, b) => getNbButs(b) - getNbButs(a));
       const topPassers = players.filter(p => getNbPasses(p) > 0).sort((a, b) => getNbPasses(b) - getNbPasses(a));
       const topCards = players.filter(p => getJaunes(p) > 0 || getBlancs(p) > 0 || getRouges(p) > 0);
       const topPlayed = players.filter(p => getNbMatchs(p) > 0).sort((a, b) => getNbMatchs(b) - getNbMatchs(a));
 
       const renderList = (arr, labelFn, emptyMsg) => arr.length > 0 ? arr.map(p => `
-        <li>
-          <strong>${getPlayerFullName(p)}</strong><br><small>${labelFn(p)}</small>
-        </li>
+        <li><strong>${getPlayerFullName(p)}</strong><br><small>${labelFn(p)}</small></li>
       `).join('') : `<p style="padding: 10px; color: #666; text-align: center;">${emptyMsg}</p>`;
 
       root.innerHTML = `
         <h2>Statistiques de la Saison</h2>
         <h3 class="accordion-header">⚽ Meilleurs Buteurs</h3>
-        <ul class="collapsed">${renderList(topScorers, p => `⚽ ${getNbButs(p)} but(s) en${getNbMatchs(p)} match(s)`, "Aucun buteur")}</ul>
+        <ul class="collapsed">${renderList(topScorers, p => `⚽ ${getNbButs(p)} but(s)`, "Aucun buteur")}</ul>
         
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
         <ul class="collapsed">${renderList(topPassers, p => `👟 ${getNbPasses(p)} passe(s)`, "Aucune passe décisive")}</ul>
         
         <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
-        <ul class="collapsed">${renderList(topCards, p => `🟨 ${getJaunes(p)} | ⬜ ${getBlancs(p)} | 🟥 ${getRouges(p)}`, "Aucun carton")}</ul>
+        <ul class="collapsed">${renderList(topCards, p => `🟨 ${getJaunes(p)} | ⬜ ${getBlancs(p)} \vert{} 🟥 ${getRouges(p)}`, "Aucun carton")}</ul>
         
         <h3 class="accordion-header">🏃 Joueurs les plus utilisés</h3>
         <ul class="collapsed">${renderList(topPlayed, p => `🏃 ${getNbMatchs(p)} match(s)`, "Aucun match enregistré")}</ul>
@@ -267,31 +208,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
     } catch (e) {
-      root.innerHTML = `<h2>Statistiques</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
+      root.innerHTML = '<h2>Statistiques</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>';
     }
   }
 
   // --- EFFECTIF ---
   async function renderPlayers() {
-    root.innerHTML = `<h2>Effectif du Club</h2><p style="text-align: center;">Chargement...</p>`;
+    root.innerHTML = '<h2>Effectif du Club</h2><p style="text-align: center;">Chargement...</p>';
     try {
-const [players, dirigeants, arbitres] = await Promise.all([
-  loadJson('players.json'),
-  loadJson('dirigeants.json'),
-  loadJson('arbitres.json')
-]);
+      const [players, dirigeants, arbitres] = await Promise.all([
+        loadJson('players.json'),
+        loadJson('dirigeants.json'),
+        loadJson('arbitres.json')
+      ]);
       let html = '<h2>Effectif du Club</h2>';
 
-      if (players.length > 0) {
-        const list = players.map(p => `<li style="border-left: 4px solid ${getPosteColor(p.poste)};">${p.symbole || '⚽'} <strong>${p.numero ? '#' + p.numero + ' ' : ''}${getPlayerFullName(p)}</strong><br><small>${p.poste || ''}</small></li>`).join('');
+      if (Array.isArray(players) && players.length > 0) {
+        const list = players.map(p => `<li style="border-left: 4px solid ${getPosteColor(p.poste)};">⚽ <strong>${p.numero ? '#' + p.numero + ' ' : ''}${getPlayerFullName(p)}</strong><br><small>${p.poste || ''}</small></li>`).join('');
         html += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${list}</ul>`;
       }
-      if (dirigeants.length > 0) {
-        const list = dirigeants.map(d => `<li style="border-left: 4px solid #6c757d;">${d.symbole || '👔'} <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`).join('');
+      if (Array.isArray(dirigeants) && dirigeants.length > 0) {
+        const list = dirigeants.map(d => `<li style="border-left: 4px solid #6c757d;">👔 <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`).join('');
         html += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${list}</ul>`;
       }
-      if (arbitres.length > 0) {
-        const list = arbitres.map(a => `<li style="border-left: 4px solid #6c757d;">${a.symbole || '🟨'} <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
+      if (Array.isArray(arbitres) && arbitres.length > 0) {
+        const list = arbitres.map(a => `<li style="border-left: 4px solid #6c757d;">🟨 <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
         html += `<h3 class="accordion-header">⬜🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
       }
 
@@ -307,23 +248,23 @@ const [players, dirigeants, arbitres] = await Promise.all([
         });
       });
     } catch (e) {
-      root.innerHTML = `<h2>Effectif du Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
+      root.innerHTML = '<h2>Effectif du Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>';
     }
   }
 
   // --- ANNONCES ---
   async function renderAnnouncements() {
-    root.innerHTML = `<h2>Annonces Club</h2><p style="text-align: center;">Chargement...</p>`;
+    root.innerHTML = '<h2>Annonces Club</h2><p style="text-align: center;">Chargement...</p>';
     try {
       const annonces = await loadJson('annonces.json');
-      const list = annonces.map(a => `
+      const list = Array.isArray(annonces) ? annonces.map(a => `
         <li style="border-left-color: ${a.couleur_bordure || 'var(--primary-color)'};">
-          ${a.symbole || '📢'} <strong>${a.titre}</strong><br>${a.details}
+          📢 <strong>${a.titre || ''}</strong><br>${a.details || ''}
         </li>
-      `).join('');
+      `).join('') : '';
       root.innerHTML = `<h2>Annonces Club</h2><ul>${list}</ul>`;
     } catch (e) {
-      root.innerHTML = `<h2>Annonces Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>`;
+      root.innerHTML = '<h2>Annonces Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>';
     }
   }
 
@@ -351,22 +292,22 @@ const [players, dirigeants, arbitres] = await Promise.all([
     const REPO_OWNER = "rchef4-hub";
     const REPO_NAME = "FC_IS_APP";
 
-    root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="text-align: center;">Chargement des données...</p>`;
+    root.innerHTML = '<h2>⚙️ Saisie de Match</h2><p style="text-align: center;">Chargement des données...</p>';
 
     try {
-     const [matches, players] = await Promise.all([
-  loadJson('matchs.json'),
-  loadJson('players.json')
-]);
+      const [matches, players] = await Promise.all([
+        loadJson('matchs.json'),
+        loadJson('players.json')
+      ]);
 
-let goalEvents = [];
-let cardEvents = [];
+      let goalEvents = [];
+      let cardEvents = [];
 
       let matchOptions = matches.map((m, idx) => 
         `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
       ).join('');
 
-      let playerOptionsScorer = `<option value="CSC"> But contre son camp</option>` + players.map(p => {
+      let playerOptionsScorer = '<option value="CSC"> But contre son camp</option>' + players.map(p => {
         const name = getPlayerFullName(p);
         return `<option value="${name}">${name}</option>`;
       }).join('');
@@ -435,27 +376,18 @@ let cardEvents = [];
           <button id="btn-save-direct" type="button" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; margin-bottom: 15px;">
             🚀 Publier le match sur GitHub
           </button>
-
-          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-          <button id="btn-reset-all" type="button" style="width: 100%; background: #dc3545; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
-            🔄 Remettre à ZÉRO les statistiques & résultats
-          </button>
-
           <p id="status-message" style="text-align:center; font-weight:bold; margin-top:10px;"></p>
         </div>
       `;
 
-      // Pré-remplir le score et les événements si le match sélectionné possède déjà des infos
       const selectMatchEl = document.getElementById('select-match');
       const matchScoreEl = document.getElementById('match-score');
 
       function loadMatchDataToForm(matchIndex) {
-        const m = matches[matchIndex]; // ✅ Correction : on cible le bon match dans le tableau
+        const m = matches[matchIndex];
         if (!m) return;
         matchScoreEl.value = m.resultat || '';
-        
-        goalEvents = []; // ✅ Correction : tableau vide syntaxiquement correct
+        goalEvents = [];
         if (m.buteurs) {
           const bList = m.buteurs.split(',').map(s => s.trim());
           bList.forEach(b => {
@@ -475,7 +407,7 @@ let cardEvents = [];
       function renderGoalsUI() {
         const container = document.getElementById('goals-list');
         if (goalEvents.length === 0) {
-          container.innerHTML = `<small style="color: #888;">Aucun but ajouté.</small>`;
+          container.innerHTML = '<small style="color: #888;">Aucun but ajouté.</small>';
           return;
         }
         container.innerHTML = goalEvents.map((e, idx) => `
@@ -497,7 +429,7 @@ let cardEvents = [];
       function renderCardsUI() {
         const container = document.getElementById('cards-list');
         if (cardEvents.length === 0) {
-          container.innerHTML = `<small style="color: #888;">Aucun carton ajouté.</small>`;
+          container.innerHTML = '<small style="color: #888;">Aucun carton ajouté.</small>';
           return;
         }
         container.innerHTML = cardEvents.map((c, idx) => `
@@ -585,15 +517,9 @@ let cardEvents = [];
           });
 
           cardEvents.forEach(c => {
-            if (c.type === '🟨') {
-              jaunesMap[c.joueur] = (jaunesMap[c.joueur] || 0) + 1;
-            }
-            if (c.type === '⬜') {
-              blancsMap[c.joueur] = (blancsMap[c.joueur] || 0) + 1;
-            }
-            if (c.type === '🟥') {
-              rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
-            }
+            if (c.type === '🟨') jaunesMap[c.joueur] = (jaunesMap[c.joueur] || 0) + 1;
+            if (c.type === '⬜') blancsMap[c.joueur] = (blancsMap[c.joueur] || 0) + 1;
+            if (c.type === '🟥') rougesMap[c.joueur] = (rougesMap[c.joueur] || 0) + 1;
           });
 
           const updatedPlayers = players.map(p => {
@@ -603,21 +529,11 @@ let cardEvents = [];
             if (presentList.includes(fullName)) {
               updatedP.matchs = (parseInt(updatedP.matchs || updatedP.matches, 10) || 0) + 1;
             }
-            if (butsMap[fullName]) {
-              updatedP.buts = (parseInt(updatedP.buts, 10) || 0) + butsMap[fullName];
-            }
-            if (passesMap[fullName]) {
-              updatedP.passes = (parseInt(updatedP.passes, 10) || 0) + passesMap[fullName];
-            }
-            if (jaunesMap[fullName]) {
-              updatedP.cartons_jaunes = (parseInt(updatedP.cartons_jaunes, 10) || 0) + jaunesMap[fullName];
-            }
-            if (blancsMap[fullName]) {
-              updatedP.cartons_blancs = (parseInt(updatedP.cartons_blancs, 10) || 0) + blancsMap[fullName];
-            }
-            if (rougesMap[fullName]) {
-              updatedP.cartons_rouges = (parseInt(updatedP.cartons_rouges, 10) || 0) + rougesMap[fullName];
-            }
+            if (butsMap[fullName]) updatedP.buts = (parseInt(updatedP.buts, 10) || 0) + butsMap[fullName];
+            if (passesMap[fullName]) updatedP.passes = (parseInt(updatedP.passes, 10) || 0) + passesMap[fullName];
+            if (jaunesMap[fullName]) updatedP.cartons_jaunes = (parseInt(updatedP.cartons_jaunes, 10) || 0) + jaunesMap[fullName];
+            if (blancsMap[fullName]) updatedP.cartons_blancs = (parseInt(updatedP.cartons_blancs, 10) || 0) + blancsMap[fullName];
+            if (rougesMap[fullName]) updatedP.cartons_rouges = (parseInt(updatedP.cartons_rouges, 10) || 0) + rougesMap[fullName];
             return updatedP;
           });
 
@@ -639,7 +555,34 @@ let cardEvents = [];
       });
 
     } catch (e) {
-      root.innerHTML = `<h2>Administration</h2><p style="color: red; text-align: center;">Erreur de chargement des données d'administration.</p>`;
+      root.innerHTML = '<h2>Administration</h2><p style="color: red; text-align: center;">Erreur de chargement des données d\'administration.</p>';
     }
+  }
+
+  // --- ROUTAGE PAR HASH ---
+  function handleRoute() {
+    const hash = window.location.hash.replace('#', '');
+    document.querySelectorAll('nav a, #admin-nav-item a').forEach(a => {
+      if (a.getAttribute('href') === `#${hash}`) {
+        a.classList.add('active');
+      } else {
+        a.classList.remove('active');
+      }
+    });
+
+    if (hash === 'matches') renderMatches();
+    else if (hash === 'stats') renderStats();
+    else if (hash === 'players') renderPlayers();
+    else if (hash === 'announcements') renderAnnouncements();
+    else if (hash === 'admin') renderAdmin();
+    else renderHome();
+  }
+
+  window.addEventListener('hashchange', handleRoute);
+
+  if (!window.location.hash) {
+    window.location.hash = 'home';
+  } else {
+    handleRoute();
   }
 });
