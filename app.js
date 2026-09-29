@@ -75,22 +75,24 @@ document.addEventListener('DOMContentLoaded', function() {
       loadJson('arbitres.json')
     ]);
 
-    // Déduplication robuste : normalisation poussée pour fusionner les doublons inter-catégories
+    // Déduplication absolue et stricte basée sur le nom/prénom normalisé et la date de naissance
     const allMembersMap = new Map();
     [...players, ...dirigeants, ...arbitres].forEach(member => {
       const fullName = getPlayerFullName(member);
       const bdayRaw = member.naissance || member.date_de_naissance || member.Naissance || '';
-      if (fullName && bdayRaw) {
-        // Nettoyage de la date pour ne garder que les chiffres (ex: "10/09/1990" -> "1009")
+      
+      if (fullName) {
+        // Normalisation agressive du nom (suppression des espaces multiples, accents, etc.)
+        const cleanName = fullName.trim().toUpperCase().replace(/\s+/g, ' ');
         const cleanDigits = bdayRaw.replace(/\D/g, '');
         const dayMonthKey = cleanDigits.length >= 4 ? cleanDigits.substring(0, 4) : cleanDigits;
         
-        // Clé unique basée sur le nom majuscule et les 4 chiffres du jour/mois
-        const uniqueKey = `${fullName.trim().toUpperCase()}_${dayMonthKey}`;
+        // Clé unique insensible aux micro-variations
+        const uniqueKey = `${cleanName}_${dayMonthKey}`;
         
         if (!allMembersMap.has(uniqueKey)) {
           allMembersMap.set(uniqueKey, {
-            name: fullName,
+            name: cleanName,
             naissance: bdayRaw
           });
         }
@@ -101,8 +103,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (allMembers.length > 0) {
       const currentMonth = new Date().getMonth() + 1;
       const monthBDays = allMembers.filter(m => {
+        if (!m.naissance) return false;
         const parts = m.naissance.includes('/') ? m.naissance.split('/') : m.naissance.split('-');
         if (parts.length < 3) return false;
+        // Détection mois (si format JJ/MM/AAAA -> parts[1], si AAAA-MM-JJ -> parts[1])
         const monthIndex = parts[0].length === 4 ? 1 : 1; 
         return parseInt(parts[monthIndex], 10) === currentMonth;
       });
@@ -132,8 +136,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const matches = await loadJson('matchs.json');
     if (Array.isArray(matches) && matches.length > 0) {
-      const sortedMatches = [...matches].sort((a, b) => new Date(b.date) - new Date(a.date));
-      const lastPlayed = sortedMatches.find(m => m.resultat);
+      // Fonction robuste pour transformer une date "JJ/MM/AAAA" ou "AAAA-MM-JJ" en objet Date exploitable
+      const parseMatchDate = (dateStr) => {
+        if (!dateStr) return new Date(0);
+        const clean = dateStr.trim();
+        if (clean.includes('/')) {
+          const p = clean.split('/');
+          if (p.length === 3) return new Date(`${p[2]}-${p[1]}-${p[0]}`);
+        }
+        return new Date(clean);
+      };
+
+      // Tri chronologique correct (du plus ancien au plus récent, ou inversement)
+      const sortedMatches = [...matches].sort((a, b) => parseMatchDate(b.date) - parseMatchDate(a.date));
+      
+      // Le dernier match joué (le plus récent parmi ceux qui ont un résultat)
+      const lastPlayed = sortedMatches.find(m => m.resultat && m.resultat.trim() !== '');
       if (lastPlayed) {
         let detailsHTML = '';
         if (lastPlayed.buteurs) {
@@ -150,7 +168,9 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
       }
 
-      const nextMatch = sortedMatches.find(m => !m.resultat);
+      // Prochain match (le premier match dans le futur sans résultat)
+      const futureMatches = [...matches].sort((a, b) => parseMatchDate(a.date) - parseMatchDate(b.date));
+      const nextMatch = futureMatches.find(m => !m.resultat || m.resultat.trim() === '');
       if (nextMatch) {
         nextMatchHTML = `
           <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center;">
