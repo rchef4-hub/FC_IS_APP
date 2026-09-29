@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
-  // --- GESTION DES FETCH ROBUSTE ---
   function fetchFresh(url) {
     return fetch(url, {
       cache: 'no-store',
@@ -16,18 +15,13 @@ document.addEventListener('DOMContentLoaded', function() {
   async function loadJson(filename, defaultValue = []) {
     try {
       const res = await fetchFresh(filename);
-      if (!res.ok) {
-        console.warn(`Fichier ${filename} introuvable ou erreur HTTP ${res.status}`);
-        return defaultValue;
-      }
+      if (!res.ok) return defaultValue;
       return await res.json();
     } catch (e) {
-      console.error(`Erreur lors du chargement de ${filename}:`, e);
       return defaultValue;
     }
   }
 
-  // --- HELPER FORMAT UNIQUE : "NOM Prénom" ---
   function getPlayerFullName(p) {
     if (!p) return '';
     const nom = (p.nom || p.Nom || '').trim().toUpperCase();
@@ -38,13 +32,19 @@ document.addEventListener('DOMContentLoaded', function() {
     return prenom ? `${nom} ${prenom}` : nom;
   }
 
-  // --- HELPER DE DÉDUPLICATION GLOBALE ---
+  // --- DÉDUPLICATION ULTRA-ROBUSTE ---
   function removeDuplicates(membersArray) {
     const map = new Map();
     membersArray.forEach(member => {
-      const fullName = getPlayerFullName(member);
-      if (fullName) {
-        const cleanName = fullName.trim().toUpperCase().replace(/\s+/g, ' ');
+      const rawName = getPlayerFullName(member);
+      if (rawName) {
+        // Normalisation agressive (suppression des accents et espaces superflus)
+        const cleanName = rawName
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toUpperCase()
+          .replace(/[^A-Z]/g, ''); // On ne garde que les lettres pour comparer
+
         const bdayRaw = member.naissance || member.date_de_naissance || member.Naissance || '';
         const cleanDigits = bdayRaw.replace(/\D/g, '');
         const dayMonthKey = cleanDigits.length >= 4 ? cleanDigits.substring(0, 4) : cleanDigits;
@@ -79,6 +79,22 @@ document.addEventListener('DOMContentLoaded', function() {
     return '#6c757d';
   }
 
+  // Convertisseur de date "DD/MM/YYYY" en objet Date JS
+  function parseMatchDate(dateStr) {
+    if (!dateStr) return new Date(0);
+    const clean = dateStr.trim();
+    // Format JJ/MM/AAAA ou JJ/MM/AA
+    if (clean.includes('/')) {
+      const p = clean.split('/');
+      if (p.length === 3) {
+        let year = p[2];
+        if (year.length === 2) year = '20' + year;
+        return new Date(`${year}-${p[1]}-${p[0]}`);
+      }
+    }
+    return new Date(clean);
+  }
+
   // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
@@ -110,11 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const parts = bdayRaw.includes('/') ? bdayRaw.split('/') : bdayRaw.split('-');
           let shortDate = bdayRaw;
           if (parts.length >= 3) {
-            if (parts[0].length === 4) {
-              shortDate = `${parts[2]}/${parts[1]}`;
-            } else {
-              shortDate = `${parts[0]}/${parts[1]}`;
-            }
+            shortDate = parts[0].length === 4 ? `${parts[2]}/${parts[1]}` : `${parts[0]}/${parts[1]}`;
           }
 
           return `
@@ -130,25 +142,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const matches = await loadJson('matchs.json');
     if (Array.isArray(matches) && matches.length > 0) {
-      const parseMatchDate = (dateStr) => {
-        if (!dateStr) return new Date(0);
-        const clean = dateStr.trim();
-        if (clean.includes('/')) {
-          const p = clean.split('/');
-          if (p.length === 3) return new Date(`${p[2]}-${p[1]}-${p[0]}`);
-        }
-        return new Date(clean);
-      };
+      const now = new Date();
 
-      const sortedMatches = [...matches].sort((a, b) => parseMatchDate(b.date) - parseMatchDate(a.date));
+      // Tri chronologique global
+      const sortedMatches = [...matches].sort((a, b) => parseMatchDate(a.date) - parseMatchDate(b.date));
       
-      const lastPlayed = sortedMatches.find(m => m.resultat && m.resultat.trim() !== '');
-      if (lastPlayed) {
-        let detailsHTML = '';
-        if (lastPlayed.buteurs) {
-          detailsHTML = `<div style="font-size: 0.85em; color: #555; margin-top: 6px;">⚽ <strong>Buteurs :</strong> ${lastPlayed.buteurs}</div>`;
-        }
+      // Dernier match : un match dont la date est passée (ou aujourd'hui) ET qui a un résultat
+      const pastMatches = sortedMatches.filter(m => {
+        const d = parseMatchDate(m.date);
+        return d <= now && m.resultat && m.resultat.trim() !== '';
+      });
 
+      const lastPlayed = pastMatches.length > 0 ? pastMatches[pastMatches.length - 1] : null;
+
+      if (lastPlayed) {
+        let detailsHTML = lastPlayed.buteurs ? `<div style="font-size: 0.85em; color: #555; margin-top: 6px;">⚽ <strong>Buteurs :</strong> ${lastPlayed.buteurs}</div>` : '';
         lastMatchHTML = `
           <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; text-align: center;">
             <small style="color: #666;">Dernier match : ${lastPlayed.date || ''} - ${lastPlayed.lieu || ''}</small><br>
@@ -159,8 +167,12 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
       }
 
-      const futureMatches = [...matches].sort((a, b) => parseMatchDate(a.date) - parseMatchDate(b.date));
-      const nextMatch = futureMatches.find(m => !m.resultat || m.resultat.trim() === '');
+      // Prochain match : un match dont la date est future (ou aujourd'hui) et sans résultat
+      const nextMatch = sortedMatches.find(m => {
+        const d = parseMatchDate(m.date);
+        return d >= now && (!m.resultat || m.resultat.trim() === '');
+      });
+
       if (nextMatch) {
         nextMatchHTML = `
           <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center;">
@@ -173,19 +185,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     root.innerHTML = `
       <h2>Accueil</h2>
-      
       <div style="margin-bottom: 20px; text-align: center;">
         <a href="https://example.com/boutique" target="_blank" style="display: block; background: linear-gradient(135deg, var(--primary-color, #007bff), var(--accent-color, #ffc107)); color: white; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; box-shadow: var(--shadow);">
           🛍️ Visiter la Boutique du Club
         </a>
       </div>
-
       <h3>📅 Dernier Match</h3>
       ${lastMatchHTML}
-      
       <h3>🏆 Prochain Match</h3>
       ${nextMatchHTML}
-
       <h3>🎂 Anniversaires du mois</h3>
       ${bdaysHTML}
     `;
@@ -206,21 +214,20 @@ document.addEventListener('DOMContentLoaded', function() {
       const cleanDirigeants = removeDuplicates(dirigeants);
       const cleanArbitres = removeDuplicates(arbitres);
 
-      if (Array.isArray(cleanPlayers) && cleanPlayers.length > 0) {
+      if (cleanPlayers.length > 0) {
         const list = cleanPlayers.map(p => `<li style="border-left: 4px solid ${getPosteColor(p.poste)};">⚽ <strong>${p.numero ? '#' + p.numero + ' ' : ''}${getPlayerFullName(p)}</strong><br><small>${p.poste || ''}</small></li>`).join('');
         html += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${list}</ul>`;
       }
-      if (Array.isArray(cleanDirigeants) && cleanDirigeants.length > 0) {
+      if (cleanDirigeants.length > 0) {
         const list = cleanDirigeants.map(d => `<li style="border-left: 4px solid #6c757d;">👔 <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`).join('');
         html += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${list}</ul>`;
       }
-      if (Array.isArray(cleanArbitres) && cleanArbitres.length > 0) {
+      if (cleanArbitres.length > 0) {
         const list = cleanArbitres.map(a => `<li style="border-left: 4px solid #6c757d;">🟨 <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
         html += `<h3 class="accordion-header">⬜🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
       }
 
       root.innerHTML = html;
-
       document.querySelectorAll('#root h3').forEach(header => {
         header.addEventListener('click', function() {
           const list = this.nextElementSibling;
@@ -296,13 +303,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <h2>Statistiques de la Saison</h2>
         <h3 class="accordion-header">⚽ Meilleurs Buteurs</h3>
         <ul class="collapsed">${renderList(topScorers, p => `⚽ ${getNbButs(p)} but(s)`, "Aucun buteur")}</ul>
-        
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
         <ul class="collapsed">${renderList(topPassers, p => `👟 ${getNbPasses(p)} passe(s)`, "Aucune passe décisive")}</ul>
-        
         <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
         <ul class="collapsed">${renderList(topCards, p => `🟨 ${getJaunes(p)} | ⬜ ${getBlancs(p)} \vert{} 🟥 ${getRouges(p)}`, "Aucun carton")}</ul>
-        
         <h3 class="accordion-header">🏃 Joueurs les plus utilisés</h3>
         <ul class="collapsed">${renderList(topPlayed, p => `🏃 ${getNbMatchs(p)} match(s)`, "Aucun match enregistré")}</ul>
       `;
@@ -337,7 +341,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Gestion du routage par hash
   function router() {
     const hash = window.location.hash.substring(1) || 'home';
     if (hash === 'home') renderHome();
