@@ -75,13 +75,16 @@ document.addEventListener('DOMContentLoaded', function() {
       loadJson('arbitres.json')
     ]);
 
-    // Fusion de toutes les listes et déduplication basée sur Nom + Prénom + Date de naissance exacte
+    // Déduplication intelligente : 
+    // Si un licencié est dans plusieurs catégories (ex: joueur + dirigeant), on ne le garde qu'une seule fois.
+    // On utilise une clé basée sur le nom complet ET la date de naissance exacte pour ne pas fusionner les homonymes.
     const allMembersMap = new Map();
     [...players, ...dirigeants, ...arbitres].forEach(member => {
       const fullName = getPlayerFullName(member);
       const bdayRaw = member.naissance || member.date_de_naissance || member.Naissance || '';
       if (fullName && bdayRaw) {
-        const uniqueKey = `${fullName}_${bdayRaw.trim()}`;
+        // Clé unique combinant le nom complet ET la date de naissance exacte pour dissocier les homonymes
+        const uniqueKey = `${fullName.toUpperCase()}_${bdayRaw.trim()}`;
         if (!allMembersMap.has(uniqueKey)) {
           allMembersMap.set(uniqueKey, {
             name: fullName,
@@ -149,7 +152,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Ordre inversé : Boutique -> Dernier Match -> Prochain Match -> Anniversaires
     root.innerHTML = `
       <h2>Accueil</h2>
       
