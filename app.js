@@ -272,16 +272,20 @@ document.addEventListener('DOMContentLoaded', function() {
       ]);
       let html = '<h2>Effectif du Club</h2>';
 
-      if (Array.isArray(players) && players.length > 0) {
-        const list = players.map(p => `<li style="border-left: 4px solid ${getPosteColor(p.poste)};">⚽ <strong>${p.numero ? '#' + p.numero + ' ' : ''}${getPlayerFullName(p)}</strong><br><small>${p.poste || ''}</small></li>`).join('');
+      const cleanPlayers = removeDuplicates(players);
+      const cleanDirigeants = removeDuplicates(dirigeants);
+      const cleanArbitres = removeDuplicates(arbitres);
+
+      if (Array.isArray(cleanPlayers) && cleanPlayers.length > 0) {
+        const list = cleanPlayers.map(p => `<li style="border-left: 4px solid ${getPosteColor(p.poste)};">⚽ <strong>${p.numero ? '#' + p.numero + ' ' : ''}${getPlayerFullName(p)}</strong><br><small>${p.poste || ''}</small></li>`).join('');
         html += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${list}</ul>`;
       }
-      if (Array.isArray(dirigeants) && dirigeants.length > 0) {
-        const list = dirigeants.map(d => `<li style="border-left: 4px solid #6c757d;">👔 <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`).join('');
+      if (Array.isArray(cleanDirigeants) && cleanDirigeants.length > 0) {
+        const list = cleanDirigeants.map(d => `<li style="border-left: 4px solid #6c757d;">👔 <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`).join('');
         html += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${list}</ul>`;
       }
-      if (Array.isArray(arbitres) && arbitres.length > 0) {
-        const list = arbitres.map(a => `<li style="border-left: 4px solid #6c757d;">🟨 <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
+      if (Array.isArray(cleanArbitres) && cleanArbitres.length > 0) {
+        const list = cleanArbitres.map(a => `<li style="border-left: 4px solid #6c757d;">🟨 <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
         html += `<h3 class="accordion-header">⬜🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
       }
 
@@ -300,7 +304,6 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = '<h2>Effectif du Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>';
     }
   }
-
   // --- ANNONCES ---
   async function renderAnnouncements() {
     root.innerHTML = '<h2>Annonces Club</h2><p style="text-align: center;">Chargement...</p>';
