@@ -62,29 +62,32 @@ document.addEventListener('DOMContentLoaded', function() {
     return '#6c757d';
   }
 
- // --- PAGE D'ACCUEIL ---
+// --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
     let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
     let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
 
-    // Chargement de toutes les populations pour les anniversaires (joueurs, dirigeants, arbitres)
+    // Chargement de toutes les populations (joueurs, dirigeants, arbitres)
     const [players, dirigeants, arbitres] = await Promise.all([
       loadJson('players.json'),
       loadJson('dirigeants.json'),
       loadJson('arbitres.json')
     ]);
 
-    // Déduplication intelligente : 
-    // Si un licencié est dans plusieurs catégories (ex: joueur + dirigeant), on ne le garde qu'une seule fois.
-    // On utilise une clé basée sur le nom complet ET la date de naissance exacte pour ne pas fusionner les homonymes.
+    // Déduplication robuste : normalisation poussée pour fusionner les doublons inter-catégories
     const allMembersMap = new Map();
     [...players, ...dirigeants, ...arbitres].forEach(member => {
       const fullName = getPlayerFullName(member);
       const bdayRaw = member.naissance || member.date_de_naissance || member.Naissance || '';
       if (fullName && bdayRaw) {
-        // Clé unique combinant le nom complet ET la date de naissance exacte pour dissocier les homonymes
-        const uniqueKey = `${fullName.toUpperCase()}_${bdayRaw.trim()}`;
+        // Nettoyage de la date pour ne garder que les chiffres (ex: "10/09/1990" -> "1009")
+        const cleanDigits = bdayRaw.replace(/\D/g, '');
+        const dayMonthKey = cleanDigits.length >= 4 ? cleanDigits.substring(0, 4) : cleanDigits;
+        
+        // Clé unique basée sur le nom majuscule et les 4 chiffres du jour/mois
+        const uniqueKey = `${fullName.trim().toUpperCase()}_${dayMonthKey}`;
+        
         if (!allMembersMap.has(uniqueKey)) {
           allMembersMap.set(uniqueKey, {
             name: fullName,
@@ -132,11 +135,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const sortedMatches = [...matches].sort((a, b) => new Date(b.date) - new Date(a.date));
       const lastPlayed = sortedMatches.find(m => m.resultat);
       if (lastPlayed) {
+        let detailsHTML = '';
+        if (lastPlayed.buteurs) {
+          detailsHTML = `<div style="font-size: 0.85em; color: #555; margin-top: 6px;">⚽ <strong>Buteurs :</strong> ${lastPlayed.buteurs}</div>`;
+        }
+
         lastMatchHTML = `
-          <div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">
+          <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; text-align: center;">
             <small style="color: #666;">Dernier match : ${lastPlayed.date || ''} - ${lastPlayed.lieu || ''}</small><br>
-            <strong>vs ${lastPlayed.adversaire || ''}</strong><br>
-            Score : ${formatScoreColor(lastPlayed.resultat)}
+            <strong style="font-size: 1.05em;">vs ${lastPlayed.adversaire || ''}</strong><br>
+            <div style="margin-top: 4px;">Score : ${formatScoreColor(lastPlayed.resultat)}</div>
+            ${detailsHTML}
           </div>
         `;
       }
@@ -144,9 +153,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const nextMatch = sortedMatches.find(m => !m.resultat);
       if (nextMatch) {
         nextMatchHTML = `
-          <div style="padding: 10px; background: #f8f9fa; border-radius: 8px;">
+          <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center;">
             <small style="color: #666;">Prochain match : ${nextMatch.date || ''} - ${nextMatch.lieu || ''}</small><br>
-            <strong>vs ${nextMatch.adversaire || ''}</strong>
+            <strong style="font-size: 1.05em;">vs ${nextMatch.adversaire || ''}</strong>
           </div>
         `;
       }
@@ -157,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       <div style="margin-bottom: 20px; text-align: center;">
         <a href="https://example.com/boutique" target="_blank" style="display: block; background: linear-gradient(135deg, var(--primary-color, #007bff), var(--accent-color, #ffc107)); color: white; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; box-shadow: var(--shadow);">
-          la Boutique du Club
+          🛍️ Visiter la Boutique du Club
         </a>
       </div>
 
