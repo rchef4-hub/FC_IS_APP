@@ -183,7 +183,6 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       const matches = await loadJson('matchs.json');
 
-      // Sécurité : on s'assure que matches est bien un tableau
       if (!Array.isArray(matches)) {
         throw new Error("Le format des matchs n'est pas un tableau valide.");
       }
