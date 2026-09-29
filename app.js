@@ -26,40 +26,183 @@ document.addEventListener('DOMContentLoaded', function() {
       return defaultValue;
     }
   }
+// --- HELPER DE DÉDUPLICATION GLOBALE ---
+  function removeDuplicates(membersArray) {
+    const map = new Map();
+    membersArray.forEach(member => {
+      const fullName = getPlayerFullName(member);
+      if (fullName) {
+        const cleanName = fullName.trim().toUpperCase().replace(/\s+/g, ' ');
+        const bdayRaw = member.naissance || member.date_de_naissance || member.Naissance || '';
+        const cleanDigits = bdayRaw.replace(/\D/g, '');
+        const dayMonthKey = cleanDigits.length >= 4 ? cleanDigits.substring(0, 4) : cleanDigits;
+        
+        // Clé unique combinant le nom normalisé et la date de naissance
+        const uniqueKey = `${cleanName}_${dayMonthKey}`;
+        
+        if (!map.has(uniqueKey)) {
+          map.set(uniqueKey, member);
+        }
+      }
+    });
+    return Array.from(map.values());
+  }
 
-  // --- HELPER FORMAT UNIQUE : "NOM Prénom" ---
-  function getPlayerFullName(p) {
-    if (!p) return '';
-    const nom = (p.nom || p.Nom || '').trim().toUpperCase();
-    let prenom = (p.prenom || p.Prenom || p.prénom || '').trim();
-    if (prenom.length > 0) {
-      prenom = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+  // --- PAGE D'ACCUEIL ---
+  async function renderHome() {
+    let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
+    let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
+    let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
+
+    const [players, dirigeants, arbitres] = await Promise.all([
+      loadJson('players.json'),
+      loadJson('dirigeants.json'),
+      loadJson('arbitres.json')
+    ]);
+
+    // Utilisation de la fonction de déduplication globale
+    const allMembers = removeDuplicates([...players, ...dirigeants, ...arbitres]);
+
+    if (allMembers.length > 0) {
+      const currentMonth = new Date().getMonth() + 1;
+      const monthBDays = allMembers.filter(m => {
+        const bdayRaw = m.naissance || m.date_de_naissance || m.Naissance || '';
+        if (!bdayRaw) return false;
+        const parts = bdayRaw.includes('/') ? bdayRaw.split('/') : bdayRaw.split('-');
+        if (parts.length < 3) return false;
+        const monthIndex = parts[0].length === 4 ? 1 : 1; 
+        return parseInt(parts[monthIndex], 10) === currentMonth;
+      });
+
+      if (monthBDays.length > 0) {
+        bdaysHTML = monthBDays.map(m => {
+          const bdayRaw = m.naissance || m.date_de_naissance || m.Naissance || '';
+          const parts = bdayRaw.includes('/') ? bdayRaw.split('/') : bdayRaw.split('-');
+          let shortDate = bdayRaw;
+          if (parts.length >= 3) {
+            if (parts[0].length === 4) {
+              shortDate = `${parts[2]}/${parts[1]}`;
+            } else {
+              shortDate = `${parts[0]}/${parts[1]}`;
+            }
+          }
+
+          return `
+            <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
+              <span>🎂 <strong>${getPlayerFullName(m)}</strong></span>
+              <small style="color: var(--primary-color, #007bff); font-weight: bold;">${shortDate}</small>
+            </li>
+          `;
+        }).join('');
+        bdaysHTML = `<ul style="padding: 0; margin: 0;">${bdaysHTML}</ul>`;
+      }
     }
-    return prenom ? `${nom} ${prenom}` : nom;
+
+    const matches = await loadJson('matchs.json');
+    if (Array.isArray(matches) && matches.length > 0) {
+      const parseMatchDate = (dateStr) => {
+        if (!dateStr) return new Date(0);
+        const clean = dateStr.trim();
+        if (clean.includes('/')) {
+          const p = clean.split('/');
+          if (p.length === 3) return new Date(`${p[2]}-${p[1]}-${p[0]}`);
+        }
+        return new Date(clean);
+      };
+
+      const sortedMatches = [...matches].sort((a, b) => parseMatchDate(b.date) - parseMatchDate(a.date));
+      
+      const lastPlayed = sortedMatches.find(m => m.resultat && m.resultat.trim() !== '');
+      if (lastPlayed) {
+        let detailsHTML = '';
+        if (lastPlayed.buteurs) {
+          detailsHTML = `<div style="font-size: 0.85em; color: #555; margin-top: 6px;">⚽ <strong>Buteurs :</strong> ${lastPlayed.buteurs}</div>`;
+        }
+
+        lastMatchHTML = `
+          <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; text-align: center;">
+            <small style="color: #666;">Dernier match : ${lastPlayed.date || ''} - ${lastPlayed.lieu || ''}</small><br>
+            <strong style="font-size: 1.05em;">vs ${lastPlayed.adversaire || ''}</strong><br>
+            <div style="margin-top: 4px;">Score : ${formatScoreColor(lastPlayed.resultat)}</div>
+            ${detailsHTML}
+          </div>
+        `;
+      }
+
+      const futureMatches = [...matches].sort((a, b) => parseMatchDate(a.date) - parseMatchDate(b.date));
+      const nextMatch = futureMatches.find(m => !m.resultat || m.resultat.trim() === '');
+      if (nextMatch) {
+        nextMatchHTML = `
+          <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+            <small style="color: #666;">Prochain match : ${nextMatch.date || ''} - ${nextMatch.lieu || ''}</small><br>
+            <strong style="font-size: 1.05em;">vs ${nextMatch.adversaire || ''}</strong>
+          </div>
+        `;
+      }
+    }
+
+    root.innerHTML = `
+      <h2>Accueil</h2>
+      
+      <div style="margin-bottom: 20px; text-align: center;">
+        <a href="https://example.com/boutique" target="_blank" style="display: block; background: linear-gradient(135deg, var(--primary-color, #007bff), var(--accent-color, #ffc107)); color: white; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; box-shadow: var(--shadow);">
+          🛍️ Visiter la Boutique du Club
+        </a>
+      </div>
+
+      <h3>📅 Dernier Match</h3>
+      ${lastMatchHTML}
+      
+      <h3>🏆 Prochain Match</h3>
+      ${nextMatchHTML}
+
+      <h3>🎂 Anniversaires du mois</h3>
+      ${bdaysHTML}
+    `;
   }
 
-  function formatScoreColor(scoreStr) {
-    if (!scoreStr) return '';
-    let str = typeof scoreStr === 'object' 
-      ? `${scoreStr.scoreDom ?? '-'} - ${scoreStr.scoreExt ?? '-'}` 
-      : scoreStr;
-    const lower = str.toLowerCase();
-    
-    if (lower.includes('victoire')) return `<span style="color: #28a745; font-weight: bold;">${str}</span>`;
-    if (lower.includes('nul')) return `<span style="color: #fd7e14; font-weight: bold;">${str}</span>`;
-    if (lower.includes('défaite') || lower.includes('defaite')) return `<span style="color: #6b0f40; font-weight: bold;">${str}</span>`;
-    
-    return `<strong>${str}</strong>`;
-  }
+  // --- EFFECTIF ---
+  async function renderPlayers() {
+    root.innerHTML = '<h2>Effectif du Club</h2><p style="text-align: center;">Chargement...</p>';
+    try {
+      const [players, dirigeants, arbitres] = await Promise.all([
+        loadJson('players.json'),
+        loadJson('dirigeants.json'),
+        loadJson('arbitres.json')
+      ]);
+      let html = '<h2>Effectif du Club</h2>';
 
-  function getPosteColor(posteStr) {
-    if (!posteStr) return '#6c757d'; 
-    const p = posteStr.toLowerCase();
-    if (p.includes('gardien') || p.includes('gb')) return '#28a745';
-    if (p.includes('défenseur') || p.includes('def')) return '#17a2b8';
-    if (p.includes('milieu')) return '#fd7e14';
-    if (p.includes('attaquant') || p.includes('att')) return '#c9a227';
-    return '#6c757d';
+      const cleanPlayers = removeDuplicates(players);
+      const cleanDirigeants = removeDuplicates(dirigeants);
+      const cleanArbitres = removeDuplicates(arbitres);
+
+      if (Array.isArray(cleanPlayers) && cleanPlayers.length > 0) {
+        const list = cleanPlayers.map(p => `<li style="border-left: 4px solid ${getPosteColor(p.poste)};">⚽ <strong>${p.numero ? '#' + p.numero + ' ' : ''}${getPlayerFullName(p)}</strong><br><small>${p.poste || ''}</small></li>`).join('');
+        html += `<h3 class="accordion-header">⚽ Joueurs</h3><ul class="collapsed">${list}</ul>`;
+      }
+      if (Array.isArray(cleanDirigeants) && cleanDirigeants.length > 0) {
+        const list = cleanDirigeants.map(d => `<li style="border-left: 4px solid #6c757d;">👔 <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`).join('');
+        html += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${list}</ul>`;
+      }
+      if (Array.isArray(cleanArbitres) && cleanArbitres.length > 0) {
+        const list = cleanArbitres.map(a => `<li style="border-left: 4px solid #6c757d;">🟨 <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
+        html += `<h3 class="accordion-header">⬜🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
+      }
+
+      root.innerHTML = html;
+
+      document.querySelectorAll('#root h3').forEach(header => {
+        header.addEventListener('click', function() {
+          const list = this.nextElementSibling;
+          if (list && list.tagName === 'UL') {
+            list.classList.toggle('collapsed'); 
+            this.classList.toggle('active');
+          }
+        });
+      });
+    } catch (e) {
+      root.innerHTML = '<h2>Effectif du Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>';
+    }
   }
 
 // --- PAGE D'ACCUEIL ---
