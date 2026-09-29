@@ -68,24 +68,61 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
     let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
 
-    const players = await loadJson('players.json');
-    if (Array.isArray(players) && players.length > 0) {
+    // Chargement de toutes les populations pour les anniversaires (joueurs, dirigeants, arbitres)
+    const [players, dirigeants, arbitres] = await Promise.all([
+      loadJson('players.json'),
+      loadJson('dirigeants.json'),
+      loadJson('arbitres.json')
+    ]);
+
+    // Fusion de toutes les listes et déduplication basée sur Nom + Prénom + Date de naissance exacte
+    const allMembersMap = new Map();
+    [...players, ...dirigeants, ...arbitres].forEach(member => {
+      const fullName = getPlayerFullName(member);
+      const bdayRaw = member.naissance || member.date_de_naissance || member.Naissance || '';
+      if (fullName && bdayRaw) {
+        // Clé unique combinant le nom complet ET la date de naissance pour différencier les homonymes
+        const uniqueKey = `${fullName}_${bdayRaw.trim()}`;
+        if (!allMembersMap.has(uniqueKey)) {
+          allMembersMap.set(uniqueKey, {
+            name: fullName,
+            naissance: bdayRaw
+          });
+        }
+      }
+    });
+
+    const allMembers = Array.from(allMembersMap.values());
+    if (allMembers.length > 0) {
       const currentMonth = new Date().getMonth() + 1;
-      const monthBDays = players.filter(p => {
-        const dateStr = p.naissance || p.date_de_naissance || p.Naissance;
-        if (!dateStr) return false;
-        const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
+      const monthBDays = allMembers.filter(m => {
+        const parts = m.naissance.includes('/') ? m.naissance.split('/') : m.naissance.split('-');
         if (parts.length < 3) return false;
-        return parseInt(parts[1], 10) === currentMonth;
+        // Détection de la position du mois (format JJ/MM/AAAA ou AAAA-MM-JJ)
+        const monthIndex = parts[0].length === 4 ? 1 : 1; 
+        return parseInt(parts[monthIndex], 10) === currentMonth;
       });
 
       if (monthBDays.length > 0) {
-        bdaysHTML = monthBDays.map(p => `
-          <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
-            <span>🎂 <strong>${getPlayerFullName(p)}</strong></span>
-            <small style="color: var(--primary-color, #007bff); font-weight: bold;">${p.naissance || ''}</small>
-          </li>
-        `).join('');
+        bdaysHTML = monthBDays.map(m => {
+          // Extraction uniquement du jour et du mois (ex: "15/04") pour masquer l'année
+          const parts = m.naissance.includes('/') ? m.naissance.split('/') : m.naissance.split('-');
+          let shortDate = m.naissance;
+          if (parts.length >= 3) {
+            if (parts[0].length === 4) {
+              shortDate = `${parts[2]}/${parts[1]}`; // Format AAAA-MM-JJ -> JJ/MM
+            } else {
+              shortDate = `${parts[0]}/${parts[1]}`; // Format JJ/MM/AAAA -> JJ/MM
+            }
+          }
+
+          return `
+            <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
+              <span>🎂 <strong>${m.name}</strong></span>
+              <small style="color: var(--primary-color, #007bff); font-weight: bold;">${shortDate}</small>
+            </li>
+          `;
+        }).join('');
         bdaysHTML = `<ul style="padding: 0; margin: 0;">${bdaysHTML}</ul>`;
       }
     }
@@ -117,10 +154,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     root.innerHTML = `
       <h2>Accueil</h2>
+      
+      <!-- Lien vers la boutique du club -->
+      <div style="margin-bottom: 20px; text-align: center;">
+        <a href="https://example.com/boutique" target="_blank" style="display: block; background: linear-gradient(135deg, var(--primary-color, #007bff), var(--accent-color, #ffc107)); color: white; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; box-shadow: var(--shadow);">
+          🛍️ Visiter la Boutique du Club
+        </a>
+      </div>
+
       <h3>🎂 Anniversaires du mois</h3>
       ${bdaysHTML}
+      
       <h3>📅 Dernier Match</h3>
       ${lastMatchHTML}
+      
       <h3>🏆 Prochain Match</h3>
       ${nextMatchHTML}
     `;
