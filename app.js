@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
         html += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${list}</ul>`;
       }
       if (cleanArbitres.length > 0) {
-        const list = cleanArbitres.map(a => `<li style="border-left: 4px solid #6c757d;">🟨 <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
+        const list = cleanArbitres.map(a => `<li style="border-left: 4px solid #6c757d;">🟨🟥 <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
         html += `<h3 class="accordion-header">⬜🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
       }
 
