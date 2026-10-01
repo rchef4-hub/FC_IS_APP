@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const isBenevole = type.includes('bénévole') || type.includes('benevole') || type.includes('touche');
           
           // Icône : Drapeau pour les bénévoles, Cartons pour les officiels
-          const icone = isBenevole ? '🚩' : '🟨 🟥';
+          const icone = isBenevole ? '⬜' : '🟨 🟥';
 
           return `<li style="border-left: 4px solid #6c757d;">
             ${icone} <strong>${getPlayerFullName(a)}</strong><br>
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </li>`;
         }).join('');
         
-        html += `<h3 class="accordion-header">🚩🟨🟥 Arbitres & Bénévoles</h3><ul class="collapsed">${list}</ul>`;
+        html += `<h3 class="accordion-header">⬜🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
       }
 
       root.innerHTML = html;
