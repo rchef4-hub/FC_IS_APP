@@ -72,21 +72,12 @@ document.addEventListener('DOMContentLoaded', function() {
     return '#6c757d';
   }
 
-  // --- EXTRACTION FIABLE DU MOIS D'ANNIVERSAIRE ---
   function getBirthMonth(bdayRaw) {
     if (!bdayRaw) return null;
     const clean = bdayRaw.trim();
     const parts = clean.includes('/') ? clean.split('/') : clean.split('-');
     if (parts.length < 3) return null;
-
-    // Si le format commence par l'année (ex: YYYY-MM-DD)
-    if (parts[0].length === 4) {
-      return parseInt(parts[1], 10);
-    } 
-    // Si le format commence par le jour (ex: DD/MM/YYYY)
-    else {
-      return parseInt(parts[1], 10);
-    }
+    return parts[0].length === 4 ? parseInt(parts[1], 10) : parseInt(parts[1], 10);
   }
 
   // --- PAGE D'ACCUEIL ---
@@ -104,14 +95,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const allMembers = removeDuplicates([...players, ...dirigeants, ...arbitres]);
 
     if (allMembers.length > 0) {
-      const currentMonth = new Date().getMonth() + 1; // Septembre = 9
+      const currentMonth = new Date().getMonth() + 1;
       const monthBDays = allMembers.filter(m => {
         const bdayRaw = m.naissance || m.date_de_naissance || m.Naissance || '';
         return getBirthMonth(bdayRaw) === currentMonth;
       });
 
       if (monthBDays.length > 0) {
-        // Tri optionnel par jour du mois pour plus de lisibilité
         monthBDays.sort((a, b) => {
           const dateA = a.naissance || a.date_de_naissance || a.Naissance || '';
           const dateB = b.naissance || b.date_de_naissance || b.Naissance || '';
@@ -260,13 +250,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- STATISTIQUES ---
+  // --- STATISTIQUES (AVEC CALCUL AUTOMATIQUE DEPUIS LES MATCHS) ---
   async function renderStats() {
     root.innerHTML = '<h2>Statistiques</h2><p style="text-align: center;">Chargement...</p>';
     try {
-      const players = await loadJson('players.json');
+      const [players, matches] = await Promise.all([
+        loadJson('players.json'),
+        loadJson('matchs.json')
+      ]);
+
+      // Objet pour comptabiliser dynamiquement les buts par nom de joueur
+      const dynamicGoals = {};
+      if (Array.isArray(matches)) {
+        matches.forEach(m => {
+          if (m.buteurs) {
+            // Sépare les buteurs si plusieurs (ex: "ROUSSEL Quentin, DUPONT Jean") ou sur plusieurs lignes
+            const lines = m.buteurs.split(/,|\n/);
+            lines.forEach(line => {
+              // Nettoie la chaîne pour extraire le nom (enlève les éventuels numéros ou libellés de minutes type "10'")
+              let cleanName = line.replace(/\d+['e]*/g, '').replace(/⚽/g, '').trim().toUpperCase();
+              if (cleanName) {
+                dynamicGoals[cleanName] = (dynamicGoals[cleanName] || 0) + 1;
+              }
+            });
+          }
+        });
+      }
+
+      // Calcul des stats globales par joueur en fusionnant players.json et dynamicGoals
       const getNbMatchs = p => parseInt(p.matchs ?? p.matches ?? 0, 10) || 0;
-      const getNbButs = p => parseInt(p.buts ?? 0, 10) || 0;
+      
+      const getNbButs = p => {
+        const baseButs = parseInt(p.buts ?? 0, 10) || 0;
+        const fullName = getPlayerFullName(p).toUpperCase();
+        const matchButs = dynamicGoals[fullName] || 0;
+        return baseButs + matchButs;
+      };
+
       const getNbPasses = p => parseInt(p.passes ?? 0, 10) || 0;
       const getJaunes = p => parseInt(p.cartons_jaunes ?? 0, 10) || 0;
       const getBlancs = p => parseInt(p.cartons_blancs ?? 0, 10) || 0;
