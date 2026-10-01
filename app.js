@@ -32,13 +32,11 @@ document.addEventListener('DOMContentLoaded', function() {
     return prenom ? `${nom} ${prenom}` : nom;
   }
 
-  // --- DÉDUPLICATION RADICALE (Par Nom + Prénom uniquement) ---
   function removeDuplicates(membersArray) {
     const map = new Map();
     membersArray.forEach(member => {
       const rawName = getPlayerFullName(member);
       if (rawName) {
-        // Nettoyage radical des espaces et accents pour fusionner les doublons parfaits
         const cleanName = rawName
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "")
@@ -74,6 +72,23 @@ document.addEventListener('DOMContentLoaded', function() {
     return '#6c757d';
   }
 
+  // --- EXTRACTION FIABLE DU MOIS D'ANNIVERSAIRE ---
+  function getBirthMonth(bdayRaw) {
+    if (!bdayRaw) return null;
+    const clean = bdayRaw.trim();
+    const parts = clean.includes('/') ? clean.split('/') : clean.split('-');
+    if (parts.length < 3) return null;
+
+    // Si le format commence par l'année (ex: YYYY-MM-DD)
+    if (parts[0].length === 4) {
+      return parseInt(parts[1], 10);
+    } 
+    // Si le format commence par le jour (ex: DD/MM/YYYY)
+    else {
+      return parseInt(parts[1], 10);
+    }
+  }
+
   // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
@@ -89,17 +104,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const allMembers = removeDuplicates([...players, ...dirigeants, ...arbitres]);
 
     if (allMembers.length > 0) {
-      const currentMonth = new Date().getMonth() + 1;
+      const currentMonth = new Date().getMonth() + 1; // Septembre = 9
       const monthBDays = allMembers.filter(m => {
         const bdayRaw = m.naissance || m.date_de_naissance || m.Naissance || '';
-        if (!bdayRaw) return false;
-        const parts = bdayRaw.includes('/') ? bdayRaw.split('/') : bdayRaw.split('-');
-        if (parts.length < 3) return false;
-        const monthIndex = parts[0].length === 4 ? 1 : 1; 
-        return parseInt(parts[monthIndex], 10) === currentMonth;
+        return getBirthMonth(bdayRaw) === currentMonth;
       });
 
       if (monthBDays.length > 0) {
+        // Tri optionnel par jour du mois pour plus de lisibilité
+        monthBDays.sort((a, b) => {
+          const dateA = a.naissance || a.date_de_naissance || a.Naissance || '';
+          const dateB = b.naissance || b.date_de_naissance || b.Naissance || '';
+          return dateA.localeCompare(dateB);
+        });
+
         bdaysHTML = monthBDays.map(m => {
           const bdayRaw = m.naissance || m.date_de_naissance || m.Naissance || '';
           const parts = bdayRaw.includes('/') ? bdayRaw.split('/') : bdayRaw.split('-');
@@ -121,10 +139,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const matches = await loadJson('matchs.json');
     if (Array.isArray(matches) && matches.length > 0) {
-      // Filtrer les matchs qui ont un score (pour le dernier match joué)
       const playedMatches = matches.filter(m => m.resultat && m.resultat.trim() !== '');
       if (playedMatches.length > 0) {
-        const lastPlayed = playedMatches[playedMatches.length - 1]; // Prend le dernier du fichier
+        const lastPlayed = playedMatches[playedMatches.length - 1];
         let detailsHTML = lastPlayed.buteurs ? `<div style="font-size: 0.85em; color: #555; margin-top: 6px;">⚽ <strong>Buteurs :</strong> ${lastPlayed.buteurs}</div>` : '';
         lastMatchHTML = `
           <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; text-align: center;">
@@ -136,10 +153,9 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
       }
 
-      // Filtrer les matchs sans score (pour le prochain match)
       const upcomingMatches = matches.filter(m => !m.resultat || m.resultat.trim() === '');
       if (upcomingMatches.length > 0) {
-        const nextMatch = upcomingMatches[0]; // Prend le premier match à venir du fichier
+        const nextMatch = upcomingMatches[0];
         nextMatchHTML = `
           <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center;">
             <small style="color: #666;">Prochain match : ${nextMatch.date || ''} - ${nextMatch.lieu || ''}</small><br>
