@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const isBenevole = type.includes('bénévole') || type.includes('benevole') || type.includes('touche');
           
           // Icône : Drapeau pour les bénévoles, Cartons pour les officiels
-          const icone = isBenevole ? '⬜' : '🟨 🟥';
+          const icone = isBenevole ? '🏁' : '🟨 🟥';
 
           return `<li style="border-left: 4px solid #6c757d;">
             ${icone} <strong>${getPlayerFullName(a)}</strong><br>
