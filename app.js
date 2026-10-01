@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div style="padding: 15px;">
           <p style="margin-bottom: 12px; color: #555; font-size: 0.95em;">Consultez le classement complet de la poule sur le site du District de la Haute-Marne :</p>
-          <a href="METS_ICI_LE_LIEN_OFFICIEL" target="_blank" style="display: inline-block; background: #5c1d43; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; box-shadow: var(--shadow);">
+          <a href="https://epreuves.fff.fr/competition/engagement/449274-departemental-4/phase/1/2/classement" target="_blank" style="display: inline-block; background: #5c1d43; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; box-shadow: var(--shadow);">
             🏆 Voir le Classement Officiel ↗
           </a>
         </div>
