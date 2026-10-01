@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return parseInt(parts[1], 10);
   }
 
-  // --- PAGE D'ACCUEIL (ANCIEN VISUEL) ---
+  // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<div style="padding: 15px; text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</div>';
     let lastMatchHTML = '<div style="padding: 15px; text-align:center; color:#666;">Aucun résultat récent</div>';
@@ -161,11 +161,23 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Structure des blocs avec le style d'origine (Bandeau boutique en haut, cartes encadrées avec en-têtes bordeaux)
+    // Structure des blocs avec le bandeau boutique, le bloc classement officiel, puis les matchs et anniversaires
     root.innerHTML = `
       <div style="background: #5c1d43; color: white; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: var(--shadow);">
         <span style="font-weight: bold; font-size: 1.05em;">🛍️ Boutique Officielle JAKO</span>
-        <a href="https://team.jako.com/fr-fr/team/fc_is/" target="_blank" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.9em; font-weight: bold;">Visiter ↗</a>
+        <a href="https://example.com/boutique" target="_blank" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.9em; font-weight: bold;">Visiter ↗</a>
+      </div>
+
+      <div style="background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid #eaeaea; text-align: center;">
+        <div style="background: #5c1d43; color: white; padding: 10px 15px; font-weight: bold; font-size: 1.05em;">
+          📊 Classement Officiel
+        </div>
+        <div style="padding: 15px;">
+          <p style="margin-bottom: 12px; color: #555; font-size: 0.95em;">Consultez le classement complet de la poule sur le site du District de la Haute-Marne :</p>
+          <a href="METS_ICI_LE_LIEN_OFFICIEL" target="_blank" style="display: inline-block; background: #5c1d43; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; box-shadow: var(--shadow);">
+            🏆 Voir le Classement Officiel ↗
+          </a>
+        </div>
       </div>
 
       <div style="background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid #eaeaea;">
