@@ -218,9 +218,14 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       if (cleanDirigeants.length > 0) {
-        const list = cleanDirigeants.map(d => `<li style="border-left: 4px solid #6c757d;">👔 <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`).join('');
+        const list = cleanDirigeants.map(d => {
+          // Récupère l'émoji du fichier JSON, ou met 👔 par défaut s'il n'y a rien
+          const symbole = d.symbole || '👔';
+          return `<li style="border-left: 4px solid #6c757d;">${symbole} <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`;
+        }).join('');
+        
         html += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${list}</ul>`;
-      } // <--- C'est cette accolade qui manquait !
+      }
 
       if (cleanArbitres.length > 0) {
         const list = cleanArbitres.map(a => {
