@@ -77,14 +77,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const clean = bdayRaw.trim();
     const parts = clean.includes('/') ? clean.split('/') : clean.split('-');
     if (parts.length < 3) return null;
-    return parts[0].length === 4 ? parseInt(parts[1], 10) : parseInt(parts[1], 10);
+    return parseInt(parts[1], 10);
   }
 
-  // --- PAGE D'ACCUEIL ---
+  // --- PAGE D'ACCUEIL (ANCIEN VISUEL) ---
   async function renderHome() {
-    let bdaysHTML = '<p style="text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</p>';
-    let lastMatchHTML = '<p style="text-align:center; color:#666;">Aucun résultat récent</p>';
-    let nextMatchHTML = '<p style="text-align:center; color:#666;">Aucun match à venir</p>';
+    let bdaysHTML = '<div style="padding: 15px; text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</div>';
+    let lastMatchHTML = '<div style="padding: 15px; text-align:center; color:#666;">Aucun résultat récent</div>';
+    let nextMatchHTML = '<div style="padding: 15px; text-align:center; color:#666;">Aucun match à venir</div>';
 
     const [players, dirigeants, arbitres] = await Promise.all([
       loadJson('players.json'),
@@ -117,13 +117,12 @@ document.addEventListener('DOMContentLoaded', function() {
           }
 
           return `
-            <li style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; list-style: none; border-left: 4px solid var(--accent-color, #ffc107);">
+            <div style="padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
               <span>🎂 <strong>${getPlayerFullName(m)}</strong></span>
               <small style="color: var(--primary-color, #007bff); font-weight: bold;">${shortDate}</small>
-            </li>
+            </div>
           `;
         }).join('');
-        bdaysHTML = `<ul style="padding: 0; margin: 0;">${bdaysHTML}</ul>`;
       }
     }
 
@@ -132,12 +131,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const playedMatches = matches.filter(m => m.resultat && m.resultat.trim() !== '');
       if (playedMatches.length > 0) {
         const lastPlayed = playedMatches[playedMatches.length - 1];
-        let detailsHTML = lastPlayed.buteurs ? `<div style="font-size: 0.85em; color: #555; margin-top: 6px;">⚽ <strong>Buteurs :</strong> ${lastPlayed.buteurs}</div>` : '';
+        let detailsHTML = '';
+        if (lastPlayed.buteurs) detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 6px;">⚽ <strong>Buteur(s) :</strong> ${lastPlayed.buteurs}</div>`;
+        if (lastPlayed.passeurs) detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 4px;">👟 <strong>Passeur(s) :</strong> ${lastPlayed.passeurs}</div>`;
+
         lastMatchHTML = `
-          <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; text-align: center;">
-            <small style="color: #666;">Dernier match : ${lastPlayed.date || ''} - ${lastPlayed.lieu || ''}</small><br>
-            <strong style="font-size: 1.05em;">vs ${lastPlayed.adversaire || ''}</strong><br>
-            <div style="margin-top: 4px;">Score : ${formatScoreColor(lastPlayed.resultat)}</div>
+          <div style="text-align: center;">
+            <div style="color: #666; font-size: 0.9em; margin-bottom: 4px;">📅 ${lastPlayed.date || ''} - ${lastPlayed.lieu || ''}</div>
+            <div style="font-size: 1.15em; font-weight: bold; margin-bottom: 6px;">vs ${lastPlayed.adversaire || ''}</div>
+            <div style="font-size: 1.05em; margin-bottom: 6px;">Score : ${formatScoreColor(lastPlayed.resultat)}</div>
             ${detailsHTML}
           </div>
         `;
@@ -146,28 +148,52 @@ document.addEventListener('DOMContentLoaded', function() {
       const upcomingMatches = matches.filter(m => !m.resultat || m.resultat.trim() === '');
       if (upcomingMatches.length > 0) {
         const nextMatch = upcomingMatches[0];
+        const isDomicile = nextMatch.lieu && nextMatch.lieu.toLowerCase().includes('domicile');
+        const badgeColor = isDomicile ? '#28a745' : '#17a2b8';
+
         nextMatchHTML = `
-          <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center;">
-            <small style="color: #666;">Prochain match : ${nextMatch.date || ''} - ${nextMatch.lieu || ''}</small><br>
-            <strong style="font-size: 1.05em;">vs ${nextMatch.adversaire || ''}</strong>
+          <div style="text-align: center;">
+            <div style="color: #666; font-size: 0.9em; margin-bottom: 4px;">📅 ${nextMatch.date || ''}</div>
+            <div style="font-size: 1.15em; font-weight: bold; margin-bottom: 8px;">vs ${nextMatch.adversaire || ''}</div>
+            <span style="background: ${badgeColor}; color: white; padding: 3px 12px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">${nextMatch.lieu || 'N/C'}</span>
           </div>
         `;
       }
     }
 
+    // Structure des blocs avec le style d'origine (Bandeau boutique en haut, cartes encadrées avec en-têtes bordeaux)
     root.innerHTML = `
-      <h2>Accueil</h2>
-      <div style="margin-bottom: 20px; text-align: center;">
-        <a href="https://example.com/boutique" target="_blank" style="display: block; background: linear-gradient(135deg, var(--primary-color, #007bff), var(--accent-color, #ffc107)); color: white; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; box-shadow: var(--shadow);">
-          🛍️ Visiter la Boutique du Club
-        </a>
+      <div style="background: #5c1d43; color: white; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: var(--shadow);">
+        <span style="font-weight: bold; font-size: 1.05em;">🛍️ Boutique Officielle JAKO</span>
+        <a href="https://example.com/boutique" target="_blank" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.9em; font-weight: bold;">Visiter ↗</a>
       </div>
-      <h3>📅 Dernier Match</h3>
-      ${lastMatchHTML}
-      <h3>🏆 Prochain Match</h3>
-      ${nextMatchHTML}
-      <h3>🎂 Anniversaires du mois</h3>
-      ${bdaysHTML}
+
+      <div style="background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid #eaeaea;">
+        <div style="background: #5c1d43; color: white; padding: 10px 15px; font-weight: bold; text-align: center; font-size: 1.05em;">
+          ⚽ Dernier Match
+        </div>
+        <div style="padding: 15px;">
+          ${lastMatchHTML}
+        </div>
+      </div>
+
+      <div style="background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid #eaeaea;">
+        <div style="background: #5c1d43; color: white; padding: 10px 15px; font-weight: bold; text-align: center; font-size: 1.05em;">
+          🏆 Prochain Match
+        </div>
+        <div style="padding: 15px;">
+          ${nextMatchHTML}
+        </div>
+      </div>
+
+      <div style="background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid #eaeaea;">
+        <div style="background: #5c1d43; color: white; padding: 10px 15px; font-weight: bold; text-align: center; font-size: 1.05em;">
+          🎉 Anniversaires du mois
+        </div>
+        <div style="padding: 15px;">
+          ${bdaysHTML}
+        </div>
+      </div>
     `;
   }
 
@@ -250,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- STATISTIQUES (AVEC CALCUL AUTOMATIQUE DEPUIS LES MATCHS) ---
+  // --- STATISTIQUES ---
   async function renderStats() {
     root.innerHTML = '<h2>Statistiques</h2><p style="text-align: center;">Chargement...</p>';
     try {
@@ -259,15 +285,12 @@ document.addEventListener('DOMContentLoaded', function() {
         loadJson('matchs.json')
       ]);
 
-      // Objet pour comptabiliser dynamiquement les buts par nom de joueur
       const dynamicGoals = {};
       if (Array.isArray(matches)) {
         matches.forEach(m => {
           if (m.buteurs) {
-            // Sépare les buteurs si plusieurs (ex: "ROUSSEL Quentin, DUPONT Jean") ou sur plusieurs lignes
             const lines = m.buteurs.split(/,|\n/);
             lines.forEach(line => {
-              // Nettoie la chaîne pour extraire le nom (enlève les éventuels numéros ou libellés de minutes type "10'")
               let cleanName = line.replace(/\d+['e]*/g, '').replace(/⚽/g, '').trim().toUpperCase();
               if (cleanName) {
                 dynamicGoals[cleanName] = (dynamicGoals[cleanName] || 0) + 1;
@@ -277,16 +300,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       }
 
-      // Calcul des stats globales par joueur en fusionnant players.json et dynamicGoals
       const getNbMatchs = p => parseInt(p.matchs ?? p.matches ?? 0, 10) || 0;
-      
       const getNbButs = p => {
         const baseButs = parseInt(p.buts ?? 0, 10) || 0;
         const fullName = getPlayerFullName(p).toUpperCase();
-        const matchButs = dynamicGoals[fullName] || 0;
-        return baseButs + matchButs;
+        return baseButs + (dynamicGoals[fullName] || 0);
       };
-
       const getNbPasses = p => parseInt(p.passes ?? 0, 10) || 0;
       const getJaunes = p => parseInt(p.cartons_jaunes ?? 0, 10) || 0;
       const getBlancs = p => parseInt(p.cartons_blancs ?? 0, 10) || 0;
