@@ -161,23 +161,15 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Structure des blocs avec le bandeau boutique, le bloc classement officiel, puis les matchs et anniversaires
     root.innerHTML = `
       <div style="background: #5c1d43; color: white; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: var(--shadow);">
         <span style="font-weight: bold; font-size: 1.05em;">🛍️ Boutique Officielle JAKO</span>
         <a href="https://team.jako.com/fr-fr/team/fc_is/" target="_blank" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.9em; font-weight: bold;">Visiter ↗</a>
       </div>
 
-      <div style="background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid #eaeaea; text-align: center;">
-        <div style="background: #5c1d43; color: white; padding: 10px 15px; font-weight: bold; font-size: 1.05em;">
-          📊 Classement Officiel
-        </div>
-        <div style="padding: 15px;">
-          <p style="margin-bottom: 12px; color: #555; font-size: 0.95em;">Consultez le classement complet de la poule sur le site du District de la Haute-Marne :</p>
-          <a href="https://epreuves.fff.fr/competition/engagement/449274-departemental-4/phase/1/2/classement" target="_blank" style="display: inline-block; background: #5c1d43; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; box-shadow: var(--shadow);">
-            🏆 Voir le Classement Officiel ↗
-          </a>
-        </div>
+      <div style="background: #5c1d43; color: white; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: var(--shadow);">
+        <span style="font-weight: bold; font-size: 1.05em;">📊 Classement Officiel</span>
+        <a href="https://epreuves.fff.fr/competition/engagement/449274-departemental-4/phase/1/2/classement" target="_blank" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.9em; font-weight: bold;">Consulter ↗</a>
       </div>
 
       <div style="background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid #eaeaea;">
