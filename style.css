@@ -55,11 +55,18 @@ header {
   align-items: center;
 }
 
+/* Élément invisible pour équilibrer le bouton de droite et garder le logo au centre */
+header::before {
+  content: "";
+  width: 40px;
+}
+
 .logo-container {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
+  flex: 1;
 }
 
 header img, header .app-logo {
