@@ -218,6 +218,44 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
+  // --- PRONOSTICS ---
+  function renderPronos() {
+    root.innerHTML = `
+      <h2>🎯 Le Défi Pronos du F.C. IS</h2>
+      
+      <!-- Bloc pour faire son prono -->
+      <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); text-align: center; border: 1px solid var(--border-color);">
+        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">Prochain Match</h3>
+        <p style="color: var(--text-muted); margin-bottom: 15px;">Qui aura le nez fin ce week-end ? Fais ton pronostic dès maintenant !</p>
+        
+        <a href="TON_LIEN_GOOGLE_FORM_ICI" target="_blank" style="background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: var(--shadow);">
+          ✍️ Remplir mon pronostic
+        </a>
+      </div>
+
+      <!-- Bloc Classement des pronos -->
+      <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
+        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">🏆 Classement des Pronostiqueurs</h3>
+        <p style="text-align: center; color: var(--text-muted); font-size: 0.9em;">Le classement est mis à jour après chaque journée de championnat.</p>
+        
+        <ul style="margin-top: 15px;">
+          <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); margin-bottom: 8px; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #d4af37;">
+            <span>🥇 <strong>Thomas M.</strong></span>
+            <span style="font-weight: bold; color: var(--primary-color);">14 pts</span>
+          </li>
+          <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); margin-bottom: 8px; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #aaa;">
+            <span>🥈 <strong>Julien B.</strong></span>
+            <span style="font-weight: bold; color: var(--primary-color);">11 pts</span>
+          </li>
+          <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); margin-bottom: 8px; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #cd7f32;">
+            <span>🥉 <strong>Alexandre D.</strong></span>
+            <span style="font-weight: bold; color: var(--primary-color);">10 pts</span>
+          </li>
+        </ul>
+      </div>
+    `;
+  }
+
  // --- EFFECTIF ---
   async function renderPlayers() {
     root.innerHTML = '<h2>Effectif du Club</h2><p style="text-align: center;">Chargement...</p>';
