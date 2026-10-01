@@ -1,6 +1,23 @@
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.getElementById('root');
   
+  // --- GESTION DU MODE SOMBRE ---
+  const toggleBtn = document.getElementById('darkModeToggle');
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+    if (toggleBtn) toggleBtn.textContent = '☀️';
+  }
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      toggleBtn.textContent = isDark ? '☀️' : '🌙';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+  }
+  // -----------------------------
+  
   function fetchFresh(url) {
     return fetch(url, {
       cache: 'no-store',
