@@ -327,8 +327,21 @@ document.addEventListener('DOMContentLoaded', function() {
       ]);
 
       const dynamicGoals = {};
+      let totalMatchsJoues = 0;
+      let nbVictoires = 0;
+      let nbNuls = 0;
+      let nbDefaites = 0;
+
       if (Array.isArray(matches)) {
         matches.forEach(m => {
+          if (m.resultat && m.resultat.trim() !== '') {
+            totalMatchsJoues++;
+            const lowerRes = m.resultat.toLowerCase();
+            if (lowerRes.includes('victoire')) nbVictoires++;
+            else if (lowerRes.includes('nul')) nbNuls++;
+            else if (lowerRes.includes('défaite') || lowerRes.includes('defaite')) nbDefaites++;
+          }
+
           if (m.buteurs) {
             const lines = m.buteurs.split(/,|\n/);
             lines.forEach(line => {
@@ -359,18 +372,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const renderList = (arr, labelFn, emptyMsg) => arr.length > 0 ? arr.map(p => `
         <li><strong>${getPlayerFullName(p)}</strong><br><small>${labelFn(p)}</small></li>
-      `).join('') : `<p style="padding: 10px; color: #666; text-align: center;">${emptyMsg}</p>`;
+      `).join('') : `<p style="padding: 10px; color: var(--text-muted); text-align: center;">${emptyMsg}</p>`;
 
       root.innerHTML = `
         <h2>Statistiques de la Saison</h2>
+
+        <!-- Bilan Global (style exact de la capture) -->
+        <div style="background: var(--card-bg); border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border-color); text-align: center;">
+          <div style="background: #5c1d43; color: white; padding: 10px 15px; font-weight: bold; font-size: 1.05em;">
+            📊 Bilan Global (${totalMatchsJoues} match${totalMatchsJoues > 1 ? 's' : ''} joué${totalMatchsJoues > 1 ? 's' : ''})
+          </div>
+          <div style="display: flex; justify-content: space-around; padding: 15px 10px;">
+            <div>
+              <div style="font-size: 1.6em; font-weight: bold; color: #28a745;">${nbVictoires}</div>
+              <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 2px;">Victoires</div>
+            </div>
+            <div>
+              <div style="font-size: 1.6em; font-weight: bold; color: #ffc107;">${nbNuls}</div>
+              <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 2px;">Nuls</div>
+            </div>
+            <div>
+              <div style="font-size: 1.6em; font-weight: bold; color: #dc3545;">${nbDefaites}</div>
+              <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 2px;">Défaites</div>
+            </div>
+          </div>
+        </div>
+
         <h3 class="accordion-header">⚽ Meilleurs Buteurs</h3>
         <ul class="collapsed">${renderList(topScorers, p => `⚽ ${getNbButs(p)} but(s)`, "Aucun buteur")}</ul>
+        
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
         <ul class="collapsed">${renderList(topPassers, p => `👟 ${getNbPasses(p)} passe(s)`, "Aucune passe décisive")}</ul>
+        
         <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
         <ul class="collapsed">${renderList(topCards, p => `🟨 ${getJaunes(p)} | ⬜ ${getBlancs(p)} \vert{} 🟥 ${getRouges(p)}`, "Aucun carton")}</ul>
-        <h3 class="accordion-header">🏃 Joueurs les plus utilisés</h3>
-        <ul class="collapsed">${renderList(topPlayed, p => `🏃 ${getNbMatchs(p)} match(s)`, "Aucun match enregistré")}</ul>
+        
+        <h3 class="accordion-header">⭐ Matchs Joués par les Joueurs</h3>
+        <ul class="collapsed">${renderList(topPlayed, p => `⭐ ${getNbMatchs(p)} match(s)`, "Aucun match enregistré")}</ul>
       `;
 
       document.querySelectorAll('#root h3.accordion-header').forEach(header => {
