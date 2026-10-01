@@ -219,11 +219,23 @@ document.addEventListener('DOMContentLoaded', function() {
       if (cleanDirigeants.length > 0) {
         const list = cleanDirigeants.map(d => `<li style="border-left: 4px solid #6c757d;">👔 <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`).join('');
         html += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${list}</ul>`;
-      }
-      if (cleanArbitres.length > 0) {
-        const list = cleanArbitres.map(a => `<li style="border-left: 4px solid #6c757d;">🟨🟥 <strong>${getPlayerFullName(a)}</strong><br><small>Arbitre ${a.categorie || 'Club'}</small></li>`).join('');
-        html += `<h3 class="accordion-header">⬜🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
-      }
+     if (cleanArbitres.length > 0) {
+  const list = cleanArbitres.map(a => {
+    // Vérifie si c'est un bénévole ou un arbitre (selon le texte de la catégorie ou fonction)
+    const type = (a.categorie || a.fonction || '').toLowerCase();
+    const isBenevole = type.includes('bénévole') || type.includes('benevole') || type.includes('touche');
+    
+    // Icône : Drapeau pour les bénévoles, Cartons pour les officiels
+    const icone = isBenevole ? '🚩' : '🟨 🟥';
+
+    return `<li style="border-left: 4px solid #6c757d;">
+      ${icone} <strong>${getPlayerFullName(a)}</strong><br>
+      <small>${a.categorie || 'Club'}</small>
+    </li>`;
+  }).join('');
+  
+  html += `<h3 class="accordion-header">🚩🟨🟥 Arbitres & Bénévoles</h3><ul class="collapsed">${list}</ul>`;
+}
 
       root.innerHTML = html;
       document.querySelectorAll('#root h3').forEach(header => {
