@@ -1,11 +1,28 @@
 :root {
-  /* Couleurs extraites du logo FC IS */
-  --primary-color: #6a0f49; /* Le bordeaux/pourpre du blason */
-  --accent-color: #d4af37;  /* Le doré du haut du blason */
-  --bg-color: #f4f4f9;      /* Gris très clair pour le fond */
-  --text-color: #333;
+  /* Couleurs extraites du logo FC IS (Mode Clair par défaut) */
+  --primary-color: #6a0f49; 
+  --accent-color: #d4af37;  
+  --bg-color: #f4f4f9;      
+  --card-bg: #ffffff;
+  --text-color: #333333;
+  --text-muted: #555555;
+  --border-color: #eaeaea;
+  --nav-bg: #ffffff;
+  --nav-color: #777777;
   --white: #ffffff;
   --shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Mode Sombre */
+body.dark-mode {
+  --bg-color: #121212;
+  --card-bg: #1e1e1e;
+  --text-color: #e0e0e0;
+  --text-muted: #aaaaaa;
+  --border-color: #2c2c2c;
+  --nav-bg: #1a1a1a;
+  --nav-color: #aaaaaa;
+  --shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
 * {
@@ -18,9 +35,10 @@ body {
   padding: 0;
   background-color: var(--bg-color);
   color: var(--text-color);
-  padding-bottom: 110px; /* Espace suffisant pour la barre du bas */
+  padding-bottom: 110px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* --- EN-TÊTE ET LOGO --- */
@@ -33,23 +51,23 @@ header {
   top: 0;
   z-index: 100;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
 }
 
 .logo-container {
-  display: inline-flex; align-items: center;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
 }
 
 header img, header .app-logo {
-  max-height: 65px; /* Augmente la taille du blason */
+  max-height: 65px;
   width: auto;
   display: block;
-  background: transparent; /* Retire le fond blanc indésirable */
-  border: none; /* Enlève la bordure rectangulaire */
+  background: transparent;
+  border: none;
   object-fit: contain;
 }
 
@@ -57,6 +75,21 @@ header h1 {
   color: var(--white);
   margin: 0;
   font-size: 1.6em;
+}
+
+/* Bouton bascule mode sombre */
+#darkModeToggle {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+#darkModeToggle:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* --- CONTENEUR PRINCIPAL --- */
@@ -81,13 +114,15 @@ h1, h2 {
 }
 
 #root li {
-  background: var(--white);
+  background: var(--card-bg);
+  color: var(--text-color);
   margin-bottom: 12px;
   padding: 15px;
   border-radius: 12px;
   box-shadow: var(--shadow);
   border-left: 5px solid var(--accent-color);
   font-size: 1.05em;
+  transition: background 0.3s, color 0.3s;
 }
 
 /* --- NAVIGATION APPLI MOBILE (FIXE EN BAS) --- */
@@ -96,11 +131,12 @@ nav {
   bottom: 0;
   left: 0;
   width: 100%;
-  background: var(--white);
+  background: var(--nav-bg);
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
   border-top: 3px solid var(--primary-color);
   z-index: 1000;
   padding: 8px 0;
+  transition: background 0.3s;
 }
 
 nav ul {
@@ -127,7 +163,7 @@ nav a {
   flex-direction: column;
   align-items: center;
   text-decoration: none;
-  color: #777;
+  color: var(--nav-color);
   font-size: 0.85em;
   font-weight: bold;
   padding: 4px 2px;
@@ -155,7 +191,7 @@ li.upcoming {
 .result {
   margin-top: 5px;
   font-size: 0.9em;
-  color: #555;
+  color: var(--text-muted);
   font-weight: bold;
 }
 
@@ -172,7 +208,6 @@ li.upcoming {
   user-select: none;
 }
 
-/* Style de la flèche de l'accordéon */
 #root h3::after {
   content: '▼';
   position: absolute;
@@ -186,7 +221,6 @@ li.upcoming {
   content: '▲'; 
 }
 
-/* Masquage strict des listes fermées */
 #root ul.collapsed {
   display: none !important;
 }
