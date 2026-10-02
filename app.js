@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
- // --- PRONOSTICS INTERACTIFS ---
+  // --- PRONOSTICS INTERACTIFS ---
   async function renderPronos() {
     root.innerHTML = `
       <h2>🎯 Le Défi Pronos du F.C. IS</h2>
@@ -247,82 +247,8 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
-      // Remplace l'URL ci-dessous par ton lien CSV Google Sheets (ou ton lien d'export CSV)
-      const csvUrl = '
-        
-      // --- PRONOSTICS INTERACTIFS ---
-  async function renderPronos() {
-    root.innerHTML = `
-      <h2>🎯 Le Défi Pronos du F.C. IS</h2>
-      
-      <!-- Bloc pour faire son prono via Google Form -->
-      <div style="background: var(--card-bg); padding: 25px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center;">
-        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">Fais ton pronostic !</h3>
-        <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 20px; line-height: 1.4;">
-          Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2) ! Valide ton prono avant le match.
-        </p>
-        
-        <a href="https://forms.gle/KLYdMeGPt1UCHDMG9" target="_blank" style="background: var(--primary-color); color: white; padding: 14px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: var(--shadow); font-size: 1.05em;">
-          📝 Remplir le formulaire de pronos ↗
-        </a>
-      </div>
-
-      <!-- Bloc Classement des pronos -->
-      <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">🏆 Classement des Pronostiqueurs</h3>
-        <p style="text-align: center; color: var(--text-muted); font-size: 0.9em; margin-bottom: 15px;">Le classement de la saison.</p>
-        
-        <div id="pronos-leaderboard">
-          <p style="text-align: center; color: var(--text-muted);">Chargement du classement...</p>
-        </div>
-      </div>
-    `;
-
-    try {
-      // Remplace l'URL ci-dessous par ton lien CSV Google Sheets (ou ton lien d'export CSV)
-      const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2rDibne_VPWER2-V9JpIuIEeR_0pNSiZe343ktp_5FEFLQLG5KZeZxv1m2J8KSWvLMCgPf7rM-cVx/pub?gid=1278749089&single=true&output=csv'; 
-      const res = await fetchFresh(csvUrl);
-      const csvText = await res.text();
-
-      // Découpage du CSV en lignes
-      const rows = csvText.split('\n').map(row => row.split(','));
-      let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
-      
-      let hasData = false;
-      // On commence à la ligne 1 pour sauter l'en-tête (Prénom / Total Points)
-      for (let i = 1; i < rows.length; i++) {
-        const cols = rows[i];
-        if (cols.length >= 2 && cols[0].trim() !== '') {
-          hasData = true;
-          const prenom = cols[0].replace(/"/g, '').trim();
-          const points = cols[1].replace(/"/g, '').trim();
-          
-          let medal = '⚽';
-          if (i === 1) medal = '🥇';
-          else if (i === 2) medal = '🥈';
-          else if (i === 3) medal = '🥉';
-
-          leaderboardHTML += `
-            <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); margin-bottom: 8px; padding: 10px 15px; border-radius: 8px; border-left: 5px solid var(--primary-color);">
-              <span>${medal} <strong>${prenom}</strong></span>
-              <span style="font-weight: bold; color: var(--primary-color);">${points} pts</span>
-            </li>
-          `;
-        }
-      }
-
-      leaderboardHTML += '</ul>';
-
-      if (!hasData) {
-        leaderboardHTML = '<p style="text-align: center; color: var(--text-muted);">Aucun point enregistré pour l\'instant.</p>';
-      }
-
-      document.getElementById('pronos-leaderboard').innerHTML = leaderboardHTML;
-
-    } catch (e) {
-      document.getElementById('pronos-leaderboard').innerHTML = '<p style="text-align: center; color: red;">Erreur de chargement du classement.</p>';
-    }
-  }'; 
+      // Remplace TON_LIEN_CSV_ICI par ton lien d'export CSV Google Sheets (sur une seule ligne)
+      const csvUrl = 'TON_LIEN_CSV_ICI'; 
       const res = await fetchFresh(csvUrl);
       const csvText = await res.text();
 
@@ -366,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
- // --- EFFECTIF ---
+  // --- EFFECTIF ---
   async function renderPlayers() {
     root.innerHTML = '<h2>Effectif du Club</h2><p style="text-align: center;">Chargement...</p>';
     try {
@@ -388,7 +314,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (cleanDirigeants.length > 0) {
         const list = cleanDirigeants.map(d => {
-          // Récupère l'émoji du fichier JSON, ou met 👔 par défaut s'il n'y a rien
           const symbole = d.symbole || '👔';
           return `<li style="border-left: 4px solid #6c757d;">${symbole} <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`;
         }).join('');
@@ -398,11 +323,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (cleanArbitres.length > 0) {
         const list = cleanArbitres.map(a => {
-          // Vérifie si c'est un bénévole ou un arbitre (selon le texte de la catégorie ou fonction)
           const type = (a.categorie || a.fonction || '').toLowerCase();
           const isBenevole = type.includes('bénévole') || type.includes('benevole') || type.includes('touche');
-          
-          // Icône : Drapeau pour les bénévoles, Cartons pour les officiels
           const icone = isBenevole ? '🏁' : '🟨 🟥';
 
           return `<li style="border-left: 4px solid #6c757d;">
@@ -525,7 +447,6 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = `
         <h2>Statistiques de la Saison</h2>
 
-        <!-- Bilan Global (style exact de la capture) -->
         <div style="background: var(--card-bg); border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border-color); text-align: center;">
           <div style="background: #5c1d43; color: white; padding: 10px 15px; font-weight: bold; font-size: 1.05em;">
             📊 Bilan Global (${totalMatchsJoues} match${totalMatchsJoues > 1 ? 's' : ''} joué${totalMatchsJoues > 1 ? 's' : ''})
@@ -595,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (hash === 'matches') renderMatches();
     else if (hash === 'stats') renderStats();
     else if (hash === 'players') renderPlayers();
-    else if (hash === 'pronos') renderPronos(); // <-- C'est cette ligne qu'il manquait !
+    else if (hash === 'pronos') renderPronos();
     else if (hash === 'announcements') renderAnnouncements();
     else if (hash === 'admin') renderAdmin();
     else renderHome();
