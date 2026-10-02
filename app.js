@@ -485,6 +485,7 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (hash === 'matches') renderMatches();
     else if (hash === 'stats') renderStats();
     else if (hash === 'players') renderPlayers();
+    else if (hash === 'pronos') renderPronos(); // <-- C'est cette ligne qu'il manquait !
     else if (hash === 'announcements') renderAnnouncements();
     else if (hash === 'admin') renderAdmin();
     else renderHome();
