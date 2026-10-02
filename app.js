@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
           Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2) ! Valide ton prono avant le match.
         </p>
         
-        <a href="TON_LIEN_GOOGLE_FORM_ICI" target="_blank" style="background: var(--primary-color); color: white; padding: 14px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: var(--shadow); font-size: 1.05em;">
+        <a href="https://forms.gle/KLYdMeGPt1UCHDMG9" target="_blank" style="background: var(--primary-color); color: white; padding: 14px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: var(--shadow); font-size: 1.05em;">
           📝 Remplir le formulaire de pronos ↗
         </a>
       </div>
