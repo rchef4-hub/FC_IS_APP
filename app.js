@@ -247,17 +247,21 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
-      // Mets ton lien d'export CSV Google Sheets ici (ex: .../export?format=csv)
-      const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2rDibne_VPWER2-V9JpIuIEeR_0pNSiZe343ktp_5FEFLQLG5KZeZxv1m2J8KSWvLMCgPf7rM-cVx/pub?gid=1278749089&single=true&output=csv'; 
-      const res = await fetchFresh(csvUrl);
-      const csvText = await res.text();
+      // Ton lien Google Sheets CSV d'origine
+      const rawCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2rDibne_VPWER2-V9JpIuIEeR_0pNSiZe343ktp_5FEFLQLG5KZeZxv1m2J8KSWvLMCgPf7rM-cVx/pub?gid=1278749089&single=true&output=csv';
+      
+      // On passe par un proxy gratuit pour contourner le blocage CORS du navigateur
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rawCsvUrl)}`;
+      
+      const res = await fetchFresh(proxyUrl);
+      const data = await res.json();
+      const csvText = data.contents;
 
-      // Sécurité : si le texte commence par "<!", c'est que c'est du HTML et non du CSV
-      if (csvText.trim().startsWith('<')) {
-        throw new Error("Le lien ne renvoie pas un fichier CSV valide.");
+      if (!csvText || csvText.trim().startsWith('<')) {
+        throw new Error("Le fichier CSV est vide ou invalide.");
       }
 
-      // Découpage propre du CSV en gérant les sauts de ligne
+      // Découpage propre du CSV en lignes
       const rows = csvText.split(/\r?\n/).map(row => row.split(','));
       let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
       
@@ -293,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('pronos-leaderboard').innerHTML = leaderboardHTML;
 
     } catch (e) {
-      document.getElementById('pronos-leaderboard').innerHTML = '<p style="text-align: center; color: red;">Erreur de chargement du classement (Vérifie le lien CSV).</p>';
+      document.getElementById('pronos-leaderboard').innerHTML = '<p style="text-align: center; color: red;">Erreur de chargement du classement.</p>';
     }
   }
   
