@@ -218,27 +218,52 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-  // --- PRONOSTICS ---
+  // --- PRONOSTICS INTERACTIFS ---
   function renderPronos() {
+    // On récupère le pronostic enregistré précédemment par l'utilisateur (s'il existe)
+    const savedProno = JSON.parse(localStorage.getItem('fc_is_prono')) || { nom: '', homeScore: '', awayScore: '' };
+
     root.innerHTML = `
       <h2>🎯 Le Défi Pronos du F.C. IS</h2>
       
       <!-- Bloc pour faire son prono -->
-      <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); text-align: center; border: 1px solid var(--border-color);">
-        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">Prochain Match</h3>
-        <p style="color: var(--text-muted); margin-bottom: 15px;">Qui aura le nez fin ce week-end ? Fais ton pronostic dès maintenant !</p>
+      <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
+        <h3 style="margin-top: 0; background: none; color: var(--primary-color); text-align: center;">Mon Pronostic du Week-end</h3>
+        <p style="color: var(--text-muted); font-size: 0.9em; text-align: center; margin-bottom: 15px;">
+          Règles : 3 pts pour le bon résultat (1N2) + 2 pts de bonus pour le score exact !
+        </p>
         
-        <a href="TON_LIEN_GOOGLE_FORM_ICI" target="_blank" style="background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: var(--shadow);">
-          ✍️ Remplir mon pronostic
-        </a>
+        <div id="prono-form-container">
+          <div style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 4px;">Ton Prénom & Nom :</label>
+            <input type="text" id="prono-nom" value="${savedProno.nom}" placeholder="Ex: Thomas Martin" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--bg-color); padding: 10px; border-radius: 8px;">
+            <span style="font-weight: bold;">FC IS</span>
+            <div>
+              <input type="number" id="prono-home" value="${savedProno.homeScore}" min="0" max="20" style="width: 45px; text-align: center; padding: 6px; font-size: 1.1em; border-radius: 6px; border: 1px solid var(--border-color);">
+              <span> - </span>
+              <input type="number" id="prono-away" value="${savedProno.awayScore}" min="0" max="20" style="width: 45px; text-align: center; padding: 6px; font-size: 1.1em; border-radius: 6px; border: 1px solid var(--border-color);">
+            </div>
+            <span style="font-weight: bold;">Adversaire</span>
+          </div>
+
+          <button id="save-prono-btn" style="width: 100%; background: var(--primary-color); color: white; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: var(--shadow);">
+            💾 Enregistrer mon pronostic
+          </button>
+        </div>
+        <div id="prono-success" style="display: none; color: #28a745; text-align: center; font-weight: bold; margin-top: 10px;">
+          ✅ Pronostic enregistré avec succès !
+        </div>
       </div>
 
       <!-- Bloc Classement des pronos -->
       <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
         <h3 style="margin-top: 0; background: none; color: var(--primary-color);">🏆 Classement des Pronostiqueurs</h3>
-        <p style="text-align: center; color: var(--text-muted); font-size: 0.9em;">Le classement est mis à jour après chaque journée de championnat.</p>
+        <p style="text-align: center; color: var(--text-muted); font-size: 0.9em;">Le classement mis à jour par le coach.</p>
         
-        <ul style="margin-top: 15px;">
+        <ul style="margin-top: 15px; padding-left: 0; list-style: none;">
           <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); margin-bottom: 8px; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #d4af37;">
             <span>🥇 <strong>Thomas M.</strong></span>
             <span style="font-weight: bold; color: var(--primary-color);">14 pts</span>
@@ -247,13 +272,28 @@ document.addEventListener('DOMContentLoaded', function() {
             <span>🥈 <strong>Julien B.</strong></span>
             <span style="font-weight: bold; color: var(--primary-color);">11 pts</span>
           </li>
-          <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); margin-bottom: 8px; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #cd7f32;">
-            <span>🥉 <strong>Alexandre D.</strong></span>
-            <span style="font-weight: bold; color: var(--primary-color);">10 pts</span>
-          </li>
         </ul>
       </div>
     `;
+
+    // Action au clic sur le bouton d'enregistrement
+    document.getElementById('save-prono-btn').addEventListener('click', () => {
+      const nom = document.getElementById('prono-nom').value.trim();
+      const homeScore = document.getElementById('prono-home').value;
+      const awayScore = document.getElementById('prono-away').value;
+
+      if (!nom || homeScore === '' || awayScore === '') {
+        alert('Merci de renseigner ton nom et les scores !');
+        return;
+      }
+
+      const pronoData = { nom, homeScore, awayScore };
+      localStorage.setItem('fc_is_prono', JSON.stringify(pronoData));
+
+      const successDiv = document.getElementById('prono-success');
+      successDiv.style.display = 'block';
+      setTimeout(() => { successDiv.style.display = 'none'; }, 3000);
+    });
   }
 
  // --- EFFECTIF ---
