@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     try {
       // Colle ici l'URL de ton application web Google Apps Script
-      const scriptUrl = 'TON_URL_APPS_SCRIPT_ICI';
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbxAnw_R0NqtVKoMMWG7H9SNM6iN33Sh5ZZSLeZwLcn90xb3n6fVBByZbOkRRh_D0NhQ4A/exec';
       
       const res = await fetchFresh(scriptUrl);
       const pronos = await res.json();
