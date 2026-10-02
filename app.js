@@ -247,8 +247,9 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
-      // Colle ici l'URL de ton application web Google Apps Script
-      const scriptUrl = 'https://script.google.com/macros/s/AKfycbxAnw_R0NqtVKoMMWG7H9SNM6iN33Sh5ZZSLeZwLcn90xb3n6fVBByZbOkRRh_D0NhQ4A/exec';
+      // Ton URL Apps Script passée par un proxy CORS pour contourner le blocage du navigateur
+      const rawScriptUrl = 'https://script.google.com/macros/s/AKfycbxAnw_R0NqtVKoMMWG7H9SNM6iN33Sh5ZZSLeZwLcn90xb3n6fVBByZbOkRRh_D0NhQ4A/exec';
+      const scriptUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawScriptUrl);
       
       const res = await fetchFresh(scriptUrl);
       const pronos = await res.json();
