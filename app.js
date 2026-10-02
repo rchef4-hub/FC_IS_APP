@@ -247,49 +247,37 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
-      const rawCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2rDibne_VPWER2-V9JpIuIEeR_0pNSiZe343ktp_5FEFLQLG5KZeZxv1m2J8KSWvLMCgPf7rM-cVx/pub?gid=1278749089&single=true&output=csv';
+      // Colle ici l'URL de ton application web Google Apps Script
+      const scriptUrl = 'TON_URL_APPS_SCRIPT_ICI';
       
-      // Utilisation d'un proxy alternatif ultra-rapide pour contourner CORS
-      const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(rawCsvUrl);
+      const res = await fetchFresh(scriptUrl);
+      const pronos = await res.json();
       
-      const res = await fetchFresh(proxyUrl);
-      const csvText = await res.text();
-
-      if (!csvText || csvText.trim().startsWith('<')) {
-        throw new Error("Format CSV invalide");
-      }
-
-      const rows = csvText.split(/\r?\n/).map(row => row.split(','));
       let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
       
-      let hasData = false;
-      for (let i = 1; i < rows.length; i++) {
-        const cols = rows[i];
-        if (cols.length >= 2 && cols[0].trim() !== '') {
-          hasData = true;
-          const prenom = cols[0].replace(/"/g, '').trim();
-          const points = cols[1].replace(/"/g, '').trim();
-          
+      if (Array.isArray(pronos) && pronos.length > 0) {
+        // Tri par points décroissants
+        pronos.sort((a, b) => b.points - a.points);
+
+        pronos.forEach((p, index) => {
+          const rang = index + 1;
           let medal = '⚽';
-          if (i === 1) medal = '🥇';
-          else if (i === 2) medal = '🥈';
-          else if (i === 3) medal = '🥉';
+          if (rang === 1) medal = '🥇';
+          else if (rang === 2) medal = '🥈';
+          else if (rang === 3) medal = '🥉';
 
           leaderboardHTML += `
             <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); margin-bottom: 8px; padding: 10px 15px; border-radius: 8px; border-left: 5px solid var(--primary-color);">
-              <span>${medal} <strong>${prenom}</strong></span>
-              <span style="font-weight: bold; color: var(--primary-color);">${points} pts</span>
+              <span>${medal} <strong>${p.prenom}</strong></span>
+              <span style="font-weight: bold; color: var(--primary-color);">${p.points} pts</span>
             </li>
           `;
-        }
+        });
+      } else {
+        leaderboardHTML += '<p style="text-align: center; color: var(--text-muted);">Aucun point enregistré pour l\'instant.</p>';
       }
 
       leaderboardHTML += '</ul>';
-
-      if (!hasData) {
-        leaderboardHTML = '<p style="text-align: center; color: var(--text-muted);">Aucun point enregistré pour l\'instant.</p>';
-      }
-
       document.getElementById('pronos-leaderboard').innerHTML = leaderboardHTML;
 
     } catch (e) {
