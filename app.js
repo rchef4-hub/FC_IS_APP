@@ -247,26 +247,22 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
-      // Ton lien Google Sheets CSV d'origine
       const rawCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2rDibne_VPWER2-V9JpIuIEeR_0pNSiZe343ktp_5FEFLQLG5KZeZxv1m2J8KSWvLMCgPf7rM-cVx/pub?gid=1278749089&single=true&output=csv';
       
-      // On passe par un proxy gratuit pour contourner le blocage CORS du navigateur
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rawCsvUrl)}`;
+      // Utilisation d'un proxy alternatif ultra-rapide pour contourner CORS
+      const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(rawCsvUrl);
       
       const res = await fetchFresh(proxyUrl);
-      const data = await res.json();
-      const csvText = data.contents;
+      const csvText = await res.text();
 
       if (!csvText || csvText.trim().startsWith('<')) {
-        throw new Error("Le fichier CSV est vide ou invalide.");
+        throw new Error("Format CSV invalide");
       }
 
-      // Découpage propre du CSV en lignes
       const rows = csvText.split(/\r?\n/).map(row => row.split(','));
       let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
       
       let hasData = false;
-      // On commence à la ligne 1 pour sauter l'en-tête
       for (let i = 1; i < rows.length; i++) {
         const cols = rows[i];
         if (cols.length >= 2 && cols[0].trim() !== '') {
