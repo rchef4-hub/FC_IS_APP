@@ -256,8 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
-      const rawScriptUrl = 'https://script.google.com/macros/s/AKfycbxAnw_R0NqtVKoMMWG7H9SNM6iN33Sh5ZZSLeZwLcn90xb3n6fVBByZbOkRRh_D0NhQ4A/exec';
-      const scriptUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawScriptUrl);
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbyqHf9kUgyf9GFaIixO5HEN4DkWaI_d2y4dIuVLR6kbRt9zpNcWq-XlxVeLFnsqFIoe_Q/exec';
       
       const res = await fetchFresh(scriptUrl);
       const pronos = await res.json();
