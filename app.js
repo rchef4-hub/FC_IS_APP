@@ -231,19 +231,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // --- PRONOSTICS INTERACTIFS (Via JSONP & Chargement des matchs) ---
   async function renderPronos() {
-    // 1. Affichage initial avec un état de chargement pour le match
+    // 1. Structure de base avec centrage et suppression des flèches
     root.innerHTML = `
       <h2>🎯 Le Défi Pronos du F.C. IS</h2>
       
       <div style="background: var(--card-bg); padding: 25px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center;">
         <h3 style="margin-top: 0; background: none; color: var(--primary-color);">Fais ton pronostic !</h3>
         <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 15px; line-height: 1.4;">
-          Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2). 
-          Valide ton prono avant le match.
+          Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2) ! Valide ton prono avant le match.
         </p>
         
-        <div id="prochain-match-container" style="background: var(--bg-color); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--primary-color); text-align: left;">
-          <span style="font-size: 0.85em; color: var(--text-muted); display: block;">📅 Recherche du prochain match...</span>
+        <div id="prochain-match-container" style="background: var(--bg-color); padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+          <span style="font-size: 0.9em; color: var(--text-muted);">Chargement du match...</span>
         </div>
         
         <a href="https://forms.gle/KLYdMeGPt1UCHDMG9" target="_blank" style="background: var(--primary-color); color: white; padding: 14px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: var(--shadow); font-size: 1.05em;">
@@ -251,32 +250,28 @@ document.addEventListener('DOMContentLoaded', function() {
         </a>
       </div>
 
-      <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
+      <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center;">
         <h3 style="margin-top: 0; background: none; color: var(--primary-color);">🏆 Classement des Pronostiqueurs</h3>
         <p style="text-align: center; color: var(--text-muted); font-size: 0.9em; margin-bottom: 15px;">Le classement de la saison.</p>
         
-        <div id="pronos-leaderboard">
+        <div id="pronos-leaderboard" style="text-align: left;">
           <p style="text-align: center; color: var(--text-muted);">Chargement du classement...</p>
         </div>
       </div>
     `;
 
-    // 2. Chargement dynamique du fichier matchs.json pour trouver le prochain match
+    // 2. Chargement du fichier matchs.json (uniquement les noms des clubs, centré)
     try {
       const response = await fetch('matchs.json');
       const matchs = await response.json();
       
-      // On cherche le premier match qui n'a pas encore de résultat
       const prochainMatch = matchs.find(m => !m.resultat || m.resultat.trim() === "");
       
       const matchContainer = document.getElementById('prochain-match-container');
       if (matchContainer) {
         if (prochainMatch) {
-          const lieuTexte = prochainMatch.lieu === "Domicile" ? "🏠 à Domicile" : "✈️ à l'Extérieur";
           matchContainer.innerHTML = `
-            <span style="font-size: 0.85em; color: var(--text-muted); display: block; margin-bottom: 3px;">📅 Prochain match concerné :</span>
-            <strong style="color: var(--primary-color); font-size: 1.05em;">F.C. IS vs ${prochainMatch.adversaire}</strong>
-            <div style="font-size: 0.85em; color: var(--text-muted); margin-top: 2px;">🗓️ ${prochainMatch.date} (${lieuTexte})</div>
+            <strong style="color: var(--primary-color); font-size: 1.15em; display: block;">F.C. IS vs ${prochainMatch.adversaire}</strong>
           `;
         } else {
           matchContainer.innerHTML = `<span style="font-size: 0.9em; color: var(--text-muted);">Aucun match à venir pour le moment.</span>`;
@@ -286,11 +281,11 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log("Erreur chargement matchs.json", e);
       const matchContainer = document.getElementById('prochain-match-container');
       if (matchContainer) {
-        matchContainer.innerHTML = `<span style="font-size: 0.9em; color: var(--text-muted);">Prochain match bientôt disponible.</span>`;
+        matchContainer.innerHTML = `<span style="font-size: 0.9em; color: var(--text-muted);">Match à venir</span>`;
       }
     }
 
-    // 3. Chargement du classement via JSONP (votre code habituel)
+    // 3. Chargement du classement via JSONP
     try {
       window.handlePronosResponse = function(pronos) {
         let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
