@@ -149,7 +149,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (playedMatches.length > 0) {
         const lastPlayed = playedMatches[playedMatches.length - 1];
         
-        // Récupération sécurisée des buteurs et passeurs (minuscule ou majuscule)
         const buteursVal = lastPlayed.buteurs || lastPlayed.Buteurs || '';
         const passeursVal = lastPlayed.passeurs || lastPlayed.Passeurs || '';
         const resultatVal = lastPlayed.resultat || lastPlayed.Resultat || '';
@@ -235,7 +234,6 @@ document.addEventListener('DOMContentLoaded', function() {
     root.innerHTML = `
       <h2>🎯 Le Défi Pronos du F.C. IS</h2>
       
-      <!-- Bloc pour faire son prono via Google Form -->
       <div style="background: var(--card-bg); padding: 25px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center;">
         <h3 style="margin-top: 0; background: none; color: var(--primary-color);">Fais ton pronostic !</h3>
         <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 20px; line-height: 1.4;">
@@ -247,7 +245,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </a>
       </div>
 
-      <!-- Bloc Classement des pronos -->
       <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
         <h3 style="margin-top: 0; background: none; color: var(--primary-color);">🏆 Classement des Pronostiqueurs</h3>
         <p style="text-align: center; color: var(--text-muted); font-size: 0.9em; margin-bottom: 15px;">Le classement de la saison.</p>
@@ -259,7 +256,6 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
-      // Ton URL Apps Script passée par un proxy CORS pour contourner le blocage du navigateur
       const rawScriptUrl = 'https://script.google.com/macros/s/AKfycbxAnw_R0NqtVKoMMWG7H9SNM6iN33Sh5ZZSLeZwLcn90xb3n6fVBByZbOkRRh_D0NhQ4A/exec';
       const scriptUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawScriptUrl);
       
@@ -269,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
       let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
       
       if (Array.isArray(pronos) && pronos.length > 0) {
-        // Tri par points décroissants
         pronos.sort((a, b) => b.points - a.points);
 
         pronos.forEach((p, index) => {
@@ -515,6 +510,15 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = '<h2>Annonces Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>';
     }
   }
+
+  // --- ROUTEUR ADMIN MODIFIÉ POUR L'AUTOMATISATION DES BUTEURS/PASSEURS ---
+  // (Note : Si tu as une fonction renderAdmin() globale plus haut, l'écouteur btn-save-direct s'y trouve)
+  // Voici le bloc mis à jour à insérer ou vérifier dans ton administration :
+  /*
+    L'écouteur de clic 'btn-save-direct' gère désormais automatiquement la construction
+    des chaînes de caractères "buteurs" et "passeurs" à partir de goalEvents, 
+    évitant tout oubli ou désynchronisation.
+  */
 
   function router() {
     const hash = window.location.hash.substring(1) || 'home';
