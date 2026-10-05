@@ -229,28 +229,9 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-// --- PRONOSTICS INTERACTIFS (Via JSONP) ---
+// --- PRONOSTICS INTERACTIFS (Via JSONP & Chargement des matchs) ---
   async function renderPronos() {
-    // 1. Récupération dynamique du prochain match si disponible
-    let prochainMatchHTML = '<p style="color: var(--text-muted); font-size: 0.9em; margin-bottom: 15px;">Prochain match à pronostiquer bientôt !</p>';
-    
-    try {
-      if (window.matchsData && Array.isArray(window.matchsData) && window.matchsData.length > 0) {
-        const matchActif = window.matchsData.find(m => !m.scoreFCS && !m.scoreAdv) || window.matchsData[0];
-        if (matchActif) {
-          prochainMatchHTML = `
-            <div style="background: var(--bg-color); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--primary-color); text-align: left;">
-              <span style="font-size: 0.85em; color: var(--text-muted); display: block; margin-bottom: 3px;">📅 Prochain match concerné :</span>
-              <strong style="color: var(--primary-color); font-size: 1.05em;">${matchActif.equipeA || 'F.C. IS'} vs ${matchActif.equipeB || 'Adversaire'}</strong>
-              <div style="font-size: 0.85em; color: var(--text-muted); margin-top: 2px;">${matchActif.date || ''}</div>
-            </div>
-          `;
-        }
-      }
-    } catch (e) {
-      console.log("Impossible de charger le prochain match dynamiquement");
-    }
-
+    // 1. Affichage initial avec un état de chargement pour le match
     root.innerHTML = `
       <h2>🎯 Le Défi Pronos du F.C. IS</h2>
       
@@ -258,10 +239,12 @@ document.addEventListener('DOMContentLoaded', function() {
         <h3 style="margin-top: 0; background: none; color: var(--primary-color);">Fais ton pronostic !</h3>
         <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 15px; line-height: 1.4;">
           Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2). 
-           Valide ton prono avant le match.
+          Valide ton prono avant le match.
         </p>
         
-        ${prochainMatchHTML}
+        <div id="prochain-match-container" style="background: var(--bg-color); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--primary-color); text-align: left;">
+          <span style="font-size: 0.85em; color: var(--text-muted); display: block;">📅 Recherche du prochain match...</span>
+        </div>
         
         <a href="https://forms.gle/KLYdMeGPt1UCHDMG9" target="_blank" style="background: var(--primary-color); color: white; padding: 14px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: var(--shadow); font-size: 1.05em;">
           📝 Remplir le formulaire de pronos ↗
@@ -278,8 +261,37 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     `;
 
+    // 2. Chargement dynamique du fichier matchs.json pour trouver le prochain match
     try {
-      // On utilise une fonction globale temporaire pour récupérer les données JSONP
+      const response = await fetch('matchs.json');
+      const matchs = await response.json();
+      
+      // On cherche le premier match qui n'a pas encore de résultat
+      const prochainMatch = matchs.find(m => !m.resultat || m.resultat.trim() === "");
+      
+      const matchContainer = document.getElementById('prochain-match-container');
+      if (matchContainer) {
+        if (prochainMatch) {
+          const lieuTexte = prochainMatch.lieu === "Domicile" ? "🏠 à Domicile" : "✈️ à l'Extérieur";
+          matchContainer.innerHTML = `
+            <span style="font-size: 0.85em; color: var(--text-muted); display: block; margin-bottom: 3px;">📅 Prochain match concerné :</span>
+            <strong style="color: var(--primary-color); font-size: 1.05em;">F.C. IS vs ${prochainMatch.adversaire}</strong>
+            <div style="font-size: 0.85em; color: var(--text-muted); margin-top: 2px;">🗓️ ${prochainMatch.date} (${lieuTexte})</div>
+          `;
+        } else {
+          matchContainer.innerHTML = `<span style="font-size: 0.9em; color: var(--text-muted);">Aucun match à venir pour le moment.</span>`;
+        }
+      }
+    } catch (e) {
+      console.log("Erreur chargement matchs.json", e);
+      const matchContainer = document.getElementById('prochain-match-container');
+      if (matchContainer) {
+        matchContainer.innerHTML = `<span style="font-size: 0.9em; color: var(--text-muted);">Prochain match bientôt disponible.</span>`;
+      }
+    }
+
+    // 3. Chargement du classement via JSONP (votre code habituel)
+    try {
       window.handlePronosResponse = function(pronos) {
         let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
         
@@ -309,7 +321,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (container) container.innerHTML = leaderboardHTML;
       };
 
-      // Création d'une balise script pour charger les données sans passer par fetch
       const script = document.createElement('script');
       script.src = 'https://script.google.com/macros/s/AKfycbyqHf9kUgyf9GFaIixO5HEN4DkWaI_d2y4dIuVLR6kbRt9zpNcWq-XlxVeLFnsqFIoe_Q/exec?callback=handlePronosResponse';
       script.onerror = function() {
