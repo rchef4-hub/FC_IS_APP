@@ -231,14 +231,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // --- PRONOSTICS INTERACTIFS (Via JSONP & Chargement des matchs) ---
   async function renderPronos() {
-    // 1. Structure de base avec masquage forcé des triangles indésirables
+    // 1. Structure de base avec un style CSS pour tuer net ces triangles
     root.innerHTML = `
+      <style>
+        /* Correctif pour masquer définitivement les petits triangles de repli */
+        h3 span[style*="display: none"], h3::after, h3::before, .card h3::after {
+          display: none !important;
+        }
+      </style>
+
       <h2>🎯 Le Défi Pronos du F.C. IS</h2>
       
       <div style="background: var(--card-bg); padding: 25px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center;">
-        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">
-          Fais ton pronostic ! <span style="display: none !important;">▼</span>
-        </h3>
+        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">Fais ton pronostic !</h3>
         <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 15px; line-height: 1.4;">
           Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2).
           Valide ton prono avant le match.
@@ -254,9 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
 
       <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center;">
-        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">
-          🏆 Classement des Pronostiqueurs <span style="display: none !important;">▼</span>
-        </h3>
+        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">🏆 Classement des Pronostiqueurs</h3>
         <p style="text-align: center; color: var(--text-muted); font-size: 0.9em; margin-bottom: 15px;">Le classement de la saison.</p>
         
         <div id="pronos-leaderboard" style="text-align: left;">
