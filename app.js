@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-  // --- PRONOSTICS INTERACTIFS ---
+  // --- PRONOSTICS INTERACTIFS (Via JSONP) ---
   async function renderPronos() {
     root.innerHTML = `
       <h2>🎯 Le Défi Pronos du F.C. IS</h2>
@@ -256,36 +256,43 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
-      const scriptUrl = 'https://script.google.com/macros/s/AKfycbyqHf9kUgyf9GFaIixO5HEN4DkWaI_d2y4dIuVLR6kbRt9zpNcWq-XlxVeLFnsqFIoe_Q/exec';
-      
-      const res = await fetchFresh(scriptUrl);
-      const pronos = await res.json();
-      
-      let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
-      
-      if (Array.isArray(pronos) && pronos.length > 0) {
-        pronos.sort((a, b) => b.points - a.points);
+      // On utilise une fonction globale temporaire pour récupérer les données JSONP
+      window.handlePronosResponse = function(pronos) {
+        let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
+        
+        if (Array.isArray(pronos) && pronos.length > 0) {
+          pronos.sort((a, b) => b.points - a.points);
 
-        pronos.forEach((p, index) => {
-          const rang = index + 1;
-          let medal = '⚽';
-          if (rang === 1) medal = '🥇';
-          else if (rang === 2) medal = '🥈';
-          else if (rang === 3) medal = '🥉';
+          pronos.forEach((p, index) => {
+            const rang = index + 1;
+            let medal = '⚽';
+            if (rang === 1) medal = '🥇';
+            else if (rang === 2) medal = '🥈';
+            else if (rang === 3) medal = '🥉';
 
-          leaderboardHTML += `
-            <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); margin-bottom: 8px; padding: 10px 15px; border-radius: 8px; border-left: 5px solid var(--primary-color);">
-              <span>${medal} <strong>${p.prenom}</strong></span>
-              <span style="font-weight: bold; color: var(--primary-color);">${p.points} pts</span>
-            </li>
-          `;
-        });
-      } else {
-        leaderboardHTML += '<p style="text-align: center; color: var(--text-muted);">Aucun point enregistré pour l\'instant.</p>';
-      }
+            leaderboardHTML += `
+              <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); margin-bottom: 8px; padding: 10px 15px; border-radius: 8px; border-left: 5px solid var(--primary-color);">
+                <span>${medal} <strong>${p.prenom}</strong></span>
+                <span style="font-weight: bold; color: var(--primary-color);">${p.points} pts</span>
+              </li>
+            `;
+          });
+        } else {
+          leaderboardHTML += '<p style="text-align: center; color: var(--text-muted);">Aucun point enregistré pour l\'instant.</p>';
+        }
 
-      leaderboardHTML += '</ul>';
-      document.getElementById('pronos-leaderboard').innerHTML = leaderboardHTML;
+        leaderboardHTML += '</ul>';
+        const container = document.getElementById('pronos-leaderboard');
+        if (container) container.innerHTML = leaderboardHTML;
+      };
+
+      // Création d'une balise script pour charger les données sans passer par fetch
+      const script = document.createElement('script');
+      script.src = 'https://script.google.com/macros/s/AKfycbyqHf9kUgyf9GFaIixO5HEN4DkWaI_d2y4dIuVLR6kbRt9zpNcWq-XlxVeLFnsqFIoe_Q/exec?callback=handlePronosResponse';
+      script.onerror = function() {
+        document.getElementById('pronos-leaderboard').innerHTML = '<p style="text-align: center; color: red;">Erreur de chargement du classement.</p>';
+      };
+      document.body.appendChild(script);
 
     } catch (e) {
       document.getElementById('pronos-leaderboard').innerHTML = '<p style="text-align: center; color: red;">Erreur de chargement du classement.</p>';
