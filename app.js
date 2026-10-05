@@ -145,34 +145,46 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const matches = await loadJson('matchs.json');
     if (Array.isArray(matches) && matches.length > 0) {
-      const playedMatches = matches.filter(m => m.resultat && m.resultat.trim() !== '');
+      const playedMatches = matches.filter(m => (m.resultat || m.Resultat) && (m.resultat || m.Resultat).trim() !== '');
       if (playedMatches.length > 0) {
         const lastPlayed = playedMatches[playedMatches.length - 1];
+        
+        // Récupération sécurisée des buteurs et passeurs (minuscule ou majuscule)
+        const buteursVal = lastPlayed.buteurs || lastPlayed.Buteurs || '';
+        const passeursVal = lastPlayed.passeurs || lastPlayed.Passeurs || '';
+        const resultatVal = lastPlayed.resultat || lastPlayed.Resultat || '';
+        const dateVal = lastPlayed.date || lastPlayed.Date || '';
+        const lieuVal = lastPlayed.lieu || lastPlayed.Lieu || '';
+        const adversaireVal = lastPlayed.adversaire || lastPlayed.Adversaire || '';
+
         let detailsHTML = '';
-        if (lastPlayed.buteurs) detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 6px;">⚽ <strong>Buteur(s) :</strong> ${lastPlayed.buteurs}</div>`;
-        if (lastPlayed.passeurs) detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 4px;">👟 <strong>Passeur(s) :</strong> ${lastPlayed.passeurs}</div>`;
+        if (buteursVal.trim() !== '') detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 6px;">⚽ <strong>Buteur(s) :</strong> ${buteursVal}</div>`;
+        if (passeursVal.trim() !== '') detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 4px;">👟 <strong>Passeur(s) :</strong> ${passeursVal}</div>`;
 
         lastMatchHTML = `
           <div style="text-align: center;">
-            <div style="color: #666; font-size: 0.9em; margin-bottom: 4px;">📅 ${lastPlayed.date || ''} - ${lastPlayed.lieu || ''}</div>
-            <div style="font-size: 1.15em; font-weight: bold; margin-bottom: 6px;">vs ${lastPlayed.adversaire || ''}</div>
-            <div style="font-size: 1.05em; margin-bottom: 6px;">Score : ${formatScoreColor(lastPlayed.resultat)}</div>
+            <div style="color: #666; font-size: 0.9em; margin-bottom: 4px;">📅 ${dateVal} - ${lieuVal}</div>
+            <div style="font-size: 1.15em; font-weight: bold; margin-bottom: 6px;">vs ${adversaireVal}</div>
+            <div style="font-size: 1.05em; margin-bottom: 6px;">Score : ${formatScoreColor(resultatVal)}</div>
             ${detailsHTML}
           </div>
         `;
       }
 
-      const upcomingMatches = matches.filter(m => !m.resultat || m.resultat.trim() === '');
+      const upcomingMatches = matches.filter(m => !((m.resultat || m.Resultat) && (m.resultat || m.Resultat).trim() !== ''));
       if (upcomingMatches.length > 0) {
         const nextMatch = upcomingMatches[0];
-        const isDomicile = nextMatch.lieu && nextMatch.lieu.toLowerCase().includes('domicile');
+        const lieuNext = nextMatch.lieu || nextMatch.Lieu || '';
+        const isDomicile = lieuNext.toLowerCase().includes('domicile');
         const badgeColor = isDomicile ? '#28a745' : '#17a2b8';
+        const dateNext = nextMatch.date || nextMatch.Date || '';
+        const advNext = nextMatch.adversaire || nextMatch.Adversaire || '';
 
         nextMatchHTML = `
           <div style="text-align: center;">
-            <div style="color: #666; font-size: 0.9em; margin-bottom: 4px;">📅 ${nextMatch.date || ''}</div>
-            <div style="font-size: 1.15em; font-weight: bold; margin-bottom: 8px;">vs ${nextMatch.adversaire || ''}</div>
-            <span style="background: ${badgeColor}; color: white; padding: 3px 12px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">${nextMatch.lieu || 'N/C'}</span>
+            <div style="color: #666; font-size: 0.9em; margin-bottom: 4px;">📅 ${dateNext}</div>
+            <div style="font-size: 1.15em; font-weight: bold; margin-bottom: 8px;">vs ${advNext}</div>
+            <span style="background: ${badgeColor}; color: white; padding: 3px 12px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">${lieuNext || 'N/C'}</span>
           </div>
         `;
       }
