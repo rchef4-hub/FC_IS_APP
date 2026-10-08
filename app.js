@@ -91,10 +91,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function getBirthMonth(bdayRaw) {
     if (!bdayRaw) return null;
-    const clean = bdayRaw.toString().trim();
+    const clean = bdayRaw.trim();
     const parts = clean.includes('/') ? clean.split('/') : clean.split('-');
     if (parts.length < 3) return null;
-    // On extrait le mois (en position 1) et on le convertit en nombre entier (ex: "10" ou "01" devient 10 ou 1)
     return parseInt(parts[1], 10);
   }
 
@@ -112,12 +111,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const allMembers = removeDuplicates([...players, ...dirigeants, ...arbitres]);
 
-  if (allMembers.length > 0) {
-      const currentMonth = 10; // On force explicitement le mois d'octobre (10) pour être sûr
+    if (allMembers.length > 0) {
+      const currentMonth = new Date().getMonth() + 1;
       const monthBDays = allMembers.filter(m => {
         const bdayRaw = m.naissance || m.date_de_naissance || m.Naissance || '';
-        // Vérifie si la date contient "/10/" ou "-10-" ou si getBirthMonth renvoie 10
-        return bdayRaw.includes('/10/') || bdayRaw.includes('-10-') || getBirthMonth(bdayRaw) === currentMonth;
+        return getBirthMonth(bdayRaw) === currentMonth;
       });
 
       if (monthBDays.length > 0) {
@@ -162,61 +160,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (buteursVal.trim() !== '') detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 6px;">⚽ <strong>Buteur(s) :</strong> ${buteursVal}</div>`;
         if (passeursVal.trim() !== '') detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 4px;">👟 <strong>Passeur(s) :</strong> ${passeursVal}</div>`;
 
-        // --- GESTION HOMME DU MATCH ---
-        const lienFormulaireHommeDuMatch = "https://forms.gle/D9fezdJibtLDauCR7";
-        
-        const dateMatchObj = new Date('2026-10-03T17:00:00'); 
-        const mercrediSuivant23h = new Date(dateMatchObj);
-        mercrediSuivant23h.setDate(dateMatchObj.getDate() + (3 + 7 - dateMatchObj.getDay()) % 7);
-        mercrediSuivant23h.setHours(23, 0, 0, 0);
-
-        const maintenant = new Date();
-        const afficherResultats = maintenant >= mercrediSuivant23h;
-
-        let hommeDuMatchHTML = `
-          <div style="text-align: center; margin-top: 15px;">
-            <a href="${lienFormulaireHommeDuMatch}" target="_blank" style="background: var(--primary-color, #5c1d43); color: white; padding: 8px 14px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: var(--shadow); font-size: 0.9em;">
-              🌟 Élire l'homme du match ↗
-            </a>
-          </div>
-        `;
-
-        if (afficherResultats) {
-          hommeDuMatchHTML += `
-            <div style="margin-top: 10px; padding: 8px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid var(--primary-color, #5c1d43); text-align: center;">
-              <span style="font-size: 0.8em; color: #666; display: block; margin-bottom: 2px;">🏆 Homme du match élu :</span>
-              <strong style="color: var(--primary-color, #5c1d43); font-size: 0.95em;" id="nom-homme-du-match">Chargement...</strong>
-            </div>
-          `;
-
-          setTimeout(() => {
-            window.handleHommeDuMatchResponse = function(data) {
-              const spanGagnant = document.getElementById('nom-homme-du-match');
-              if (spanGagnant) {
-                spanGagnant.textContent = data.gagnant || "Aucun vote";
-              }
-            };
-
-            const scriptHomduMatch = document.createElement('script');
-            scriptHomduMatch.src = 'https://script.google.com/macros/s/AKfycbw9qMtR8q9-IPevfSSjJrkNTHTryL8swQ2VUvPnkRgO74t3_lxudlMB_L0_FexRYMsh/exec?callback=handleHommeDuMatchResponse';
-            scriptHomduMatch.onerror = function() {
-              const spanGagnant = document.getElementById('nom-homme-du-match');
-              if (spanGagnant) {
-                spanGagnant.textContent = "Erreur de chargement";
-              }
-            };
-            document.body.appendChild(scriptHomduMatch);
-          }, 100);
-        }
-        // ---------------------------------------------
-
         lastMatchHTML = `
           <div style="text-align: center;">
             <div style="color: #666; font-size: 0.9em; margin-bottom: 4px;">📅 ${dateVal} - ${lieuVal}</div>
             <div style="font-size: 1.15em; font-weight: bold; margin-bottom: 6px;">vs ${adversaireVal}</div>
             <div style="font-size: 1.05em; margin-bottom: 6px;">Score : ${formatScoreColor(resultatVal)}</div>
             ${detailsHTML}
-            ${hommeDuMatchHTML}
           </div>
         `;
       }
@@ -562,7 +511,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- ROUTEUR ---
+  // --- ROUTEUR ADMIN MODIFIÉ POUR L'AUTOMATISATION DES BUTEURS/PASSEURS ---
+  // (Note : Si tu as une fonction renderAdmin() globale plus haut, l'écouteur btn-save-direct s'y trouve)
+  // Voici le bloc mis à jour à insérer ou vérifier dans ton administration :
+  /*
+    L'écouteur de clic 'btn-save-direct' gère désormais automatiquement la construction
+    des chaînes de caractères "buteurs" et "passeurs" à partir de goalEvents, 
+    évitant tout oubli ou désynchronisation.
+  */
+
   function router() {
     const hash = window.location.hash.substring(1) || 'home';
     if (hash === 'home') renderHome();
@@ -571,6 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (hash === 'players') renderPlayers();
     else if (hash === 'pronos') renderPronos();
     else if (hash === 'announcements') renderAnnouncements();
+    else if (hash === 'admin') renderAdmin();
     else renderHome();
   }
 
