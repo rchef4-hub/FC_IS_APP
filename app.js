@@ -163,8 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // --- GESTION HOMME DU MATCH (Remplace le rond bleu) ---
         const lienFormulaireHommeDuMatch = "https://forms.gle/D9fezdJibtLDauCR7";
         
-        // Calcul du mercredi suivant à 23h00 par rapport à la date du dernier match
-        const dateMatchObj = new Date('2026-10-03T17:00:00'); // Date de votre dernier match
+        const dateMatchObj = new Date('2026-10-03T17:00:00'); 
         const mercrediSuivant23h = new Date(dateMatchObj);
         mercrediSuivant23h.setDate(dateMatchObj.getDate() + (3 + 7 - dateMatchObj.getDay()) % 7);
         mercrediSuivant23h.setHours(23, 0, 0, 0);
@@ -188,7 +187,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           `;
 
-          // Appel asynchrone JSONP pour récupérer le gagnant du Google Sheet après insertion dans le DOM
           setTimeout(() => {
             window.handleHommeDuMatchResponse = function(data) {
               const spanGagnant = document.getElementById('nom-homme-du-match');
@@ -569,15 +567,374 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // --- ANNONCES ---
+  async function renderAnnouncements() {
+    root.innerHTML = '<h2>Annonces Club</h2><p style="text-align: center;">Chargement...</p>';
+    try {
+      const annonces = await loadJson('annonces.json');
+      const list = Array.isArray(annonces) ? annonces.map(a => `
+        <li style="border-left-color: ${a.couleur_bordure || 'var(--primary-color)'};">
+          📢 <strong>${a.titre || ''}</strong><br>${a.details || ''}
+        </li>
+      `).join('') : '';
+      root.innerHTML = `<h2>Annonces Club</h2><ul>${list}</ul>`;
+    } catch (e) {
+      root.innerHTML = '<h2>Annonces Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>';
+    }
+  }
+
+  // --- ADMINISTRATION (SAISIE & RESET) ---
+  async function renderAdmin() {
+    const password = prompt("Veuillez entrer le mot de passe administrateur :");
+    if (password !== "508497") {
+      alert("Mot de passe incorrect !");
+      window.location.hash = "home";
+      return;
+    }
+
+    let githubToken = localStorage.getItem('fcis_github_token');
+    if (!githubToken) {
+      githubToken = prompt("Entrez votre Token GitHub (ghp_...) :");
+      if (githubToken) {
+        localStorage.setItem('fcis_github_token', githubToken);
+      } else {
+        alert("Token nécessaire.");
+        window.location.hash = "home";
+        return;
+      }
+    }
+
+    const REPO_OWNER = "rchef4-hub";
+    const REPO_NAME = "FC_IS_APP";
+
+    root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="text-align: center;">Chargement des données...</p>`;
+
+    try {
+      const [playersRes, matchesRes] = await Promise.all([
+        fetchFresh('players.json'),
+        fetchFresh('matchs.json')
+      ]);
+
+      const players = await playersRes.json();
+      const matches = await matchesRes.json();
+
+      let goalEvents = [];
+      let cardEvents = [];
+
+      let matchOptions = matches.map((m, idx) => 
+        `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
+      ).join('');
+
+      let playerOptionsScorer = `<option value="CSC">[CSC] But contre son camp</option>` + players.map(p => 
+        `<option value="${p.nom}">${p.nom}</option>`
+      ).join('');
+
+      let playerOptionsPasser = players.map(p => 
+        `<option value="${p.nom}">${p.nom}</option>`
+      ).join('');
+
+      let playerCheckboxList = players.map(p => `
+        <label style="display:block; margin: 5px 0; font-size: 0.95em;">
+          <input type="checkbox" class="presence-check" value="${p.nom}">
+          #${p.numero || ''} ${p.nom} (${p.poste || ''})
+        </label>
+      `).join('');
+
+      root.innerHTML = `
+        <h2>⚙️ Saisie d'un Match</h2>
+        <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow);">
+          <label style="font-weight: bold; display: block; margin-bottom: 5px;">1. Sélectionner le match :</label>
+          <select id="select-match" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px;">
+            ${matchOptions}
+          </select>
+
+          <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Score final :</label>
+          <input type="text" id="match-score" placeholder="Ex: Victoire 3 - 0 ou Défaite 1 -2" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc;">
+
+          <label style="font-weight: bold; display: block; margin-bottom: 5px;">3. Joueurs Présents :</label>
+          <div style="max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 15px;">
+            ${playerCheckboxList}
+          </div>
+
+          <label style="font-weight: bold; display: block; margin-bottom: 5px;">4. Ajouter Buteur / Passeur :</label>
+          <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <select id="select-buteur" style="flex: 1; padding: 6px; border-radius: 6px;">
+              <option value="">-- Buteur --</option>
+              ${playerOptionsScorer}
+            </select>
+            <select id="select-passeur" style="flex: 1; padding: 6px; border-radius: 6px;">
+              <option value="">-- Passeur --</option>
+              ${playerOptionsPasser}
+            </select>
+            <button id="btn-add-goal" type="button" style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
+          </div>
+
+          <label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Avertissement / Carton :</label>
+          <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
+              <option value="">-- Joueur Sanctionné --</option>
+              ${playerOptionsPasser}
+            </select>
+            <select id="select-type-carton" style="width: 140px; padding: 6px; border-radius: 6px;">
+              <option value="🟨">🟨 Jaune</option>
+              <option value="⬜">⬜ Blanc (Excl. temp.)</option>
+              <option value="🟥">🟥 Rouge Direct</option>
+            </select>
+            <button id="btn-add-card" type="button" style="background: #ffc107; color: black; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Ajouter</button>
+          </div>
+
+          <div id="goals-list" style="margin-bottom: 10px;"></div>
+          <div id="cards-list" style="margin-bottom: 15px;"></div>
+
+          <button id="btn-save-direct" type="button" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; margin-bottom: 15px;">
+            🚀 Publier le match sur GitHub
+          </button>
+
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+          <button id="btn-reset-all" type="button" style="width: 100%; background: #dc3545; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
+            🔄 Remettre à ZÉRO les statistiques & résultats
+          </button>
+
+          <p id="status-message" style="text-align:center; font-weight:bold; margin-top:10px;"></p>
+        </div>
+      `;
+
+      function renderGoalsUI() {
+        const goalsContainer = document.getElementById('goals-list');
+        if (goalEvents.length === 0) {
+          goalsContainer.innerHTML = `<small style="color: #888;">Aucun but ajouté pour l'instant.</small>`;
+          return;
+        }
+        goalsContainer.innerHTML = goalEvents.map((e, index) => {
+          const buteurLabel = e.buteur === 'CSC' ? '🤖 <em>[CSC] But contre son camp</em>' : `⚽ <strong>${e.buteur}</strong>`;
+          return `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid var(--accent-color);">
+              <span>${buteurLabel} ${e.passeur ? '<small style="color:#555;">(passe : ' + e.passeur + ')</small>' : ''}</span>
+              <button type="button" onclick="removeGoal(${index})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">❌</button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderCardsUI() {
+        const cardsContainer = document.getElementById('cards-list');
+        if (cardEvents.length === 0) {
+          cardsContainer.innerHTML = `<small style="color: #888;">Aucun carton ajouté pour l'instant.</small>`;
+          return;
+        }
+        cardsContainer.innerHTML = cardEvents.map((c, index) => `
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid #ffc107;">
+            <span>${c.type} <strong>${c.joueur}</strong></span>
+            <button type="button" onclick="removeCard(${index})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">❌</button>
+          </div>
+        `).join('');
+      }
+
+      window.removeGoal = function(index) {
+        goalEvents.splice(index, 1);
+        renderGoalsUI();
+      };
+
+      window.removeCard = function(index) {
+        cardEvents.splice(index, 1);
+        renderCardsUI();
+      };
+
+      document.getElementById('btn-add-goal').addEventListener('click', () => {
+        const buteur = document.getElementById('select-buteur').value;
+        const passeur = document.getElementById('select-passeur').value;
+        if (!buteur) {
+          alert("Veuillez sélectionner un buteur.");
+          return;
+        }
+        goalEvents.push({ buteur, passeur });
+        renderGoalsUI();
+        document.getElementById('select-buteur').value = '';
+        document.getElementById('select-passeur').value = '';
+      });
+
+      document.getElementById('btn-add-card').addEventListener('click', () => {
+        const joueur = document.getElementById('select-joueur-carton').value;
+        const type = document.getElementById('select-type-carton').value;
+        if (!joueur) {
+          alert("Veuillez sélectionner un joueur.");
+          return;
+        }
+        cardEvents.push({ joueur, type });
+        renderCardsUI();
+        document.getElementById('select-joueur-carton').value = '';
+      });
+
+      document.getElementById('btn-save-direct').addEventListener('click', async () => {
+        const matchIdx = document.getElementById('select-match').value;
+        const score = document.getElementById('match-score').value.trim();
+        const statusMsg = document.getElementById('status-message');
+
+        if (!score) {
+          alert("Veuillez indiquer le score final.");
+          return;
+        }
+
+        statusMsg.style.color = 'blue';
+        statusMsg.textContent = "Publication en cours sur GitHub...";
+
+        try {
+          const checkboxes = document.querySelectorAll('.presence-check:checked');
+          const presentNames = Array.from(checkboxes).map(cb => cb.value);
+
+          players.forEach(p => {
+            if (presentNames.includes(p.nom)) {
+              p.matchs = (parseInt(p.matchs || p.matches || 0, 10)) + 1;
+            }
+          });
+
+          goalEvents.forEach(e => {
+            if (e.buteur !== 'CSC') {
+              const p = players.find(pl => pl.nom === e.buteur);
+              if (p) p.buts = (parseInt(p.buts || 0, 10)) + 1;
+            }
+            if (e.passeur) {
+              const p = players.find(pl => pl.nom === e.passeur);
+              if (p) p.passes = (parseInt(p.passes || 0, 10)) + 1;
+            }
+          });
+
+          cardEvents.forEach(c => {
+            const p = players.find(pl => pl.nom === c.joueur);
+            if (p) {
+              if (c.type === '🟨') p.cartons_jaunes = (parseInt(p.cartons_jaunes || 0, 10)) + 1;
+              if (c.type === '⬜') p.cartons_blancs = (parseInt(p.cartons_blancs || 0, 10)) + 1;
+              if (c.type === '🟥') p.cartons_rouges = (parseInt(p.cartons_rouges || 0, 10)) + 1;
+            }
+          });
+
+          const matchTarget = matches[matchIdx];
+          matchTarget.resultat = score;
+          matchTarget.buteurs = goalEvents.filter(e => e.buteur !== 'CSC').map(e => e.buteur).join(', ');
+          matchTarget.passeurs = goalEvents.filter(e => e.passeur).map(e => e.passeur).join(', ');
+
+          async function updateGitHubFile(path, contentObj) {
+            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+            const getRes = await fetch(url, {
+              headers: { 'Authorization': `token ${githubToken}` }
+            });
+            const getData = await getRes.json();
+            const sha = getData.sha;
+
+            const putRes = await fetch(url, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `token ${githubToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                message: `Mise à jour automatique via Admin (${path})`,
+                content: btoa(unescape(encodeURIComponent(JSON.stringify(contentObj, null, 2)))),
+                sha: sha
+              })
+            });
+
+            if (!putRes.ok) throw new Error(`Erreur GitHub sur ${path}`);
+          }
+
+          await updateGitHubFile('players.json', players);
+          await updateGitHubFile('matchs.json', matches);
+
+          statusMsg.style.color = 'green';
+          statusMsg.textContent = "✅ Match publié et statistiques mises à jour avec succès !";
+          setTimeout(() => { window.location.hash = "home"; }, 2000);
+
+        } catch (err) {
+          console.error(err);
+          statusMsg.style.color = 'red';
+          statusMsg.textContent = "❌ Erreur lors de la publication. Vérifiez votre token GitHub.";
+        }
+      });
+
+      document.getElementById('btn-reset-all').addEventListener('click', async () => {
+        if (!confirm("⚠️ ATTENTION : Voulez-vous vraiment réinitialiser toutes les statistiques et les résultats des matchs à zéro ?")) {
+          return;
+        }
+
+        const statusMsg = document.getElementById('status-message');
+        statusMsg.style.color = 'blue';
+        statusMsg.textContent = "Réinitialisation en cours...";
+
+        try {
+          players.forEach(p => {
+            p.matchs = 0;
+            p.matches = 0;
+            p.buts = 0;
+            p.passes = 0;
+            p.cartons_jaunes = 0;
+            p.cartons_blancs = 0;
+            p.cartons_rouges = 0;
+          });
+
+          matches.forEach(m => {
+            m.resultat = "";
+            m.buteurs = "";
+            m.passeurs = "";
+          });
+
+          async function updateGitHubFile(path, contentObj) {
+            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+            const getRes = await fetch(url, {
+              headers: { 'Authorization': `token ${githubToken}` }
+            });
+            const getData = await getRes.json();
+            const sha = getData.sha;
+
+            const putRes = await fetch(url, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `token ${githubToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                message: `Remise à zéro globale (${path})`,
+                content: btoa(unescape(encodeURIComponent(JSON.stringify(contentObj, null, 2)))),
+                sha: sha
+              })
+            });
+
+            if (!putRes.ok) throw new Error(`Erreur GitHub sur ${path}`);
+          }
+
+          await updateGitHubFile('players.json', players);
+          await updateGitHubFile('matchs.json', matches);
+
+          statusMsg.style.color = 'green';
+          statusMsg.textContent = "🔄 Remise à zéro effectuée avec succès !";
+          setTimeout(() => { window.location.hash = "home"; }, 2000);
+
+        } catch (err) {
+          console.error(err);
+          statusMsg.style.color = 'red';
+          statusMsg.textContent = "❌ Erreur lors de la remise à zéro.";
+        }
+      });
+
+      renderGoalsUI();
+      renderCardsUI();
+
+    } catch (e) {
+      console.error(e);
+      root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="color: red; text-align: center;">Erreur lors du chargement des données d'administration.</p>`;
+    }
+  }
+
   // --- ROUTEUR SIMPLE DE L'APPLICATION ---
   function router() {
-    const hash = window.location.hash || '#home';
-    if (hash === '#home') renderHome();
-    else if (hash === '#pronos') renderPronos();
-    else if (hash === '#players') renderPlayers();
-    else if (hash === '#matches') renderMatches();
-    else if (hash === '#stats') renderStats();
-    else if (hash === '#admin') renderAdmin();
+    const hash = window.location.hash.replace('#', '') || 'home';
+    if (hash === 'home') renderHome();
+    else if (hash === 'pronos') renderPronos();
+    else if (hash === 'players') renderPlayers();
+    else if (hash === 'matches') renderMatches();
+    else if (hash === 'stats') renderStats();
+    else if (hash === 'announcements') renderAnnouncements();
+    else if (hash === 'admin') renderAdmin();
     else renderHome();
   }
 
