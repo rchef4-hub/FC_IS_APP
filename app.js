@@ -246,6 +246,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <h3 style="margin-top: 0; background: none; color: var(--primary-color);">Fais ton pronostic !</h3>
         <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 15px; line-height: 1.4;">
           Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2).
+        </p>
+        
+         <p style="color: var(--primary-color); font-size: 0.9em; font-weight: bold; margin-bottom: 15px;">
           Valide ton prono avant le match.
         </p>
         
