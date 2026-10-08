@@ -163,8 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // --- GESTION HOMME DU MATCH (Remplace le rond bleu) ---
         const lienFormulaireHommeDuMatch = "https://forms.gle/D9fezdJibtLDauCR7";
         
-        // Calcul du mercredi suivant à 23h00 par rapport à la date du dernier match
-        const dateMatchObj = new Date('2026-10-03T17:00:00'); // Date de votre dernier match
+        const dateMatchObj = new Date('2026-10-03T17:00:00'); 
         const mercrediSuivant23h = new Date(dateMatchObj);
         mercrediSuivant23h.setDate(dateMatchObj.getDate() + (3 + 7 - dateMatchObj.getDay()) % 7);
         mercrediSuivant23h.setHours(23, 0, 0, 0);
@@ -188,7 +187,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           `;
 
-          // Appel asynchrone JSONP pour récupérer le gagnant du Google Sheet après insertion dans le DOM
           setTimeout(() => {
             window.handleHommeDuMatchResponse = function(data) {
               const spanGagnant = document.getElementById('nom-homme-du-match');
