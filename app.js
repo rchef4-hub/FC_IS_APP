@@ -91,10 +91,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function getBirthMonth(bdayRaw) {
     if (!bdayRaw) return null;
-    const clean = bdayRaw.trim();
+    const clean = bdayRaw.toString().trim();
+    // Recherche d'un motif de type XX/XX/XXXX ou XX-XX-XXXX
     const parts = clean.includes('/') ? clean.split('/') : clean.split('-');
-    if (parts.length < 3) return null;
-    return parseInt(parts[1], 10);
+    if (parts.length >= 3) {
+      // Si le premier élément a 4 chiffres (AAAA-MM-JJ), le mois est à l'index 1
+      if (parts[0].length === 4) {
+        return parseInt(parts[1], 10);
+      }
+      // Sinon (JJ/MM/AAAA), le mois est aussi à l'index 1
+      return parseInt(parts[1], 10);
+    }
+    return null;
   }
 
   // --- PAGE D'ACCUEIL ---
