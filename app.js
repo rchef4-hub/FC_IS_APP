@@ -524,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul class="collapsed">${renderList(topPassers, p => `👟 ${getNbPasses(p)} passe(s)`, "Aucune passe décisive")}</ul>
         
         <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
-        <ul class="collapsed">${renderList(topCards, p => `🟨 ${getJaunes(p)} | ⬜ ${getBlancs(p)} 🟥 ${getRouges(p)}`, "Aucun carton")}</ul>
+        <ul class="collapsed">${renderList(topCards, p => `🟨 ${getJaunes(p)} | ⬜ ${getBlancs(p)} \vert{} 🟥 ${getRouges(p)}`, "Aucun carton")}</ul>
         
         <h3 class="accordion-header">⭐ Matchs Joués par les Joueurs</h3>
         <ul class="collapsed">${renderList(topPlayed, p => `⭐ ${getNbMatchs(p)} match(s)`, "Aucun match enregistré")}</ul>
