@@ -160,12 +160,43 @@ document.addEventListener('DOMContentLoaded', function() {
         if (buteursVal.trim() !== '') detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 6px;">⚽ <strong>Buteur(s) :</strong> ${buteursVal}</div>`;
         if (passeursVal.trim() !== '') detailsHTML += `<div style="font-size: 0.9em; color: #444; margin-top: 4px;">👟 <strong>Passeur(s) :</strong> ${passeursVal}</div>`;
 
+        // --- GESTION HOMME DU MATCH (Remplace le rond bleu) ---
+        const lienFormulaireHommeDuMatch = "https://forms.gle/D9fezdJibtLDauCR7";
+        
+        // Calcul du mercredi suivant à 23h00 par rapport à la date du dernier match
+        const dateMatchObj = new Date('2026-10-03T17:00:00'); // Date de votre dernier match
+        const mercrediSuivant23h = new Date(dateMatchObj);
+        mercrediSuivant23h.setDate(dateMatchObj.getDate() + (3 + 7 - dateMatchObj.getDay()) % 7);
+        mercrediSuivant23h.setHours(23, 0, 0, 0);
+
+        const maintenant = new Date();
+        const afficherResultats = maintenant >= mercrediSuivant23h;
+
+        let hommeDuMatchHTML = `
+          <div style="text-align: center; margin-top: 15px;">
+            <a href="${lienFormulaireHommeDuMatch}" target="_blank" style="background: var(--primary-color, #5c1d43); color: white; padding: 8px 14px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: var(--shadow); font-size: 0.9em;">
+              🌟 Élire l'homme du match ↗
+            </a>
+          </div>
+        `;
+
+        if (afficherResultats) {
+          hommeDuMatchHTML += `
+            <div style="margin-top: 10px; padding: 8px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid var(--primary-color, #5c1d43); text-align: center;">
+              <span style="font-size: 0.8em; color: #666; display: block; margin-bottom: 2px;">🏆 Homme du match élu :</span>
+              <strong style="color: var(--primary-color, #5c1d43); font-size: 0.95em;" id="nom-homme-du-match">Chargement...</strong>
+            </div>
+          `;
+        }
+        // -----------------------------------------------------
+
         lastMatchHTML = `
           <div style="text-align: center;">
             <div style="color: #666; font-size: 0.9em; margin-bottom: 4px;">📅 ${dateVal} - ${lieuVal}</div>
             <div style="font-size: 1.15em; font-weight: bold; margin-bottom: 6px;">vs ${adversaireVal}</div>
             <div style="font-size: 1.05em; margin-bottom: 6px;">Score : ${formatScoreColor(resultatVal)}</div>
             ${detailsHTML}
+            ${hommeDuMatchHTML}
           </div>
         `;
       }
@@ -229,12 +260,10 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-// --- PRONOSTICS INTERACTIFS (Via JSONP & Chargement des matchs) ---
+  // --- PRONOSTICS INTERACTIFS (Via JSONP & Chargement des matchs) ---
   async function renderPronos() {
-    // 1. Structure de base avec un style CSS pour tuer net ces triangles
     root.innerHTML = `
       <style>
-        /* Correctif pour masquer définitivement les petits triangles de repli */
         h3 span[style*="display: none"], h3::after, h3::before, .card h3::after {
           display: none !important;
         }
@@ -247,15 +276,12 @@ document.addEventListener('DOMContentLoaded', function() {
         <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 15px; line-height: 1.4;">
           Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2).
         </p>
-        
          <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 15px; line-height: 1.4;">
           Valide ton prono avant le match.
         </p>
-        
         <div id="prochain-match-container" style="background: var(--bg-color); padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
           <span style="font-size: 0.9em; color: var(--text-muted);">Chargement du match...</span>
         </div>
-        
         <a href="https://forms.gle/KLYdMeGPt1UCHDMG9" target="_blank" style="background: var(--primary-color); color: white; padding: 14px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: var(--shadow); font-size: 1.05em;">
           📝 Remplir le formulaire de pronos ↗
         </a>
@@ -264,46 +290,36 @@ document.addEventListener('DOMContentLoaded', function() {
       <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center;">
         <h3 style="margin-top: 0; background: none; color: var(--primary-color);">🏆 Classement des Pronostiqueurs</h3>
         <p style="text-align: center; color: var(--text-muted); font-size: 0.9em; margin-bottom: 15px;">Le classement de la saison.</p>
-        
         <div id="pronos-leaderboard" style="text-align: left;">
           <p style="text-align: center; color: var(--text-muted);">Chargement du classement...</p>
         </div>
       </div>
     `;
 
-    // 2. Chargement du fichier matchs.json (uniquement les noms des clubs, centré)
     try {
       const response = await fetch('matchs.json');
       const matchs = await response.json();
-      
       const prochainMatch = matchs.find(m => !m.resultat || m.resultat.trim() === "");
-      
       const matchContainer = document.getElementById('prochain-match-container');
       if (matchContainer) {
         if (prochainMatch) {
-          matchContainer.innerHTML = `
-            <strong style="color: var(--primary-color); font-size: 1.15em; display: block;">F.C. IS vs ${prochainMatch.adversaire}</strong>
-          `;
+          matchContainer.innerHTML = `<strong style="color: var(--primary-color); font-size: 1.15em; display: block;">F.C. IS vs ${prochainMatch.adversaire}</strong>`;
         } else {
           matchContainer.innerHTML = `<span style="font-size: 0.9em; color: var(--text-muted);">Aucun match à venir pour le moment.</span>`;
         }
       }
     } catch (e) {
-      console.log("Erreur chargement matchs.json", e);
       const matchContainer = document.getElementById('prochain-match-container');
       if (matchContainer) {
         matchContainer.innerHTML = `<span style="font-size: 0.9em; color: var(--text-muted);">Match à venir</span>`;
       }
     }
 
-    // 3. Chargement du classement via JSONP
     try {
       window.handlePronosResponse = function(pronos) {
         let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
-        
         if (Array.isArray(pronos) && pronos.length > 0) {
           pronos.sort((a, b) => b.points - a.points);
-
           pronos.forEach((p, index) => {
             const rang = index + 1;
             let medal = '⚽';
@@ -321,7 +337,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           leaderboardHTML += '<p style="text-align: center; color: var(--text-muted);">Aucun point enregistré pour l\'instant.</p>';
         }
-
         leaderboardHTML += '</ul>';
         const container = document.getElementById('pronos-leaderboard');
         if (container) container.innerHTML = leaderboardHTML;
@@ -333,12 +348,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('pronos-leaderboard').innerHTML = '<p style="text-align: center; color: red;">Erreur de chargement du classement.</p>';
       };
       document.body.appendChild(script);
-
     } catch (e) {
       document.getElementById('pronos-leaderboard').innerHTML = '<p style="text-align: center; color: red;">Erreur de chargement du classement.</p>';
     }
   }
-  
+
   // --- EFFECTIF ---
   async function renderPlayers() {
     root.innerHTML = '<h2>Effectif du Club</h2><p style="text-align: center;">Chargement...</p>';
@@ -364,7 +378,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const symbole = d.symbole || '👔';
           return `<li style="border-left: 4px solid #6c757d;">${symbole} <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`;
         }).join('');
-        
         html += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${list}</ul>`;
       }
 
@@ -373,13 +386,8 @@ document.addEventListener('DOMContentLoaded', function() {
           const type = (a.categorie || a.fonction || '').toLowerCase();
           const isBenevole = type.includes('bénévole') || type.includes('benevole') || type.includes('touche');
           const icone = isBenevole ? '🏁' : '🟨 🟥';
-
-          return `<li style="border-left: 4px solid #6c757d;">
-            ${icone} <strong>${getPlayerFullName(a)}</strong><br>
-            <small>${a.categorie || 'Club'}</small>
-          </li>`;
+          return `<li style="border-left: 4px solid #6c757d;">${icone} <strong>${getPlayerFullName(a)}</strong><br><small>${a.categorie || 'Club'}</small></li>`;
         }).join('');
-        
         html += `<h3 class="accordion-header">⬜🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
       }
 
@@ -521,7 +529,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul class="collapsed">${renderList(topPassers, p => `👟 ${getNbPasses(p)} passe(s)`, "Aucune passe décisive")}</ul>
         
         <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
-        <ul class="collapsed">${renderList(topCards, p => `🟨 ${getJaunes(p)} | ⬜ ${getBlancs(p)} \vert{} 🟥 ${getRouges(p)}`, "Aucun carton")}</ul>
+        <ul class="collapsed">${renderList(topCards, p => `🟨 ${getJaunes(p)} | ⬜ ${getBlancs(p)} 🟥 ${getRouges(p)}`, "Aucun carton")}</ul>
         
         <h3 class="accordion-header">⭐ Matchs Joués par les Joueurs</h3>
         <ul class="collapsed">${renderList(topPlayed, p => `⭐ ${getNbMatchs(p)} match(s)`, "Aucun match enregistré")}</ul>
@@ -541,383 +549,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- ANNONCES ---
-  async function renderAnnouncements() {
-    root.innerHTML = '<h2>Annonces Club</h2><p style="text-align: center;">Chargement...</p>';
-    try {
-      const annonces = await loadJson('annonces.json');
-      const list = Array.isArray(annonces) ? annonces.map(a => `
-        <li style="border-left-color: ${a.couleur_bordure || 'var(--primary-color)'};">
-          📢 <strong>${a.titre || ''}</strong><br>${a.details || ''}
-        </li>
-      `).join('') : '';
-      root.innerHTML = `<h2>Annonces Club</h2><ul>${list}</ul>`;
-    } catch (e) {
-      root.innerHTML = '<h2>Annonces Club</h2><p style="color: red; text-align: center;">Erreur de chargement.</p>';
-    }
-  }
-
-  // --- ADMINISTRATION (SAISIE & RESET) ---
-  async function renderAdmin() {
-    const password = prompt("Veuillez entrer le mot de passe administrateur :");
-    if (password !== "508497") {
-      alert("Mot de passe incorrect !");
-      window.location.hash = "home";
-      return;
-    }
-
-    let githubToken = localStorage.getItem('fcis_github_token');
-    if (!githubToken) {
-      githubToken = prompt("Entrez votre Token GitHub (ghp_...) :");
-      if (githubToken) {
-        localStorage.setItem('fcis_github_token', githubToken);
-      } else {
-        alert("Token nécessaire.");
-        window.location.hash = "home";
-        return;
-      }
-    }
-
-    const REPO_OWNER = "rchef4-hub";
-    const REPO_NAME = "FC_IS_APP";
-
-    root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="text-align: center;">Chargement des données...</p>`;
-
-    try {
-      const [playersRes, matchesRes] = await Promise.all([
-        fetchFresh('players.json'),
-        fetchFresh('matchs.json')
-      ]);
-
-      const players = await playersRes.json();
-      const matches = await matchesRes.json();
-
-      let goalEvents = [];
-      let cardEvents = [];
-
-      let matchOptions = matches.map((m, idx) => 
-        `<option value="${idx}">${m.date} - vs ${m.adversaire} (${m.lieu})</option>`
-      ).join('');
-
-      let playerOptionsScorer = `<option value="CSC">[CSC] But contre son camp</option>` + players.map(p => 
-        `<option value="${p.nom}">${p.nom}</option>`
-      ).join('');
-
-      let playerOptionsPasser = players.map(p => 
-        `<option value="${p.nom}">${p.nom}</option>`
-      ).join('');
-
-      let playerCheckboxList = players.map(p => `
-        <label style="display:block; margin: 5px 0; font-size: 0.95em;">
-          <input type="checkbox" class="presence-check" value="${p.nom}">
-          #${p.numero || ''} ${p.nom} (${p.poste || ''})
-        </label>
-      `).join('');
-
-      root.innerHTML = `
-        <h2>⚙️ Saisie d'un Match</h2>
-        <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow);">
-          <label style="font-weight: bold; display: block; margin-bottom: 5px;">1. Sélectionner le match :</label>
-          <select id="select-match" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px;">
-            ${matchOptions}
-          </select>
-
-          <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Score final :</label>
-          <input type="text" id="match-score" placeholder="Ex: Victoire 3 - 0 ou Défaite 1 -2" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc;">
-
-          <label style="font-weight: bold; display: block; margin-bottom: 5px;">3. Joueurs Présents :</label>
-          <div style="max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 15px;">
-            ${playerCheckboxList}
-          </div>
-
-          <label style="font-weight: bold; display: block; margin-bottom: 5px;">4. Ajouter Buteur / Passeur :</label>
-          <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-            <select id="select-buteur" style="flex: 1; padding: 6px; border-radius: 6px;">
-              <option value="">-- Buteur --</option>
-              ${playerOptionsScorer}
-            </select>
-            <select id="select-passeur" style="flex: 1; padding: 6px; border-radius: 6px;">
-              <option value="">-- Passeur --</option>
-              ${playerOptionsPasser}
-            </select>
-            <button id="btn-add-goal" type="button" style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">+ Ajouter</button>
-          </div>
-
-          <label style="font-weight: bold; display: block; margin-bottom: 5px;">5. Ajouter un Avertissement / Carton :</label>
-          <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-            <select id="select-joueur-carton" style="flex: 1; padding: 6px; border-radius: 6px;">
-              <option value="">-- Joueur Sanctionné --</option>
-              ${playerOptionsPasser}
-            </select>
-            <select id="select-type-carton" style="width: 140px; padding: 6px; border-radius: 6px;">
-              <option value="🟨">🟨 Jaune</option>
-              <option value="⬜">⬜ Blanc (Excl. temp.)</option>
-              <option value="🟥">🟥 Rouge Direct</option>
-            </select>
-            <button id="btn-add-card" type="button" style="background: #ffc107; color: black; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Ajouter</button>
-          </div>
-
-          <div id="goals-list" style="margin-bottom: 10px;"></div>
-          <div id="cards-list" style="margin-bottom: 15px;"></div>
-
-          <button id="btn-save-direct" type="button" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; margin-bottom: 15px;">
-            🚀 Publier le match sur GitHub
-          </button>
-
-          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-          <button id="btn-reset-all" type="button" style="width: 100%; background: #dc3545; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
-            🔄 Remettre à ZÉRO les statistiques & résultats
-          </button>
-
-          <p id="status-message" style="text-align:center; font-weight:bold; margin-top:10px;"></p>
-        </div>
-      `;
-
-      function renderGoalsUI() {
-        const goalsContainer = document.getElementById('goals-list');
-        if (goalEvents.length === 0) {
-          goalsContainer.innerHTML = `<small style="color: #888;">Aucun but ajouté pour l'instant.</small>`;
-          return;
-        }
-        goalsContainer.innerHTML = goalEvents.map((e, index) => {
-          const buteurLabel = e.buteur === 'CSC' ? '🤖 <em>[CSC] But contre son camp</em>' : `⚽ <strong>${e.buteur}</strong>`;
-          return `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid var(--accent-color);">
-              <span>${buteurLabel} ${e.passeur ? '<small style="color:#555;">(passe : ' + e.passeur + ')</small>' : ''}</span>
-              <button type="button" onclick="removeGoal(${index})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">❌</button>
-            </div>
-          `;
-        }).join('');
-      }
-
-      function renderCardsUI() {
-        const cardsContainer = document.getElementById('cards-list');
-        if (cardEvents.length === 0) {
-          cardsContainer.innerHTML = `<small style="color: #888;">Aucun carton ajouté pour l'instant.</small>`;
-          return;
-        }
-        cardsContainer.innerHTML = cardEvents.map((c, index) => `
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid #ffc107;">
-            <span>${c.type} <strong>${c.joueur}</strong></span>
-            <button type="button" onclick="removeCard(${index})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">❌</button>
-          </div>
-        `).join('');
-      }
-
-      window.removeGoal = function(index) {
-        goalEvents.splice(index, 1);
-        renderGoalsUI();
-      };
-
-      window.removeCard = function(index) {
-        cardEvents.splice(index, 1);
-        renderCardsUI();
-      };
-
-      document.getElementById('btn-add-goal').addEventListener('click', () => {
-        const buteur = document.getElementById('select-buteur').value;
-        const passeur = document.getElementById('select-passeur').value;
-        if (!buteur) {
-          alert("Veuillez sélectionner un buteur.");
-          return;
-        }
-        goalEvents.push({ buteur, passeur });
-        renderGoalsUI();
-        document.getElementById('select-buteur').value = '';
-        document.getElementById('select-passeur').value = '';
-      });
-
-      document.getElementById('btn-add-card').addEventListener('click', () => {
-        const joueur = document.getElementById('select-joueur-carton').value;
-        const type = document.getElementById('select-type-carton').value;
-        if (!joueur) {
-          alert("Veuillez sélectionner un joueur.");
-          return;
-        }
-        cardEvents.push({ joueur, type });
-        renderCardsUI();
-        document.getElementById('select-joueur-carton').value = '';
-      });
-
-      // Gestion de la publication GitHub
-      document.getElementById('btn-save-direct').addEventListener('click', async () => {
-        const matchIdx = document.getElementById('select-match').value;
-        const score = document.getElementById('match-score').value.trim();
-        const statusMsg = document.getElementById('status-message');
-
-        if (!score) {
-          alert("Veuillez indiquer le score final.");
-          return;
-        }
-
-        statusMsg.style.color = 'blue';
-        statusMsg.textContent = "Publication en cours sur GitHub...";
-
-        try {
-          // 1. Récupération des présences cochées
-          const checkboxes = document.querySelectorAll('.presence-check:checked');
-          const presentNames = Array.from(checkboxes).map(cb => cb.value);
-
-          // 2. Mise à jour des stats des joueurs
-          players.forEach(p => {
-            if (presentNames.includes(p.nom)) {
-              p.matchs = (parseInt(p.matchs || p.matches || 0, 10)) + 1;
-            }
-          });
-
-          goalEvents.forEach(e => {
-            if (e.buteur !== 'CSC') {
-              const p = players.find(pl => pl.nom === e.buteur);
-              if (p) p.buts = (parseInt(p.buts || 0, 10)) + 1;
-            }
-            if (e.passeur) {
-              const p = players.find(pl => pl.nom === e.passeur);
-              if (p) p.passes = (parseInt(p.passes || 0, 10)) + 1;
-            }
-          });
-
-          cardEvents.forEach(c => {
-            const p = players.find(pl => pl.nom === c.joueur);
-            if (p) {
-              if (c.type === '🟨') p.cartons_jaunes = (parseInt(p.cartons_jaunes || 0, 10)) + 1;
-              if (c.type === '⬜') p.cartons_blancs = (parseInt(p.cartons_blancs || 0, 10)) + 1;
-              if (c.type === '🟥') p.cartons_rouges = (parseInt(p.cartons_rouges || 0, 10)) + 1;
-            }
-          });
-
-          // 3. Mise à jour du match sélectionné
-          const matchTarget = matches[matchIdx];
-          matchTarget.resultat = score;
-          matchTarget.buteurs = goalEvents.filter(e => e.buteur !== 'CSC').map(e => e.buteur).join(', ');
-          matchTarget.passeurs = goalEvents.filter(e => e.passeur).map(e => e.passeur).join(', ');
-
-          // Helper pour envoyer les fichiers sur l'API GitHub
-          async function updateGitHubFile(path, contentObj) {
-            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
-            const getRes = await fetch(url, {
-              headers: { 'Authorization': `token ${githubToken}` }
-            });
-            const getData = await getRes.json();
-            const sha = getData.sha;
-
-            const putRes = await fetch(url, {
-              method: 'PUT',
-              headers: {
-                'Authorization': `token ${githubToken}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                message: `Mise à jour automatique via Admin (${path})`,
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(contentObj, null, 2)))),
-                sha: sha
-              })
-            });
-
-            if (!putRes.ok) throw new Error(`Erreur GitHub sur ${path}`);
-          }
-
-          await updateGitHubFile('players.json', players);
-          await updateGitHubFile('matchs.json', matches);
-
-          statusMsg.style.color = 'green';
-          statusMsg.textContent = "✅ Match publié et statistiques mises à jour avec succès !";
-          setTimeout(() => { window.location.hash = "home"; }, 2000);
-
-        } catch (err) {
-          console.error(err);
-          statusMsg.style.color = 'red';
-          statusMsg.textContent = "❌ Erreur lors de la publication. Vérifiez votre token GitHub.";
-        }
-      });
-
-      // Gestion de la remise à zéro
-      document.getElementById('btn-reset-all').addEventListener('click', async () => {
-        if (!confirm("⚠️ ATTENTION : Voulez-vous vraiment réinitialiser toutes les statistiques et les résultats des matchs à zéro ?")) {
-          return;
-        }
-
-        const statusMsg = document.getElementById('status-message');
-        statusMsg.style.color = 'blue';
-        statusMsg.textContent = "Réinitialisation en cours...";
-
-        try {
-          players.forEach(p => {
-            p.matchs = 0;
-            p.matches = 0;
-            p.buts = 0;
-            p.passes = 0;
-            p.cartons_jaunes = 0;
-            p.cartons_blancs = 0;
-            p.cartons_rouges = 0;
-          });
-
-          matches.forEach(m => {
-            m.resultat = "";
-            m.buteurs = "";
-            m.passeurs = "";
-          });
-
-          async function updateGitHubFile(path, contentObj) {
-            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
-            const getRes = await fetch(url, {
-              headers: { 'Authorization': `token ${githubToken}` }
-            });
-            const getData = await getRes.json();
-            const sha = getData.sha;
-
-            const putRes = await fetch(url, {
-              method: 'PUT',
-              headers: {
-                'Authorization': `token ${githubToken}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                message: `Remise à zéro globale (${path})`,
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(contentObj, null, 2)))),
-                sha: sha
-              })
-            });
-
-            if (!putRes.ok) throw new Error(`Erreur GitHub sur ${path}`);
-          }
-
-          await updateGitHubFile('players.json', players);
-          await updateGitHubFile('matchs.json', matches);
-
-          statusMsg.style.color = 'green';
-          statusMsg.textContent = "🔄 Remise à zéro effectuée avec succès !";
-          setTimeout(() => { window.location.hash = "home"; }, 2000);
-
-        } catch (err) {
-          console.error(err);
-          statusMsg.style.color = 'red';
-          statusMsg.textContent = "❌ Erreur lors de la remise à zéro.";
-        }
-      });
-
-      renderGoalsUI();
-      renderCardsUI();
-
-    } catch (e) {
-      console.error(e);
-      root.innerHTML = `<h2>⚙️ Saisie de Match</h2><p style="color: red; text-align: center;">Erreur lors du chargement des données d'administration.</p>`;
-    }
-  }
-
-  // --- ROUTEUR & INITIALISATION GLOBALE ---
+  // --- ROUTEUR SIMPLE DE L'APPLICATION ---
   function router() {
-    const hash = window.location.hash.replace('#', '') || 'home';
-    if (hash === 'home') renderHome();
-    else if (hash === 'pronos') renderPronos();
-    else if (hash === 'players') renderPlayers();
-    else if (hash === 'matches') renderMatches();
-    else if (hash === 'stats') renderStats();
-    else if (hash === 'announcements') renderAnnouncements();
-    else if (hash === 'admin') renderAdmin();
+    const hash = window.location.hash || '#home';
+    if (hash === '#home') renderHome();
+    else if (hash === '#pronos') renderPronos();
+    else if (hash === '#players') renderPlayers();
+    else if (hash === '#matches') renderMatches();
+    else if (hash === '#stats') renderStats();
+    else if (hash === '#admin') renderAdmin();
     else renderHome();
   }
 
   window.addEventListener('hashchange', router);
-  window.addEventListener('load', router);
+  router();
 });
