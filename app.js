@@ -103,10 +103,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastMatchHTML = '<div style="padding: 15px; text-align:center; color:#666;">Aucun résultat récent</div>';
     let nextMatchHTML = '<div style="padding: 15px; text-align:center; color:#666;">Aucun match à venir</div>';
 
-    const [players, dirigeants, arbitres] = await Promise.all([
+    const [players, dirigeants, arbitres, matches] = await Promise.all([
       loadJson('players.json'),
       loadJson('dirigeants.json'),
-      loadJson('arbitres.json')
+      loadJson('arbitres.json'),
+      loadJson('matchs.json')
     ]);
 
     const allMembers = removeDuplicates([...players, ...dirigeants, ...arbitres]);
@@ -143,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    const matches = await loadJson('matchs.json');
     if (Array.isArray(matches) && matches.length > 0) {
       const playedMatches = matches.filter(m => (m.resultat || m.Resultat) && (m.resultat || m.Resultat).trim() !== '');
       if (playedMatches.length > 0) {
