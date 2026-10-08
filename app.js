@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const clean = bdayRaw.toString().trim();
     const parts = clean.includes('/') ? clean.split('/') : clean.split('-');
     if (parts.length < 3) return null;
+    // On extrait le mois (en position 1) et on le convertit en nombre entier (ex: "10" ou "01" devient 10 ou 1)
     return parseInt(parts[1], 10);
   }
 
