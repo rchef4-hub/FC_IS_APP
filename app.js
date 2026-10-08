@@ -187,6 +187,26 @@ document.addEventListener('DOMContentLoaded', function() {
               <strong style="color: var(--primary-color, #5c1d43); font-size: 0.95em;" id="nom-homme-du-match">Chargement...</strong>
             </div>
           `;
+
+          // Appel asynchrone JSONP pour récupérer le gagnant du Google Sheet après insertion dans le DOM
+          setTimeout(() => {
+            window.handleHommeDuMatchResponse = function(data) {
+              const spanGagnant = document.getElementById('nom-homme-du-match');
+              if (spanGagnant) {
+                spanGagnant.textContent = data.gagnant || "Aucun vote";
+              }
+            };
+
+            const scriptHomduMatch = document.createElement('script');
+            scriptHomduMatch.src = 'https://script.google.com/macros/s/AKfycbw9qMtR8q9-IPevfSSjJrkNTHTryL8swQ2VUvPnkRgO74t3_lxudlMB_L0_FexRYMsh/exec?callback=handleHommeDuMatchResponse';
+            scriptHomduMatch.onerror = function() {
+              const spanGagnant = document.getElementById('nom-homme-du-match');
+              if (spanGagnant) {
+                spanGagnant.textContent = "Erreur de chargement";
+              }
+            };
+            document.body.appendChild(scriptHomduMatch);
+          }, 100);
         }
         // -----------------------------------------------------
 
