@@ -139,7 +139,7 @@
       }
     }
 
-    root.innerHTML = `
+   root.innerHTML = `
       <div style="background: #5c1d43; color: white; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: var(--shadow);">
         <span style="font-weight: bold; font-size: 1.05em;">🛍️ Boutique Officielle JAKO</span>
         <a href="https://team.jako.com/fr-fr/team/fc_is/" target="_blank" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.9em; font-weight: bold;">Visiter ↗</a>
