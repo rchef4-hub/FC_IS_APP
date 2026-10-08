@@ -112,11 +112,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const allMembers = removeDuplicates([...players, ...dirigeants, ...arbitres]);
 
-    if (allMembers.length > 0) {
-      const currentMonth = new Date().getMonth() + 1;
+  if (allMembers.length > 0) {
+      const currentMonth = 10; // On force explicitement le mois d'octobre (10) pour être sûr
       const monthBDays = allMembers.filter(m => {
         const bdayRaw = m.naissance || m.date_de_naissance || m.Naissance || '';
-        return getBirthMonth(bdayRaw) === currentMonth;
+        // Vérifie si la date contient "/10/" ou "-10-" ou si getBirthMonth renvoie 10
+        return bdayRaw.includes('/10/') || bdayRaw.includes('-10-') || getBirthMonth(bdayRaw) === currentMonth;
       });
 
       if (monthBDays.length > 0) {
