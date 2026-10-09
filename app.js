@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const lower = scoreStr.toLowerCase();
     let color = '#333';
     if (lower.includes('victoire')) color = '#28a745';
-    else if (lower.includes('défaite')) color = '#dc3545';
+    else if (lower.includes('défaite') || lower.includes('defaite')) color = '#dc3545';
     else if (lower.includes('nul')) color = '#ffc107';
     return `<span style="color: ${color}; font-weight: bold;">${scoreStr}</span>`;
   }
@@ -278,68 +278,16 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-  // --- PRONOSTICS INTERACTIFS ---
+  // --- PRONOSTICS ---
   async function renderPronos() {
     root.innerHTML = `
       <h2>🎯 Le Défi Pronos du F.C. IS</h2>
-      
       <div style="background: var(--card-bg); padding: 25px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center;">
         <h3 style="margin-top: 0; background: none; color: var(--primary-color);">Fais ton pronostic !</h3>
-        <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 20px; line-height: 1.4;">
-          Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2) ! Valide ton prono avant le match.
-        </p>
-        
-        <a href="https://forms.gle/KLYdMeGPt1UCHDMG9" target="_blank" style="background: var(--primary-color); color: white; padding: 14px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: var(--shadow); font-size: 1.05em;">
-          📝 Remplir le formulaire de pronos ↗
-        </a>
-      </div>
-
-      <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">🏆 Classement des Pronostiqueurs</h3>
-        <p style="text-align: center; color: var(--text-muted); font-size: 0.9em; margin-bottom: 15px;">Le classement de la saison.</p>
-        
-        <div id="pronos-leaderboard">
-          <p style="text-align: center; color: var(--text-muted);">Chargement du classement...</p>
-        </div>
+        <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 20px;">Règles : 5 pts pour le score exact, 3 pts pour le bon résultat !</p>
+        <a href="https://forms.gle/KLYdMeGPt1UCHDMG9" target="_blank" style="background: var(--primary-color); color: white; padding: 14px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">📝 Remplir le formulaire ↗</a>
       </div>
     `;
-
-    try {
-      const rawScriptUrl = 'https://script.google.com/macros/s/AKfycbxAnw_R0NqtVKoMMWG7H9SNM6iN33Sh5ZZSLeZwLcn90xb3n6fVBByZbOkRRh_D0NhQ4A/exec';
-      const scriptUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawScriptUrl);
-      
-      const res = await fetchFresh(scriptUrl);
-      const pronos = await res.json();
-      
-      let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
-      
-      if (Array.isArray(pronos) && pronos.length > 0) {
-        pronos.sort((a, b) => b.points - a.points);
-
-        pronos.forEach((p, index) => {
-          const rang = index + 1;
-          let medal = '⚽';
-          if (rang === 1) medal = '🥇';
-          else if (rang === 2) medal = '🥈';
-          else if (rang === 3) medal = '🥉';
-
-          leaderboardHTML += `
-            <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); margin-bottom: 8px; padding: 10px 15px; border-radius: 8px; border-left: 5px solid var(--primary-color);">
-              <span>${medal} <strong>${p.prenom}</strong></span>
-              <span style="font-weight: bold; color: var(--primary-color);">${p.points} pts</span>
-            </li>
-          `;
-        });
-      } else {
-        leaderboardHTML += '<p style="text-align: center; color: var(--text-muted);">Aucun point enregistré pour l\'instant.</p>';
-      }
-
-      leaderboardHTML += '</ul>';
-      document.getElementById('pronos-leaderboard').innerHTML = leaderboardHTML;
-
-    } catch (e) {
-      document.getElementById('pronos-leaderboard').innerHTML = '<p style="text-align: center; color: red;">Erreur de chargement du classement.</p>';
-    }
   }
   
   // --- EFFECTIF ---
@@ -367,7 +315,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const symbole = d.symbole || '👔';
           return `<li style="border-left: 4px solid #6c757d;">${symbole} <strong>${getPlayerFullName(d)}</strong><br><small>${d.fonction || ''}</small></li>`;
         }).join('');
-        
         html += `<h3 class="accordion-header">👔 Dirigeants</h3><ul class="collapsed">${list}</ul>`;
       }
 
@@ -376,13 +323,8 @@ document.addEventListener('DOMContentLoaded', function() {
           const type = (a.categorie || a.fonction || '').toLowerCase();
           const isBenevole = type.includes('bénévole') || type.includes('benevole') || type.includes('touche');
           const icone = isBenevole ? '🏁' : '🟨 🟥';
-
-          return `<li style="border-left: 4px solid #6c757d;">
-            ${icone} <strong>${getPlayerFullName(a)}</strong><br>
-            <small>${a.categorie || 'Club'}</small>
-          </li>`;
+          return `<li style="border-left: 4px solid #6c757d;">${icone} <strong>${getPlayerFullName(a)}</strong><br><small>${a.categorie || 'Club'}</small></li>`;
         }).join('');
-        
         html += `<h3 class="accordion-header">⬜🟨🟥 Arbitres</h3><ul class="collapsed">${list}</ul>`;
       }
 
@@ -448,9 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const dynamicGoals = {};
       let totalMatchsJoues = 0;
-      let nbVictoires = 0;
-      let nbNuls = 0;
-      let nbDefaites = 0;
+      let nbVictoires = 0, nbNuls = 0, nbDefaites = 0;
 
       if (Array.isArray(matches)) {
         matches.forEach(m => {
@@ -496,38 +436,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
       root.innerHTML = `
         <h2>Statistiques de la Saison</h2>
-
         <div style="background: var(--card-bg); border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border-color); text-align: center;">
-          <div style="background: #5c1d43; color: white; padding: 10px 15px; font-weight: bold; font-size: 1.05em;">
-            📊 Bilan Global (${totalMatchsJoues} match${totalMatchsJoues > 1 ? 's' : ''} joué${totalMatchsJoues > 1 ? 's' : ''})
-          </div>
+          <div style="background: #5c1d43; color: white; padding: 10px 15px; font-weight: bold;">Bilan Global (${totalMatchsJoues} match${totalMatchsJoues > 1 ? 's' : ''})</div>
           <div style="display: flex; justify-content: space-around; padding: 15px 10px;">
-            <div>
-              <div style="font-size: 1.6em; font-weight: bold; color: #28a745;">${nbVictoires}</div>
-              <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 2px;">Victoires</div>
-            </div>
-            <div>
-              <div style="font-size: 1.6em; font-weight: bold; color: #ffc107;">${nbNuls}</div>
-              <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 2px;">Nuls</div>
-            </div>
-            <div>
-              <div style="font-size: 1.6em; font-weight: bold; color: #dc3545;">${nbDefaites}</div>
-              <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 2px;">Défaites</div>
-            </div>
+            <div><div style="font-size: 1.6em; font-weight: bold; color: #28a745;">${nbVictoires}</div><div>Victoires</div></div>
+            <div><div style="font-size: 1.6em; font-weight: bold; color: #ffc107;">${nbNuls}</div><div>Nuls</div></div>
+            <div><div style="font-size: 1.6em; font-weight: bold; color: #dc3545;">${nbDefaites}</div><div>Défaites</div></div>
           </div>
         </div>
-
         <h3 class="accordion-header">⚽ Meilleurs Buteurs</h3>
         <ul class="collapsed">${renderList(topScorers, p => `⚽ ${getNbButs(p)} but(s)`, "Aucun buteur")}</ul>
-        
         <h3 class="accordion-header">👟 Meilleurs Passeurs</h3>
-        <ul class="collapsed">${renderList(topPassers, p => `👟 ${getNbPasses(p)} passe(s)`, "Aucune passe décisive")}</ul>
-        
+        <ul class="collapsed">${renderList(topPassers, p => `👟 ${getNbPasses(p)} passe(s)`, "Aucune passe")}</ul>
         <h3 class="accordion-header">⬜🟨🟥 Discipline</h3>
         <ul class="collapsed">${renderList(topCards, p => `🟨 ${getJaunes(p)} | ⬜ ${getBlancs(p)} 🟥 ${getRouges(p)}`, "Aucun carton")}</ul>
-        
-        <h3 class="accordion-header">⭐ Matchs Joués par les Joueurs</h3>
-        <ul class="collapsed">${renderList(topPlayed, p => `⭐ ${getNbMatchs(p)} match(s)`, "Aucun match enregistré")}</ul>
+        <h3 class="accordion-header">⭐ Matchs Joués</h3>
+        <ul class="collapsed">${renderList(topPlayed, p => `⭐ ${getNbMatchs(p)} match(s)`, "Aucun match")}</ul>
       `;
 
       document.querySelectorAll('#root h3.accordion-header').forEach(header => {
