@@ -42,7 +42,7 @@
     "naissance": "30/05/1973",
     "matchs": 7,
     "buts": 2,
-    "passes": 0,
+    "passes": 1,
     "cartons_jaunes": 0,
     "cartons_blancs": 0,
     "cartons_rouges": 0
@@ -305,7 +305,7 @@
     "symbole": "⚽",
     "naissance": "16/12/2005",
     "matchs": 3,
-    "buts": 0,
+    "buts": 1,
     "passes": 0,
     "cartons_jaunes": 0,
     "cartons_blancs": 0,
