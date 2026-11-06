@@ -229,9 +229,8 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-// --- PRONOSTICS INTERACTIFS (Via JSONP & Chargement des matchs) ---
+  // --- PRONOSTICS INTERACTIFS ---
   async function renderPronos() {
-    // 1. Affichage initial avec un état de chargement pour le match
     root.innerHTML = `
       <h2>🎯 Le Défi Pronos du F.C. IS</h2>
       
@@ -261,7 +260,6 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     `;
 
-    // 2. Chargement dynamique du match choisi pour les pronos
     try {
       const [matchsRes, configRes] = await Promise.all([
         fetchFresh('matchs.json'),
@@ -277,12 +275,10 @@ document.addEventListener('DOMContentLoaded', function() {
       let matchAffiche = "";
       let dateAffiche = "";
 
-      // Si un match personnalisé a été saisi en Admin
       if (config && config.affiche) {
         matchAffiche = config.affiche;
         dateAffiche = config.date || "";
       } else {
-        // Sinon par défaut, on prend le prochain match du FC IS sans résultat
         const prochainMatch = matchs.find(m => !m.resultat || m.resultat.trim() === "");
         if (prochainMatch) {
           const lieuTexte = prochainMatch.lieu === "Domicile" ? "🏠 à Domicile" : "✈️ à l'Extérieur";
@@ -307,7 +303,6 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log("Erreur chargement pronos", e);
     }
 
-    // 3. Chargement du classement via JSONP (votre code habituel)
     try {
       window.handlePronosResponse = function(pronos) {
         let leaderboardHTML = '<ul style="margin-top: 5px; padding-left: 0; list-style: none;">';
@@ -470,19 +465,16 @@ document.addEventListener('DOMContentLoaded', function() {
             else if (lowerRes.includes('défaite') || lowerRes.includes('defaite')) nbDefaites++;
           }
 
-         if (m.buteurs) {
-            // On sépare par les virgules
+          if (m.buteurs) {
             const entries = m.buteurs.split(',');
             entries.forEach(entry => {
               let cleanEntry = entry.trim();
               if (!cleanEntry) return;
 
-              // On cherche si un nombre de buts est spécifié entre parenthèses, ex: "GIRAULT Lucas (3)"
               let count = 1;
               const matchCount = cleanEntry.match(/\((\d+)\)/);
               if (matchCount) {
                 count = parseInt(matchCount[1], 10);
-                // On retire la partie entre parenthèses pour garder juste le nom
                 cleanEntry = cleanEntry.replace(/\(\d+\)/, '');
               }
 
@@ -588,15 +580,6 @@ document.addEventListener('DOMContentLoaded', function() {
       window.location.hash = "home";
       return;
     }
-    <!-- BLOC SAISIE MANUELLE PRONOS -->
-          <div style="background: #f8f9fa; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
-            <label style="font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary-color);">🎯 Configurer le Match des Pronostics :</label>
-            <input type="text" id="prono-affiche" placeholder="Ex: Nogent AS 2 vs ECMR 3" style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ccc;">
-            <input type="text" id="prono-date" placeholder="Ex: Dimanche 08/11 à 14h30" style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc;">
-            <button id="btn-save-custom-prono" type="button" style="width: 100%; background: var(--primary-color); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">
-              💾 Enregistrer ce match pour les Pronos
-            </button>
-          </div>
 
     let githubToken = localStorage.getItem('fcis_github_token');
     if (!githubToken) {
@@ -649,6 +632,17 @@ document.addEventListener('DOMContentLoaded', function() {
       root.innerHTML = `
         <h2>⚙️ Saisie d'un Match</h2>
         <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow);">
+          
+          <!-- BLOC SAISIE MANUELLE PRONOS -->
+          <div style="background: #f8f9fa; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary-color);">🎯 Configurer le Match des Pronostics :</label>
+            <input type="text" id="prono-affiche" placeholder="Ex: Nogent AS 2 vs ECMR 3" style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ccc;">
+            <input type="text" id="prono-date" placeholder="Ex: Dimanche 08/11 à 14h30" style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc;">
+            <button id="btn-save-custom-prono" type="button" style="width: 100%; background: var(--primary-color); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+              💾 Enregistrer ce match pour les Pronos
+            </button>
+          </div>
+
           <label style="font-weight: bold; display: block; margin-bottom: 5px;">1. Sélectionner le match :</label>
           <select id="select-match" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 6px;">
             ${matchOptions}
@@ -704,30 +698,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
           <p id="status-message" style="text-align:center; font-weight:bold; margin-top:10px;"></p>
         </div>
-        document.getElementById('btn-save-custom-prono').addEventListener('click', async () => {
-        const affiche = document.getElementById('prono-affiche').value.trim();
-        const date = document.getElementById('prono-date').value.trim();
-        const statusMsg = document.getElementById('status-message');
-
-        if (!affiche) {
-          alert("Veuillez entrer au moins l'affiche du match (ex: Nogent vs ECMR).");
-          return;
-        }
-
-        statusMsg.style.color = 'blue';
-        statusMsg.textContent = "Mise à jour du match de pronostics sur GitHub...";
-
-        try {
-          await updateGitHubFile('pronos_config.json', { affiche, date });
-          statusMsg.style.color = 'green';
-          statusMsg.textContent = "✅ Nouveau match de pronostics enregistré !";
-          setTimeout(() => { statusMsg.textContent = ""; }, 3000);
-        } catch (err) {
-          console.error(err);
-          statusMsg.style.color = 'red';
-          statusMsg.textContent = "❌ Erreur lors de la sauvegarde sur GitHub.";
-        }
-      });
       `;
 
       function renderGoalsUI() {
@@ -796,6 +766,57 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('select-joueur-carton').value = '';
       });
 
+      // Helper pour envoyer les fichiers sur l'API GitHub
+      async function updateGitHubFile(path, contentObj) {
+        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+        const getRes = await fetch(url, {
+          headers: { 'Authorization': `token ${githubToken}` }
+        });
+        const getData = await getRes.json();
+        const sha = getData.sha;
+
+        const putRes = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Mise à jour automatique via Admin (${path})`,
+            content: btoa(unescape(encodeURIComponent(JSON.stringify(contentObj, null, 2)))),
+            sha: sha
+          })
+        });
+
+        if (!putRes.ok) throw new Error(`Erreur GitHub sur ${path}`);
+      }
+
+      // Gestion de la sauvegarde du match pronos personnalisé
+      document.getElementById('btn-save-custom-prono').addEventListener('click', async () => {
+        const affiche = document.getElementById('prono-affiche').value.trim();
+        const date = document.getElementById('prono-date').value.trim();
+        const statusMsg = document.getElementById('status-message');
+
+        if (!affiche) {
+          alert("Veuillez entrer au moins l'affiche du match (ex: Nogent vs ECMR).");
+          return;
+        }
+
+        statusMsg.style.color = 'blue';
+        statusMsg.textContent = "Mise à jour du match de pronostics sur GitHub...";
+
+        try {
+          await updateGitHubFile('pronos_config.json', { affiche, date });
+          statusMsg.style.color = 'green';
+          statusMsg.textContent = "✅ Nouveau match de pronostics enregistré !";
+          setTimeout(() => { statusMsg.textContent = ""; }, 3000);
+        } catch (err) {
+          console.error(err);
+          statusMsg.style.color = 'red';
+          statusMsg.textContent = "❌ Erreur lors de la sauvegarde sur GitHub.";
+        }
+      });
+
       // Gestion de la publication GitHub
       document.getElementById('btn-save-direct').addEventListener('click', async () => {
         const matchIdx = document.getElementById('select-match').value;
@@ -811,11 +832,9 @@ document.addEventListener('DOMContentLoaded', function() {
         statusMsg.textContent = "Publication en cours sur GitHub...";
 
         try {
-          // 1. Récupération des présences cochées
           const checkboxes = document.querySelectorAll('.presence-check:checked');
           const presentNames = Array.from(checkboxes).map(cb => cb.value);
 
-          // 2. Mise à jour des stats des joueurs
           players.forEach(p => {
             if (presentNames.includes(p.nom)) {
               p.matchs = (parseInt(p.matchs || p.matches || 0, 10)) + 1;
@@ -842,36 +861,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
 
-          // 3. Mise à jour du match sélectionné
           const matchTarget = matches[matchIdx];
           matchTarget.resultat = score;
           matchTarget.buteurs = goalEvents.filter(e => e.buteur !== 'CSC').map(e => e.buteur).join(', ');
           matchTarget.passeurs = goalEvents.filter(e => e.passeur).map(e => e.passeur).join(', ');
-
-          // Helper pour envoyer les fichiers sur l'API GitHub
-          async function updateGitHubFile(path, contentObj) {
-            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
-            const getRes = await fetch(url, {
-              headers: { 'Authorization': `token ${githubToken}` }
-            });
-            const getData = await getRes.json();
-            const sha = getData.sha;
-
-            const putRes = await fetch(url, {
-              method: 'PUT',
-              headers: {
-                'Authorization': `token ${githubToken}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                message: `Mise à jour automatique via Admin (${path})`,
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(contentObj, null, 2)))),
-                sha: sha
-              })
-            });
-
-            if (!putRes.ok) throw new Error(`Erreur GitHub sur ${path}`);
-          }
 
           await updateGitHubFile('players.json', players);
           await updateGitHubFile('matchs.json', matches);
@@ -913,30 +906,6 @@ document.addEventListener('DOMContentLoaded', function() {
             m.buteurs = "";
             m.passeurs = "";
           });
-
-          async function updateGitHubFile(path, contentObj) {
-            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
-            const getRes = await fetch(url, {
-              headers: { 'Authorization': `token ${githubToken}` }
-            });
-            const getData = await getRes.json();
-            const sha = getData.sha;
-
-            const putRes = await fetch(url, {
-              method: 'PUT',
-              headers: {
-                'Authorization': `token ${githubToken}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                message: `Remise à zéro globale (${path})`,
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(contentObj, null, 2)))),
-                sha: sha
-              })
-            });
-
-            if (!putRes.ok) throw new Error(`Erreur GitHub sur ${path}`);
-          }
 
           await updateGitHubFile('players.json', players);
           await updateGitHubFile('matchs.json', matches);
