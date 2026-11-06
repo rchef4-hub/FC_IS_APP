@@ -453,12 +453,25 @@ document.addEventListener('DOMContentLoaded', function() {
             else if (lowerRes.includes('défaite') || lowerRes.includes('defaite')) nbDefaites++;
           }
 
-          if (m.buteurs) {
-            const lines = m.buteurs.split(/,|\n/);
-            lines.forEach(line => {
-              let cleanName = line.replace(/\d+['e]*/g, '').replace(/⚽/g, '').trim().toUpperCase();
-              if (cleanName) {
-                dynamicGoals[cleanName] = (dynamicGoals[cleanName] || 0) + 1;
+         if (m.buteurs) {
+            // On sépare par les virgules
+            const entries = m.buteurs.split(',');
+            entries.forEach(entry => {
+              let cleanEntry = entry.trim();
+              if (!cleanEntry) return;
+
+              // On cherche si un nombre de buts est spécifié entre parenthèses, ex: "GIRAULT Lucas (3)"
+              let count = 1;
+              const matchCount = cleanEntry.match(/\((\d+)\)/);
+              if (matchCount) {
+                count = parseInt(matchCount[1], 10);
+                // On retire la partie entre parenthèses pour garder juste le nom
+                cleanEntry = cleanEntry.replace(/\(\d+\)/, '');
+              }
+
+              let cleanName = cleanEntry.replace(/\d+['e]*/g, '').replace(/⚽/g, '').trim().toUpperCase();
+              if (cleanName && cleanName !== 'CSC') {
+                dynamicGoals[cleanName] = (dynamicGoals[cleanName] || 0) + count;
               }
             });
           }
