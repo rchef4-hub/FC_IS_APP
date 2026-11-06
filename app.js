@@ -261,33 +261,50 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     `;
 
-    // 2. Chargement dynamique du fichier matchs.json pour trouver le prochain match
+    // 2. Chargement dynamique du match choisi pour les pronos
     try {
-      const response = await fetch('matchs.json');
-      const matchs = await response.json();
+      const [matchsRes, configRes] = await Promise.all([
+        fetchFresh('matchs.json'),
+        fetchFresh('pronos_config.json').catch(() => null)
+      ]);
       
-      // On cherche le premier match qui n'a pas encore de résultat
-      const prochainMatch = matchs.find(m => !m.resultat || m.resultat.trim() === "");
-      
-      const matchContainer = document.getElementById('prochain-match-container');
-      if (matchContainer) {
+      const matchs = await matchsRes.json();
+      let config = null;
+      if (configRes && configRes.ok) {
+        config = await configRes.json();
+      }
+
+      let matchAffiche = "";
+      let dateAffiche = "";
+
+      // Si un match personnalisé a été saisi en Admin
+      if (config && config.affiche) {
+        matchAffiche = config.affiche;
+        dateAffiche = config.date || "";
+      } else {
+        // Sinon par défaut, on prend le prochain match du FC IS sans résultat
+        const prochainMatch = matchs.find(m => !m.resultat || m.resultat.trim() === "");
         if (prochainMatch) {
           const lieuTexte = prochainMatch.lieu === "Domicile" ? "🏠 à Domicile" : "✈️ à l'Extérieur";
+          matchAffiche = `F.C. IS vs ${prochainMatch.adversaire}`;
+          dateAffiche = `${prochainMatch.date} (${lieuTexte})`;
+        }
+      }
+
+      const matchContainer = document.getElementById('prochain-match-container');
+      if (matchContainer) {
+        if (matchAffiche) {
           matchContainer.innerHTML = `
-            <span style="font-size: 0.85em; color: var(--text-muted); display: block; margin-bottom: 3px;">📅 Prochain match concerné :</span>
-            <strong style="color: var(--primary-color); font-size: 1.05em;">F.C. IS vs ${prochainMatch.adversaire}</strong>
-            <div style="font-size: 0.85em; color: var(--text-muted); margin-top: 2px;">🗓️ ${prochainMatch.date} (${lieuTexte})</div>
+            <span style="font-size: 0.85em; color: var(--text-muted); display: block; margin-bottom: 3px;">📅 Match soumis aux pronostics :</span>
+            <strong style="color: var(--primary-color); font-size: 1.05em;">${matchAffiche}</strong>
+            <div style="font-size: 0.85em; color: var(--text-muted); margin-top: 2px;">🗓️ ${dateAffiche}</div>
           `;
         } else {
-          matchContainer.innerHTML = `<span style="font-size: 0.9em; color: var(--text-muted);">Aucun match à venir pour le moment.</span>`;
+          matchContainer.innerHTML = `<span style="font-size: 0.9em; color: var(--text-muted);">Aucun match de pronostic configuré.</span>`;
         }
       }
     } catch (e) {
-      console.log("Erreur chargement matchs.json", e);
-      const matchContainer = document.getElementById('prochain-match-container');
-      if (matchContainer) {
-        matchContainer.innerHTML = `<span style="font-size: 0.9em; color: var(--text-muted);">Prochain match bientôt disponible.</span>`;
-      }
+      console.log("Erreur chargement pronos", e);
     }
 
     // 3. Chargement du classement via JSONP (votre code habituel)
