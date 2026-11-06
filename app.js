@@ -588,6 +588,15 @@ document.addEventListener('DOMContentLoaded', function() {
       window.location.hash = "home";
       return;
     }
+    <!-- BLOC SAISIE MANUELLE PRONOS -->
+          <div style="background: #f8f9fa; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary-color);">🎯 Configurer le Match des Pronostics :</label>
+            <input type="text" id="prono-affiche" placeholder="Ex: Nogent AS 2 vs ECMR 3" style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ccc;">
+            <input type="text" id="prono-date" placeholder="Ex: Dimanche 08/11 à 14h30" style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc;">
+            <button id="btn-save-custom-prono" type="button" style="width: 100%; background: var(--primary-color); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+              💾 Enregistrer ce match pour les Pronos
+            </button>
+          </div>
 
     let githubToken = localStorage.getItem('fcis_github_token');
     if (!githubToken) {
