@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <h2>🎯 Le Défi Pronos du F.C. IS</h2>
       
       <div style="background: var(--card-bg); padding: 25px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center;">
-        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">Fais ton pronostic !</h3>
+        <div style="font-size: 1.2em; font-weight: bold; margin-top: 0; color: var(--primary-color); margin-bottom: 10px;">Fais ton pronostic !</div>
         <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 15px; line-height: 1.4;">
           Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2). 
           Valide ton prono avant le match.
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
 
       <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-        <h3 style="margin-top: 0; background: none; color: var(--primary-color);">🏆 Classement des Pronostiqueurs</h3>
+        <div style="font-size: 1.2em; font-weight: bold; text-align: center; color: var(--primary-color); margin-bottom: 5px;">🏆 Classement des Pronostiqueurs</div>
         <p style="text-align: center; color: var(--text-muted); font-size: 0.9em; margin-bottom: 15px;">Le classement de la saison.</p>
         
         <div id="pronos-leaderboard">
