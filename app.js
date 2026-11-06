@@ -704,6 +704,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
           <p id="status-message" style="text-align:center; font-weight:bold; margin-top:10px;"></p>
         </div>
+        document.getElementById('btn-save-custom-prono').addEventListener('click', async () => {
+        const affiche = document.getElementById('prono-affiche').value.trim();
+        const date = document.getElementById('prono-date').value.trim();
+        const statusMsg = document.getElementById('status-message');
+
+        if (!affiche) {
+          alert("Veuillez entrer au moins l'affiche du match (ex: Nogent vs ECMR).");
+          return;
+        }
+
+        statusMsg.style.color = 'blue';
+        statusMsg.textContent = "Mise à jour du match de pronostics sur GitHub...";
+
+        try {
+          await updateGitHubFile('pronos_config.json', { affiche, date });
+          statusMsg.style.color = 'green';
+          statusMsg.textContent = "✅ Nouveau match de pronostics enregistré !";
+          setTimeout(() => { statusMsg.textContent = ""; }, 3000);
+        } catch (err) {
+          console.error(err);
+          statusMsg.style.color = 'red';
+          statusMsg.textContent = "❌ Erreur lors de la sauvegarde sur GitHub.";
+        }
+      });
       `;
 
       function renderGoalsUI() {
