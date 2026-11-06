@@ -480,9 +480,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const getNbMatchs = p => parseInt(p.matchs ?? p.matches ?? 0, 10) || 0;
       const getNbButs = p => {
-        const baseButs = parseInt(p.buts ?? 0, 10) || 0;
         const fullName = getPlayerFullName(p).toUpperCase();
-        return baseButs + (dynamicGoals[fullName] || 0);
+        return dynamicGoals[fullName] || 0;
       };
       const getNbPasses = p => parseInt(p.passes ?? 0, 10) || 0;
       const getJaunes = p => parseInt(p.cartons_jaunes ?? 0, 10) || 0;
