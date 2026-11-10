@@ -75,3 +75,43 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+// --- 4. GESTION DES NOTIFICATIONS PUSH ---
+
+// Réception d'une notification push
+self.addEventListener('push', function(event) {
+  let data = { title: 'F.C. IS', body: 'Nouvelle actualité du club !', icon: '/icon-192.png' };
+  
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/icon-192.png',
+    badge: '/icon-192.png',
+    vibrate: [100, 50, 100],
+    data: { url: data.url || '/' }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Clic sur la notification (ouvre l'application)
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+      if (clientList.length > 0) {
+        return clientList[0].focus();
+      }
+      return clients.openWindow(event.notification.data.url);
+    })
+  );
+});
