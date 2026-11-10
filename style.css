@@ -231,6 +231,7 @@ li.upcoming {
 #root ul.collapsed {
   display: none !important;
 }
+
 /* --- CORRECTIF MODE SOMBRE POUR LES BLOCS EN DUR (JS) --- */
 body.dark-mode div[style*="background: white"],
 body.dark-mode div[style*="background: #ffffff"],
@@ -249,6 +250,7 @@ body.dark-mode div[style*="color: #444"],
 body.dark-mode small[style*="color: #666"] {
   color: var(--text-muted) !important;
 }
+
 /* --- CORRECTIF SUPPLÉMENTAIRE POUR LES MATCHS EN MODE SOMBRE --- */
 body.dark-mode li[style*="background"],
 body.dark-mode li[style*="background: white"],
@@ -258,7 +260,6 @@ body.dark-mode li[style*="background: #ffffff"] {
   border-color: var(--border-color) !important;
 }
 
-body.dark-mode .result, 
-body.dark-mode span[style*="color"] {
+body.dark-mode .result {
   color: var(--text-muted) !important;
 }
