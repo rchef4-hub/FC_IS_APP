@@ -178,7 +178,17 @@ nav a {
   transition: color 0.2s ease;
 }
 
-nav a.active, nav a:hover {
+/* --- NAVIGATION ACTIVE / INACTIVE --- */
+nav a {
+  color: var(--nav-color);
+  transition: color 0.2s ease;
+}
+
+nav a.active {
+  color: var(--primary-color) !important;
+}
+
+nav a:hover {
   color: var(--primary-color);
 }
 
