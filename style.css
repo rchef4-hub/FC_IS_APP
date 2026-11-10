@@ -249,3 +249,16 @@ body.dark-mode div[style*="color: #444"],
 body.dark-mode small[style*="color: #666"] {
   color: var(--text-muted) !important;
 }
+/* --- CORRECTIF SUPPLÉMENTAIRE POUR LES MATCHS EN MODE SOMBRE --- */
+body.dark-mode li[style*="background"],
+body.dark-mode li[style*="background: white"],
+body.dark-mode li[style*="background: #ffffff"] {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode .result, 
+body.dark-mode span[style*="color"] {
+  color: var(--text-muted) !important;
+}
