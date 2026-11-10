@@ -33,5 +33,10 @@
     "nom": "Hurier",
     "logo": "logo_sponsor/regnier_hurier.png",
     "lien": "https://www.google.com"
+  },
+  {
+    "nom": "Autosur",
+    "logo": "logo_sponsor/autosur.png",
+    "lien": "https://controle-technique.autosur.fr/816-autosur-nogent"
   }
 ]
