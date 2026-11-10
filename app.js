@@ -103,17 +103,38 @@ document.addEventListener('DOMContentLoaded', function() {
     const sponsors = await loadJson('sponsors.json');
     if (!Array.isArray(sponsors) || sponsors.length === 0) return '';
 
-    const sponsorsHTML = sponsors.map(s => `
-      <a href="${s.lien || '#'}" target="_blank" style="flex: 0 0 auto; text-align: center; text-decoration: none;">
+    // On double la liste des sponsors pour créer un effet de boucle infinie sans coupure
+    const doubleSponsors = [...sponsors, ...sponsors];
+
+    const sponsorsHTML = doubleSponsors.map(s => `
+      <a href="${s.lien || '#'}" target="_blank" style="flex: 0 0 auto; text-align: center; text-decoration: none; margin: 0 15px;">
         <img src="${s.logo}" alt="${s.nom}" style="height: 40px; max-width: 100px; object-fit: contain; filter: grayscale(20%); opacity: 0.85; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
       </a>
     `).join('');
 
     return `
-      <div style="background: white; border-radius: 10px; padding: 12px 15px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid #eaeaea; text-align: center;">
+      <style>
+        @keyframes sponsorScroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .sponsors-track {
+          display: flex;
+          align-items: center;
+          width: max-content;
+          animation: sponsorScroll 15s linear infinite;
+        }
+        .sponsors-track:hover {
+          animation-play-state: paused; /* Pause au survol du doigt ou de la souris */
+        }
+      </style>
+
+      <div style="background: white; border-radius: 10px; padding: 12px 0; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid #eaeaea; text-align: center; overflow: hidden;">
         <div style="font-size: 0.75em; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px;">Nos Partenaires</div>
-        <div style="display: flex; justify-content: flex-start; align-items: center; gap: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none;">
-          ${sponsorsHTML}
+        <div style="overflow: hidden; width: 100%;">
+          <div class="sponsors-track">
+            ${sponsorsHTML}
+          </div>
         </div>
       </div>
     `;
