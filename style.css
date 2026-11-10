@@ -263,3 +263,18 @@ body.dark-mode li[style*="background: #ffffff"] {
 body.dark-mode .result {
   color: var(--text-muted) !important;
 }
+
+/* --- AMÉLIORATION DES LOGOS SPONSORS EN MODE SOMBRE --- */
+body.dark-mode .sponsors-track a {
+  background: rgba(255, 255, 255, 0.9); /* Fond blanc légèrement translucide */
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.dark-mode .sponsors-track img {
+  filter: none !important; /* Retire le filtre sombre pour garder les couleurs d'origine des logos */
+  opacity: 1 !important;
+}
