@@ -231,3 +231,21 @@ li.upcoming {
 #root ul.collapsed {
   display: none !important;
 }
+/* --- CORRECTIF MODE SOMBRE POUR LES BLOCS EN DUR (JS) --- */
+body.dark-mode div[style*="background: white"],
+body.dark-mode div[style*="background: #ffffff"],
+body.dark-mode div[style*="background: #f8f9fa"],
+body.dark-mode div[style*="background:#fff"],
+body.dark-mode div[style*="background:#ffffff"] {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Harmonisation des textes secondaires gris à l'intérieur des cartes en mode sombre */
+body.dark-mode div[style*="color: #666"],
+body.dark-mode div[style*="color: #555"],
+body.dark-mode div[style*="color: #444"],
+body.dark-mode small[style*="color: #666"] {
+  color: var(--text-muted) !important;
+}
