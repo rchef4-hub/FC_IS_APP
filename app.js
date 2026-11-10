@@ -991,6 +991,18 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- ROUTEUR & INITIALISATION GLOBALE ---
   function router() {
     const hash = window.location.hash.replace('#', '') || 'home';
+
+    // 1. Mise à jour de la classe .active sur les liens du menu de navigation
+    document.querySelectorAll('nav a').forEach(link => {
+      const linkHash = link.getAttribute('href')?.replace('#', '') || '';
+      if (linkHash === hash) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+
+    // 2. Rendu de la vue correspondante
     if (hash === 'home') renderHome();
     else if (hash === 'pronos') renderPronos();
     else if (hash === 'players') renderPlayers();
@@ -1003,4 +1015,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
   window.addEventListener('hashchange', router);
   window.addEventListener('load', router);
-});
