@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const doubleSponsors = [...sponsors, ...sponsors];
 
     const sponsorsHTML = doubleSponsors.map(s => `
-      <a href="${s.lien || '#'}" target="_blank" style="flex: 0 0 auto; text-align: center; text-decoration: none; margin: 0 15px; display: inline-block;">
+      <a href="${s.lien || '#'}" target="_blank" onclick="this.blur();" onfocus="this.blur();" style="flex: 0 0 auto; text-align: center; text-decoration: none; margin: 0 15px; display: inline-block;">
         <img src="${s.logo}" alt="${s.nom}" style="height: 40px; max-width: 100px; object-fit: contain; filter: grayscale(20%); opacity: 0.85; transition: opacity 0.2s;">
       </a>
     `).join('');
