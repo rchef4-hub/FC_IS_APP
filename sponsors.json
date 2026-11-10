@@ -1,0 +1,17 @@
+[
+  {
+    "nom": "Partenaire 1",
+    "logo": "https://via.placeholder.com/120x50?text=Sponsor+1",
+    "lien": "https://www.google.com"
+  },
+  {
+    "nom": "Partenaire 2",
+    "logo": "https://via.placeholder.com/120x50?text=Sponsor+2",
+    "lien": "https://www.google.com"
+  },
+  {
+    "nom": "Partenaire 3",
+    "logo": "https://via.placeholder.com/120x50?text=Sponsor+3",
+    "lien": "https://www.google.com"
+  }
+]
