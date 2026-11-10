@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
           display: flex;
           align-items: center;
           width: max-content;
-          animation: sponsorScroll 15s linear infinite;
+          animation: sponsorScroll 20s linear infinite;
         }
         .sponsors-track:hover {
           animation-play-state: paused; /* Pause au survol du doigt ou de la souris */
