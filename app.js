@@ -99,6 +99,26 @@ document.addEventListener('DOMContentLoaded', function() {
     return parseInt(parts[1], 10);
   }
 
+  async function renderSponsorsBanner() {
+    const sponsors = await loadJson('sponsors.json');
+    if (!Array.isArray(sponsors) || sponsors.length === 0) return '';
+
+    const sponsorsHTML = sponsors.map(s => `
+      <a href="${s.lien || '#'}" target="_blank" style="flex: 0 0 auto; text-align: center; text-decoration: none;">
+        <img src="${s.logo}" alt="${s.nom}" style="height: 40px; max-width: 100px; object-fit: contain; filter: grayscale(20%); opacity: 0.85; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
+      </a>
+    `).join('');
+
+    return `
+      <div style="background: white; border-radius: 10px; padding: 12px 15px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid #eaeaea; text-align: center;">
+        <div style="font-size: 0.75em; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px;">Nos Partenaires</div>
+        <div style="display: flex; justify-content: flex-start; align-items: center; gap: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none;">
+          ${sponsorsHTML}
+        </div>
+      </div>
+    `;
+  }
+
   // --- PAGE D'ACCUEIL ---
   async function renderHome() {
     let bdaysHTML = '<div style="padding: 15px; text-align:center; color:#666;">Aucun anniversaire ce mois-ci 🎉</div>';
