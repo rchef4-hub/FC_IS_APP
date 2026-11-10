@@ -1015,3 +1015,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
   window.addEventListener('hashchange', router);
   window.addEventListener('load', router);
+  });
