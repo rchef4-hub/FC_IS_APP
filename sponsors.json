@@ -1,17 +1,37 @@
 [
   {
     "nom": "LALLEMANT DIFFUSION",
-    "logo": "logo_sponsor/lallemant.png",
+    "logo": "logo_sponsor/LOGO LALLEMANT DIFFUSION + VS.png",
     "lien": "https://www.google.com"
   },
   {
     "nom": "BORALEX",
-    "logo": "https://via.placeholder.com/120x50?text=Sponsor+2",
+    "logo": "logo_sponsor/boralex.png",
     "lien": "https://www.google.com"
   },
   {
-    "nom": "Partenaire 3",
-    "logo": "https://via.placeholder.com/120x50?text=Sponsor+3",
+    "nom": "Les Charpentiers d'IS",
+    "logo": "logo_sponsor/logo_charpentiers.png",
+    "lien": "https://www.google.com"
+  },
+  {
+    "nom": "Garage OUDOT",
+    "logo": "logo_sponsor/logo_oudot.png",
+    "lien": "https://www.google.com"
+  },
+  {
+    "nom": "ERA",
+    "logo": "logo_sponsor/ERA_Immobilier.jpg",
+    "lien": "https://www.google.com"
+  },
+  {
+    "nom": "Le CHAI de la croisotte",
+    "logo": "logo_sponsor/chai_croisotte_contour.png",
+    "lien": "https://www.google.com"
+  },
+  {
+    "nom": "Hurier",
+    "logo": "logo_sponsor/regnier_hurier.png",
     "lien": "https://www.google.com"
   }
 ]
