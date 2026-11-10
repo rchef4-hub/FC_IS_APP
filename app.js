@@ -18,8 +18,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   // -----------------------------
   
+ // ✅ APRÈS (Ajout de ?v= + timestamp pour forcer le téléchargement et contourner le cache mobile) :
   function fetchFresh(url) {
-    return fetch(url, {
+    const antiCacheUrl = `${url}?v=${new Date().getTime()}`;
+    return fetch(antiCacheUrl, {
       cache: 'no-store',
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
