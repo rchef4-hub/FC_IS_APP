@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div style="background: var(--card-bg); padding: 25px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center;">
         <div style="font-size: 1.2em; font-weight: bold; margin-top: 0; color: var(--primary-color); margin-bottom: 10px;">Fais ton pronostic !</div>
         <p style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 15px; line-height: 1.4;">
-          Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2). 
+          Règles : 5 pts pour le score exact, 3 pts pour le bon résultat (1N2).<br>
           Valide ton prono avant le match.
         </p>
         
