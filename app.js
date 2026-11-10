@@ -99,39 +99,50 @@ document.addEventListener('DOMContentLoaded', function() {
     return parseInt(parts[1], 10);
   }
 
-  async function renderSponsorsBanner() {
+ async function renderSponsorsBanner() {
     const sponsors = await loadJson('sponsors.json');
     if (!Array.isArray(sponsors) || sponsors.length === 0) return '';
 
-    // On double la liste des sponsors pour créer un effet de boucle infinie sans coupure
+    // On double la liste des sponsors pour l'effet de boucle infinie
     const doubleSponsors = [...sponsors, ...sponsors];
 
     const sponsorsHTML = doubleSponsors.map(s => `
-      <a href="${s.lien || '#'}" target="_blank" style="flex: 0 0 auto; text-align: center; text-decoration: none; margin: 0 15px;">
-        <img src="${s.logo}" alt="${s.nom}" style="height: 40px; max-width: 100px; object-fit: contain; filter: grayscale(20%); opacity: 0.85; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
+      <a href="${s.lien || '#'}" target="_blank" style="flex: 0 0 auto; text-align: center; text-decoration: none; margin: 0 15px; display: inline-block;">
+        <img src="${s.logo}" alt="${s.nom}" style="height: 40px; max-width: 100px; object-fit: contain; filter: grayscale(20%); opacity: 0.85; transition: opacity 0.2s;">
       </a>
     `).join('');
 
     return `
       <style>
         @keyframes sponsorScroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-50%, 0, 0); }
+        }
+        .sponsors-wrapper {
+          overflow: hidden;
+          width: 100%;
+          position: relative;
         }
         .sponsors-track {
           display: flex;
           align-items: center;
           width: max-content;
-          animation: sponsorScroll 20s linear infinite;
+          will-change: transform;
+          animation: sponsorScroll 15s linear infinite;
+          -webkit-animation: sponsorScroll 15s linear infinite;
         }
-        .sponsors-track:hover {
-          animation-play-state: paused; /* Pause au survol du doigt ou de la souris */
+        /* La pause au survol s'applique UNIQUEMENT sur ordinateur avec une vraie souris */
+        @media (hover: hover) and (pointer: fine) {
+          .sponsors-track:hover {
+            animation-play-state: paused;
+            -webkit-animation-play-state: paused;
+          }
         }
       </style>
 
-      <div style="background: white; border-radius: 10px; padding: 12px 0; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid #eaeaea; text-align: center; overflow: hidden;">
+      <div style="background: white; border-radius: 10px; padding: 12px 0; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid #eaeaea; text-align: center;">
         <div style="font-size: 0.75em; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px;">Nos Partenaires</div>
-        <div style="overflow: hidden; width: 100%;">
+        <div class="sponsors-wrapper">
           <div class="sponsors-track">
             ${sponsorsHTML}
           </div>
