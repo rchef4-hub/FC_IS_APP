@@ -20,12 +20,14 @@
 
   <!-- Styles CSS -->
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: "0db7fee2-2daa-49f2-8da1-4fb7c9026270",
+      serviceWorkerParam: { scope: "/FC_IS_APP/" },
+      serviceWorkerPath: "/FC_IS_APP/OneSignalSDKWorker.js"
     });
   });
 </script>
