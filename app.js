@@ -291,6 +291,21 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       </div>
     `;
+
+    const btnPush = document.getElementById('btn-enable-push');
+    if (btnPush) {
+      btnPush.addEventListener('click', () => {
+        if (window.OneSignalDeferred) {
+          window.OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.Notifications.requestPermission();
+            if (OneSignal.Notifications.permission) {
+              btnPush.textContent = "✅ Activées";
+              btnPush.disabled = true;
+            }
+          });
+        }
+      });
+    }
   }
 
   // --- PRONOSTICS INTERACTIFS ---
