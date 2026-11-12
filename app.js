@@ -258,6 +258,12 @@ document.addEventListener('DOMContentLoaded', function() {
         <a href="https://epreuves.fff.fr/competition/engagement/449274-departemental-4/phase/1/2/classement" target="_blank" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.9em; font-weight: bold;">Consulter ↗</a>
       </div>
 
+      <!-- NOUVEAU BOUTON NOTIFICATIONS -->
+      <div id="push-banner" style="background: #28a745; color: white; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: var(--shadow);">
+        <span style="font-weight: bold; font-size: 1.05em;">🔔 Alertes & Résultats du club</span>
+        <button id="btn-enable-push" type="button" style="background: rgba(255,255,255,0.25); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.9em; font-weight: bold; cursor: pointer;">Activer</button>
+      </div>
+
       <div style="background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid #eaeaea;">
         <div style="background: #5c1d43; color: white; padding: 10px 15px; font-weight: bold; text-align: center; font-size: 1.05em;">
           ⚽ Dernier Match
