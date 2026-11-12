@@ -1,7 +1,5 @@
 // service-worker.js
 
-importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
-
 const CACHE_NAME = 'fcis-cache-v19';
 
 // 1. Installation : enregistrement des fichiers de base
