@@ -292,8 +292,19 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     `;
 
-    const btnPush = document.getElementById('btn-enable-push');
+   const btnPush = document.getElementById('btn-enable-push');
     if (btnPush) {
+      // Vérifie l'état actuel au chargement de la page d'accueil
+      if (window.OneSignalDeferred) {
+        window.OneSignalDeferred.push(function(OneSignal) {
+          if (OneSignal.Notifications.permission) {
+            btnPush.textContent = "✅ Activées";
+            btnPush.disabled = true;
+          }
+        });
+      }
+
+      // Gère le clic sur le bouton Activer
       btnPush.addEventListener('click', () => {
         if (window.OneSignalDeferred) {
           window.OneSignalDeferred.push(async function(OneSignal) {
